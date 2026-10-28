@@ -1,0 +1,16 @@
+name: Testes
+on:
+  push:
+  pull_request:
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Testes de classificação e desempate
+        run: node tests/classificacao.test.mjs
+      - name: Sintaxe dos módulos JS
+        run: for f in js/*.js js/paginas/*.js sw.js; do node --check "$f"; done

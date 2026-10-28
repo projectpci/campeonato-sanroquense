@@ -1,0 +1,43 @@
+/* Layout fixo da arte exportada (1080px), independente da tela */
+.arte { display: none; width: 1080px; }
+.arte--renderizando { display: flex; position: fixed; left: -9999px; top: 0; }
+
+/* Arte 1080×1350 (html2canvas não suporta clip-path: faixa simples) */
+.arte {
+  height: 1350px; padding: 48px; color: var(--cor-texto); font-family: var(--fonte-corpo);
+  background: radial-gradient(ellipse at 50% 0%, var(--cor-fundo-3) 0%, var(--cor-fundo) 70%);
+  flex-direction: column; gap: 24px;
+}
+.arte__topo { text-align: center; }
+.arte__titulo { font-family: var(--fonte-titulo); font-size: 72px; line-height: 1.2; transform: none; color: var(--cor-primaria); text-shadow: var(--cor-brilho); margin: 0 0 20px; }
+.arte__info { display: flex; justify-content: center; gap: 24px; font-size: 30px; font-weight: 800; text-transform: uppercase; }
+.arte__info div { padding: 10px 28px; border: 2px solid var(--cor-borda-neon); border-radius: var(--raio); background: var(--cor-fundo-2); }
+.arte__info small { display: block; font-size: 18px; color: var(--cor-primaria); }
+.arte__faixa { display: inline-block; margin: 24px auto 0; padding: 8px 48px; background: var(--cor-primaria-forte); color: var(--cor-texto-inverso); font-family: var(--fonte-destaque); font-size: 46px; font-style: italic; text-transform: uppercase; }
+.arte-tabela, .arte-jogos { flex: 1; display: flex; flex-direction: column; gap: 6px; border: 2px solid var(--cor-borda-neon); border-radius: var(--raio-grande); padding: 6px; background: var(--cor-fundo-2); }
+.arte-linha { display: grid; align-items: center; text-align: center; font-size: 36px; font-weight: 800; flex: 1; border-bottom: 1px solid var(--cor-borda); }
+.arte-linha--classif { grid-template-columns: 90px 1fr 80px repeat(7, 62px); }
+.arte-linha--art { grid-template-columns: 90px 1fr 60px 100px; }
+.arte-linha--cab { flex: none; padding: 8px 0; font-family: var(--fonte-destaque); font-weight: 400; color: var(--cor-primaria-clara); font-size: 30px; text-transform: uppercase; }
+.arte-pos { font-family: var(--fonte-destaque); font-size: 40px; }
+.arte-pts { font-family: var(--fonte-destaque); font-size: 46px; color: var(--cor-primaria); }
+.arte-time { display: flex; align-items: center; gap: 16px; text-align: left; text-transform: uppercase; }
+.arte-time--col { flex-direction: column; align-items: flex-start; gap: 0; }
+.arte-time--col small { font-size: 24px; color: var(--cor-texto-2); font-weight: 500; }
+.arte .escudo { width: 48px; height: 48px; display: block; }
+.arte .ouro { color: var(--cor-ouro); } .arte .prata { color: var(--cor-prata); } .arte .bronze { color: var(--cor-bronze); }
+.arte-jogos { justify-content: flex-start; gap: 28px; padding-top: 24px; }
+.arte-jogo { padding: 12px 20px; border-bottom: 1px solid var(--cor-borda); }
+.arte-jogo__linha { display: grid; grid-template-columns: 1fr 180px 1fr; align-items: center; font-size: 38px; font-weight: 800; text-transform: uppercase; }
+.arte-jogo__time { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+.arte-jogo__time--v { justify-content: flex-start; }
+.arte-jogo__placar { text-align: center; font-family: var(--fonte-destaque); font-size: 58px; font-weight: 400; color: var(--cor-primaria); }
+.arte-jogo__gols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; font-size: 24px; color: var(--cor-texto-2); }
+.arte-jogo__gols span:last-child { text-align: right; }
+.arte__rodape { display: flex; justify-content: space-between; align-items: center; font-family: var(--fonte-titulo); font-size: 28px; color: var(--cor-primaria); }
+.arte__atualizado { font-family: var(--fonte-corpo); font-size: 24px; color: var(--cor-texto-2); }
+
+.arte__rodape { align-items: center; }
+.arte__frases { display: flex; flex-direction: column; gap: 2px; }
+.arte__qr { display: flex; align-items: center; gap: 16px; font-family: var(--fonte-destaque); font-size: 26px; line-height: 1.1; text-transform: uppercase; color: var(--cor-texto); }
+.arte__qr img { width: 132px; height: 132px; border-radius: 8px; background: var(--cor-texto); }

@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../css/tokens.css"><link rel="stylesheet" href="../css/base.css"><link rel="stylesheet" href="../css/componentes.css">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@500;700;800&family=Permanent+Marker&display=swap" rel="stylesheet"></head>
+<body><main class="conteudo" id="app"></main>
+<script type="module">
+// Página de conferência visual com dados simulados (sem Supabase)
+import { cartaoJogo } from '../js/cartaoJogo.js';
+import { montarLayout } from '../js/ui.js';
+montarLayout('confrontos');
+const m = { id: 1, nome: 'RDL' }, v = { id: 2, nome: 'Palmeiras' };
+const jogo = (extra) => ({ id: 1, mandante: m, visitante: v, mandante_id: 1, visitante_id: 2, data_hora: '2026-11-02T16:00:00', ...extra });
+document.getElementById('app').innerHTML =
+  cartaoJogo(jogo({ status: 'encerrado', gols_mandante: 3, gols_visitante: 1, gols: [
+    { time_id: 1, quantidade: 2, contra: false, jogador: { nome: 'Pedro' } },
+    { time_id: 1, quantidade: 1, contra: true, jogador: { nome: 'Zé' } },
+    { time_id: 2, quantidade: 1, contra: false, jogador: { nome: 'Lucas' } }] })) +
+  cartaoJogo(jogo({ status: 'agendado' }));
+</script></body></html>

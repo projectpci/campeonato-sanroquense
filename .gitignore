@@ -1,0 +1,8 @@
+# js/config.js É versionado de propósito: o GitHub Pages precisa dele e a anon key é pública
+# (a segurança vem das políticas RLS). NUNCA coloque a service_role key aqui.
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.vscode/
+node_modules/

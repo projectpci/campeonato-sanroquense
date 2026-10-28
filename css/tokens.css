@@ -1,0 +1,51 @@
+/* Tokens do design system (docs/05-design-system.md). Cores e fontes só via variáveis. */
+:root {
+  /* Fundos */
+  --cor-fundo:            #050B07;
+  --cor-fundo-2:          #0B1A10;
+  --cor-fundo-3:          #12281A;
+  --cor-cabecalho-tabela: #08140C;
+
+  /* Verde neon (identidade) */
+  --cor-primaria:         #39FF14;
+  --cor-primaria-forte:   #00E33A;
+  --cor-primaria-clara:   #A6FF4D;
+  --cor-brilho:           0 0 12px rgba(57, 255, 20, .55);
+
+  /* Bordas */
+  --cor-borda:            #1F5C2E;
+  --cor-borda-neon:       #2BD94F;
+
+  /* Texto */
+  --cor-texto:            #FFFFFF;
+  --cor-texto-2:          #B9C7BC;
+  --cor-texto-inverso:    #04140A;
+
+  /* Pódio */
+  --cor-ouro:             #FFC93C;
+  --cor-prata:            #D9DEE3;
+  --cor-bronze:           #F08A3E;
+
+  /* Estados */
+  --cor-positivo:         #39FF14;
+  --cor-negativo:         #FF4D4D;
+  --cor-neutro:           #B9C7BC;
+
+  /* Sobreposições */
+  --cor-overlay:          rgba(5, 11, 7, .85);
+
+  /* Tipografia */
+  --fonte-titulo:   'Permanent Marker', 'Bangers', cursive;
+  --fonte-destaque: 'Anton', 'Bebas Neue', sans-serif;
+  --fonte-corpo:    'Barlow Condensed', 'Oswald', sans-serif;
+
+  /* Espaçamento e forma */
+  --raio:        10px;
+  --raio-grande: 16px;
+  --esp-1: 4px; --esp-2: 8px; --esp-3: 12px; --esp-4: 16px; --esp-5: 24px; --esp-6: 32px;
+
+  /* Layout */
+  --altura-header: 56px;
+  --altura-nav:    64px;
+  --largura-max:   960px;
+}
