@@ -246,7 +246,9 @@ function htmlPartida(j) {
     ? `<span class="partida__placar"><b>${r.meus} × ${r.deles}</b><i class="forma__item forma__item--${r.letra}">${r.letra.toUpperCase()}</i></span>`
     : j.status === 'ao_vivo'
       ? `<span class="partida__placar"><b>${j.gols_mandante ?? 0} × ${j.gols_visitante ?? 0}</b><i class="selo selo--aovivo">Ao vivo</i></span>`
-      : `<span class="partida__hora">${data ? formatarHora(j.data_hora) : '—'}<small>${data ? escapar(quando(j.data_hora)) : ''}</small></span>`;
+      : data && data < new Date()
+        ? '<span class="partida__hora">—<small>aguardando resultado</small></span>'
+        : `<span class="partida__hora">${data ? formatarHora(j.data_hora) : '—'}<small>${data ? escapar(quando(j.data_hora)) : ''}</small></span>`;
   return `
     <a class="partida" href="time.html?id=${adv.id}">
       <span class="partida__data">${data ? `<b>${data.getDate()}</b>${data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}` : '—'}</span>

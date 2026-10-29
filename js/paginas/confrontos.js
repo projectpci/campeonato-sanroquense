@@ -4,17 +4,12 @@ import { cartaoJogo } from '../cartaoJogo.js';
 import { carregarComCache } from '../cache.js';
 import { compartilharImagem } from '../compartilhar.js';
 import { arteRodada, inserirArte } from '../artes.js';
+import { rodadaAtual } from '../rodadas.js';
 import { botaoCompartilhar, montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, formatarData } from '../ui.js';
 
 const app = document.getElementById('app');
 let rodadaSelecionada = null;
 let dados = null;
-
-// Rodada atual: menor número com jogo agendado; senão, a última
-export function rodadaAtual(rodadas, jogos) {
-  const comAgendado = rodadas.find((r) => jogos.some((j) => j.rodada_id === r.id && ['agendado', 'ao_vivo'].includes(j.status)));
-  return (comAgendado ?? rodadas[rodadas.length - 1])?.id ?? null;
-}
 
 function renderizar(rodadas, jogos) {
   if (!rodadas.length) {

@@ -5,6 +5,7 @@ import {
 } from '../api.js';
 import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
+import { rodadaAtual } from '../rodadas.js';
 
 const app = document.getElementById('app');
 const estado = { aba: 'confrontos', rodadaId: null };
@@ -192,7 +193,7 @@ function dialogoTime(time) {
 // ---------- Aba Confrontos e resultados ----------
 function abaConfrontos(aba, { times, rodadas, jogos, jogadores }) {
   if (!rodadas.some((r) => r.id === estado.rodadaId)) {
-    estado.rodadaId = (rodadas.find((r) => jogos.some((j) => j.rodada_id === r.id && j.status === 'agendado')) ?? rodadas.at(-1))?.id ?? null;
+    estado.rodadaId = rodadaAtual(rodadas, jogos);
   }
   const rodada = rodadas.find((r) => r.id === estado.rodadaId);
   const dosJogos = jogos.filter((j) => j.rodada_id === estado.rodadaId);

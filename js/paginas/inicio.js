@@ -3,6 +3,7 @@ import { ordenarClassificacao } from '../classificacao.js';
 import { assinarMudancas } from '../realtime.js';
 import { cartaoJogo } from '../cartaoJogo.js';
 import { carregarComCache } from '../cache.js';
+import { rodadaDoProximoJogo } from '../rodadas.js';
 import { CANAL_WHATSAPP } from '../supabase.js';
 import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone } from '../ui.js';
 
@@ -87,7 +88,9 @@ async function buscar() {
 function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }) {
     const porRodada = (r) => jogos.filter((j) => j.rodada_id === r?.id);
     const destaque = htmlDestaque(jogos);
-    const proxima = rodadas.find((r) => porRodada(r).some((j) => j.status === 'agendado' && !destaque.ids.includes(j.id)));
+    // próxima rodada = a do próximo jogo pelo calendário (não uma rodada antiga que ficou sem resultado)
+    const idProxima = rodadaDoProximoJogo(jogos.filter((j) => !destaque.ids.includes(j.id)));
+    const proxima = rodadas.find((r) => r.id === idProxima);
     const ultimaEncerrada = [...rodadas].reverse().find((r) => porRodada(r).some((j) => j.status === 'encerrado'));
 
     app.innerHTML = `

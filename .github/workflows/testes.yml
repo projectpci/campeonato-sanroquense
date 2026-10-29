@@ -11,6 +11,6 @@ jobs:
         with:
           node-version: 20
       - name: Testes de classificação e desempate
-        run: node tests/classificacao.test.mjs
+        run: node tests/classificacao.test.mjs && node tests/rodadas.test.mjs
       - name: Sintaxe dos módulos JS
         run: for f in js/*.js js/paginas/*.js sw.js; do node --check "$f"; done
