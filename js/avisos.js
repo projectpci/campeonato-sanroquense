@@ -87,3 +87,43 @@ export function botaoAvisos(container, contexto = {}) {
   };
   desenhar();
 }
+
+// Sino no canto do cabeçalho (todas as páginas públicas): liga/desliga os avisos de todos os jogos
+export function sinoNoCabecalho() {
+  const sair = document.querySelector('.header__sair');
+  if (!sair || document.getElementById('btn-sino')) return;
+  const semApp = noIphoneSemApp();
+  if (!suportado() && !semApp) return;
+
+  const botao = document.createElement('button');
+  botao.id = 'btn-sino';
+  botao.className = 'header__sino';
+  sair.before(botao);
+
+  const pintar = () => {
+    const estado = lerEstado();
+    const ativo = estado.todos || estado.times.length > 0;
+    botao.classList.toggle('header__sino--ativo', ativo);
+    botao.innerHTML = icone('sino');
+    botao.setAttribute('aria-label', ativo ? 'Avisos ligados (toque para desligar)' : 'Ativar avisos de gols');
+    botao.title = ativo ? 'Avisos ligados' : 'Ativar avisos de gols';
+  };
+
+  botao.addEventListener('click', async () => {
+    if (semApp) { location.href = 'instalar.html'; return; } // iPhone: precisa instalar o app primeiro
+    const estado = lerEstado();
+    const ativo = estado.todos || estado.times.length > 0;
+    if (ativo && !confirm('Desligar os avisos de gols neste aparelho?')) return;
+    botao.disabled = true;
+    try {
+      await salvar(ativo ? { todos: false, times: [] } : { todos: true, times: [] });
+      toast(ativo ? 'Avisos desligados' : 'Avisos ligados ✔');
+    } catch (erro) {
+      toast(`Não foi possível ativar os avisos: ${erro.message}`, true);
+    }
+    botao.disabled = false;
+    pintar();
+    document.dispatchEvent(new CustomEvent('avisos-mudou'));
+  });
+  pintar();
+}

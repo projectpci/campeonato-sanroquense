@@ -3,7 +3,6 @@ import { ordenarClassificacao } from '../classificacao.js';
 import { assinarMudancas } from '../realtime.js';
 import { cartaoJogo } from '../cartaoJogo.js';
 import { carregarComCache } from '../cache.js';
-import { botaoAvisos } from '../avisos.js';
 import { CANAL_WHATSAPP } from '../supabase.js';
 import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone } from '../ui.js';
 
@@ -94,7 +93,6 @@ function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }
     app.innerHTML = `
       ${htmlHero(campeonato)}
       ${destaque.html}
-      <div id="avisos-geral"></div>
       ${htmlSecaoJogos('Próxima rodada', proxima, porRodada(proxima).filter((j) => j.status === 'agendado' && !destaque.ids.includes(j.id)))}
       ${htmlSecaoJogos('Últimos resultados', ultimaEncerrada, porRodada(ultimaEncerrada).filter((j) => j.status === 'encerrado'))}
       ${htmlTop4(ordenarClassificacao(linhas, encerrados))}
@@ -102,7 +100,6 @@ function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }
       ${CANAL_WHATSAPP ? `<p class="centro"><a class="botao" href="${escapar(CANAL_WHATSAPP)}" target="_blank" rel="noopener">${icone('whatsapp')} Entrar no canal do WhatsApp</a></p>` : ''}
       <p class="rodape-frase">Juntos pelo futebol de nossa comunidade!</p>
       <p class="centro texto-pequeno"><a class="texto-2" href="instalar.html">Instalar o app</a> · <a class="texto-2" href="index.html">Trocar perfil</a></p>`;
-    botaoAvisos(document.getElementById('avisos-geral'));
 }
 
 async function carregar() {

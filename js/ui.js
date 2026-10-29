@@ -45,6 +45,8 @@ export function montarLayout(ativa) {
   // No desktop a nav inferior some e usa a do header
   const inferior = document.body.lastElementChild;
   inferior.classList.add('nav--inferior');
+  // Sino de avisos no cabeçalho das páginas públicas (carregado depois, para não atrasar a tela)
+  if (ativa) import('./avisos.js').then((m) => m.sinoNoCabecalho()).catch(() => {});
 }
 
 // Escapa texto vindo do banco antes de colocar em innerHTML
