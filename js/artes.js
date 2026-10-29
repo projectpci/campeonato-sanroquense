@@ -83,6 +83,31 @@ export function arteArtilharia(campeonato, artilheiros) {
   return moldura(campeonato.nome, 'Artilharia', campeonato, `<div class="arte-tabela">${corpo}</div>`);
 }
 
+// Um jogo: antes ("Hoje tem jogo" / "Próximo jogo"), durante ("Ao vivo") e depois ("Resultado final" com os autores)
+export function arteJogo(campeonato, jogo) {
+  const encerrado = jogo.status === 'encerrado';
+  const aoVivo = jogo.status === 'ao_vivo';
+  const hoje = jogo.data_hora && new Date(jogo.data_hora).toDateString() === new Date().toDateString();
+  const faixa = encerrado ? 'Resultado final' : aoVivo ? 'Ao vivo' : hoje ? 'Hoje tem jogo' : 'Próximo jogo';
+  const quando = [jogo.rodada?.numero ? `Rodada ${jogo.rodada.numero}` : '', jogo.data_hora ? formatarData(jogo.data_hora) : '',
+    jogo.data_hora && !encerrado ? horaDoJogo(jogo) : ''].filter(Boolean).join(' · ');
+  const gols = (timeId) => (jogo.gols ?? []).filter((g) => g.time_id === timeId)
+    .map((g) => `<span>⚽ ${escapar(g.jogador?.nome ?? 'Gol contra')}${g.contra ? ' (contra)' : g.quantidade > 1 ? ` (${g.quantidade})` : ''}</span>`).join('');
+  const time = (t) => `<div class="arte-partida__time">${escudo(t, 48)}<strong>${escapar(t.nome)}</strong></div>`;
+  const centro = encerrado || aoVivo
+    ? `<div class="arte-partida__placar"><b>${jogo.gols_mandante ?? 0}</b><i>×</i><b>${jogo.gols_visitante ?? 0}</b></div>`
+    : '<div class="arte-partida__placar arte-partida__placar--vs"><i>×</i></div>';
+  const autores = encerrado && (jogo.gols ?? []).length
+    ? `<div class="arte-partida__gols"><div>${gols(jogo.mandante_id)}</div><div>${gols(jogo.visitante_id)}</div></div>` : '';
+  return moldura(campeonato.nome, faixa, campeonato, `
+    <div class="arte-partida">
+      <p class="arte-partida__quando">${escapar(quando)}</p>
+      <div class="arte-partida__confronto">${time(jogo.mandante)}${centro}${time(jogo.visitante)}</div>
+      ${autores}
+      ${!encerrado && !aoVivo ? '<p class="arte-partida__chamada">Vem pro Campo Maicon Santos!</p>' : ''}
+    </div>`);
+}
+
 // Escalação no campo (padrão das transmissões): time, próximo jogo, 11 titulares, reservas e técnico
 export function arteEscalacao(campeonato, time, { formacao, titulares, reservas = [] }, jogadores, jogo) {
   const qr = qrCodeSite();

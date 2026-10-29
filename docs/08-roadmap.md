@@ -87,3 +87,4 @@
 - [x] Mural com aprovação do organizador; área do clube com visual de app de jogo (cartas, folha de escolha, auto-escalar, pódio)
 - [x] Rodada padrão = a mais recente pelo calendário (js/rodadas.js + tests/rodadas.test.mjs) em Confrontos, painel e Início
 - [x] Horário a definir (jogos.horario_definido): Real Barça SR × Rua Nova remarcado para 01/11; painel tem Data, Hora e 'Horário a definir'
+- [x] Avisos de foto para aprovar (organizador), painel em tempo real, arte de cada jogo para compartilhar

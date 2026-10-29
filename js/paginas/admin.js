@@ -6,6 +6,8 @@ import {
 import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
 import { rodadaAtual } from '../rodadas.js';
+import { assinarMudancas } from '../realtime.js';
+import { botaoAvisosOrganizador } from '../avisos.js';
 
 const app = document.getElementById('app');
 const estado = { aba: 'confrontos', rodadaId: null };
@@ -62,6 +64,7 @@ function telaLogin() {
       // Entrou: abre o painel direto (sem reler a sessão, que logo após o login pode ainda não estar disponível)
       mostrarCarregando(app);
       await carregar();
+      ligarTempoReal();
     } catch (erro) {
       toast(`Não foi possível entrar: ${erro.message}`, true);
     }
@@ -74,6 +77,16 @@ async function iniciar() {
   if (!sessao) return telaLogin();
   mostrarCarregando(app);
   await carregar();
+  ligarTempoReal();
+}
+
+// Tempo real: o que outro organizador lançar (ou um time publicar no mural) aparece sozinho.
+// Não redesenha com uma janela aberta, para não perder o que está sendo digitado.
+let tempoRealLigado = false;
+function ligarTempoReal() {
+  if (tempoRealLigado) return;
+  tempoRealLigado = true;
+  assinarMudancas(() => { if (!document.querySelector('dialog[open]')) carregar(); });
 }
 
 async function carregar() {
@@ -91,7 +104,9 @@ async function carregar() {
       </div>
       <div class="chips" role="tablist">${abas.map(([id, rotulo]) =>
         `<button class="chip${estado.aba === id ? ' chip--ativo' : ''}" data-aba="${id}">${rotulo}</button>`).join('')}</div>
+      <div id="avisos-adm" class="avisos-adm"></div>
       <div id="aba"></div>`;
+    botaoAvisosOrganizador(document.getElementById('avisos-adm'));
     app.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { estado.aba = b.dataset.aba; carregar(); }));
     document.getElementById('btn-csv').addEventListener('click', () => exportarCsv(jogos, rodadas));
     const aba = document.getElementById('aba');

@@ -1,5 +1,6 @@
 // Renderiza o card de um jogo (usado em Confrontos e Início).
-import { escapar, escudo, formatarData, horaDoJogo } from './ui.js';
+import { escapar, escudo, formatarData, horaDoJogo, icone } from './ui.js';
+import { registrarJogo } from './compartilharJogo.js';
 
 function listaGols(jogo, timeId) {
   return (jogo.gols ?? [])
@@ -21,6 +22,8 @@ export function cartaoJogo(jogo, extras = {}) {
     : `<span class="jogo__versus">×</span><span class="texto-2 texto-pequeno">${escapar(horaDoJogo(jogo))}</span>`;
   const rotuloStatus = { agendado: 'Agendado', ao_vivo: 'Ao vivo', encerrado: 'Encerrado', adiado: 'Adiado', wo: 'W.O.' }[jogo.status];
   const data = jogo.data_hora ? formatarData(jogo.data_hora) : '';
+  registrarJogo(jogo);
+  const compartilhar = `<button class="jogo__compartilhar" data-compartilhar-jogo="${jogo.id}" aria-label="Compartilhar este jogo no WhatsApp" title="Compartilhar">${icone('whatsapp')}</button>`;
 
   return `
     <article class="card jogo">
@@ -28,7 +31,7 @@ export function cartaoJogo(jogo, extras = {}) {
         <span class="texto-2 texto-pequeno">${escapar(data)}</span>
         <span class="jogo__topo-dir">
           <span class="selo${encerrado ? ' selo--encerrado' : aoVivo ? ' selo--aovivo' : ''}">${rotuloStatus}</span>
-          ${extras.acao ?? ''}
+          ${compartilhar}${extras.acao ?? ''}
         </span>
       </header>
       <div class="jogo__confronto">

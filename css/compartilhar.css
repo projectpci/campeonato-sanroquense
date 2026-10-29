@@ -61,3 +61,18 @@
 .arte-esc__banco b { color: var(--cor-primaria); }
 .arte-esc__tecnico { display: flex; align-items: center; gap: 14px; font-size: 28px; font-weight: 800; text-transform: uppercase; }
 .arte-esc__foto { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 3px solid var(--cor-primaria); display: inline-grid; place-items: center; font-family: var(--fonte-destaque); font-size: 36px; color: var(--cor-primaria); background: var(--cor-fundo-2); }
+
+/* Arte de um jogo (antes / ao vivo / resultado) */
+.arte-partida { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 36px; padding: 32px; border: 2px solid var(--cor-borda-neon); border-radius: var(--raio-grande); background: var(--cor-fundo-2); }
+.arte-partida__quando { margin: 0; text-align: center; font-family: var(--fonte-destaque); font-size: 40px; text-transform: uppercase; color: var(--cor-primaria-clara); }
+.arte-partida__confronto { display: grid; grid-template-columns: 1fr 260px 1fr; align-items: center; }
+.arte-partida__time { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+.arte-partida__time .escudo { width: 250px; height: 250px; }
+.arte-partida__time strong { font-family: var(--fonte-destaque); font-size: 50px; font-weight: 400; line-height: 1.05; text-transform: uppercase; }
+.arte-partida__placar { display: flex; align-items: center; justify-content: center; gap: 16px; font-family: var(--fonte-destaque); }
+.arte-partida__placar b { font-size: 150px; font-weight: 400; line-height: 1; color: var(--cor-primaria); text-shadow: var(--cor-brilho); }
+.arte-partida__placar i { font-style: normal; font-size: 70px; color: var(--cor-texto-2); }
+.arte-partida__placar--vs i { font-size: 120px; color: var(--cor-primaria); }
+.arte-partida__gols { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; font-size: 30px; font-weight: 700; }
+.arte-partida__gols div { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.arte-partida__chamada { margin: 0; text-align: center; font-family: var(--fonte-titulo); font-size: 46px; color: var(--cor-texto); }

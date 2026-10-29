@@ -1,5 +1,5 @@
 // Avisos no celular (Web Push): gols, início e fim de jogo. Sem login; a inscrição fica só neste aparelho.
-import { inscreverPush, cancelarPush } from './api.js';
+import { inscreverPush, cancelarPush, inscreverPushOrganizador, cancelarPushOrganizador } from './api.js';
 import { escapar, icone, toast } from './ui.js';
 
 // Chave pública do servidor de avisos (a privada fica só no Supabase)
@@ -35,11 +35,17 @@ async function obterInscricao() {
     ?? registro.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: paraBytes(CHAVE_PUBLICA) });
 }
 
+const CHAVE_ORGANIZADOR = 'avisos_organizador';
+const avisosDoOrganizador = () => { try { return localStorage.getItem(CHAVE_ORGANIZADOR) === '1'; } catch { return false; } };
+
 async function salvar(estado) {
   if (!estado.todos && !estado.times.length) {
     const registro = await registroPronto().catch(() => null);
     const inscricao = await registro?.pushManager.getSubscription();
-    if (inscricao) { await cancelarPush(inscricao.endpoint); await inscricao.unsubscribe(); }
+    if (inscricao) {
+      await cancelarPush(inscricao.endpoint);
+      if (!avisosDoOrganizador()) await inscricao.unsubscribe(); // o aparelho ainda recebe os avisos do organizador
+    }
   } else {
     const inscricao = await obterInscricao();
     await inscreverPush(inscricao.toJSON(), estado.todos ? [] : estado.times);
@@ -79,6 +85,45 @@ export function botaoAvisos(container, contexto = {}) {
       try {
         await salvar(novo);
         toast(novo.todos || novo.times.length ? 'Avisos ligados ✔' : 'Avisos desligados');
+      } catch (erro) {
+        toast(`Não foi possível ativar os avisos: ${erro.message}`, true);
+      }
+      desenhar();
+    });
+  };
+  desenhar();
+}
+
+// Painel do organizador: avisa no celular quando um time manda foto para aprovar
+export function botaoAvisosOrganizador(container) {
+  if (!container) return;
+  if (!suportado()) {
+    container.innerHTML = noIphoneSemApp() ? '<p class="texto-2 texto-pequeno">No iPhone, instale o app para receber o aviso de fotos para aprovar.</p>' : '';
+    return;
+  }
+  const desenhar = () => {
+    const ativo = avisosDoOrganizador();
+    container.innerHTML = `<button class="botao botao--secundario${ativo ? ' botao--ligado' : ''}" aria-pressed="${ativo}">
+      ${icone('sino')} ${ativo ? 'Avisos de fotos ligados' : 'Avisar fotos para aprovar'}</button>`;
+    container.querySelector('button').addEventListener('click', async (e) => {
+      e.currentTarget.disabled = true;
+      try {
+        if (ativo) {
+          if (!confirm('Parar de receber o aviso de fotos para aprovar neste aparelho?')) { desenhar(); return; }
+          const registro = await registroPronto().catch(() => null);
+          const inscricao = await registro?.pushManager.getSubscription();
+          if (inscricao) {
+            await cancelarPushOrganizador(inscricao.endpoint);
+            const torcedor = lerEstado();
+            if (!torcedor.todos && !torcedor.times.length) await inscricao.unsubscribe();
+          }
+          try { localStorage.removeItem(CHAVE_ORGANIZADOR); } catch { /* sem armazenamento */ }
+          toast('Avisos de fotos desligados');
+        } else {
+          await inscreverPushOrganizador((await obterInscricao()).toJSON());
+          try { localStorage.setItem(CHAVE_ORGANIZADOR, '1'); } catch { /* sem armazenamento */ }
+          toast('Pronto! Você vai receber um aviso quando chegar foto para aprovar ✔');
+        }
       } catch (erro) {
         toast(`Não foi possível ativar os avisos: ${erro.message}`, true);
       }

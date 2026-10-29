@@ -589,3 +589,14 @@ a.time__nome { color: var(--cor-texto); }
   .clube-conteudo--entrar, .dialogo--folha { animation: none; }
   .clube-aba, .carta, .gramado__vaga { transition: none; }
 }
+
+/* Compartilhar um jogo (ícone discreto no card) */
+.jogo__compartilhar { display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--cor-texto-2); cursor: pointer; }
+.jogo__compartilhar svg { width: 20px; height: 20px; }
+.jogo__compartilhar:hover, .jogo__compartilhar:focus-visible { color: var(--cor-primaria); background: var(--cor-borda); }
+.jogo__compartilhar:disabled { opacity: .4; }
+
+/* Avisos do organizador no painel */
+.avisos-adm { margin-bottom: var(--esp-3); }
+.avisos-adm .botao svg { width: 18px; height: 18px; }
+.botao--ligado { color: var(--cor-texto-inverso); background: var(--cor-primaria-forte); border-color: var(--cor-primaria-forte); }

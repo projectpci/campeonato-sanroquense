@@ -306,3 +306,12 @@ export async function clubeMeusPosts(codigo) {
   if (demo) return dadosDemo.clubeMeusPosts(codigo);
   return (await rpcClube('clube_meus_posts', { p_codigo: codigo })).posts ?? [];
 }
+
+// Avisos do organizador (foto de time aguardando aprovação) — exige estar logado
+export const inscreverPushOrganizador = (inscricao) =>
+  demo ? Promise.resolve() :
+  executar(cliente().rpc('inscrever_push_organizador', { p_endpoint: inscricao.endpoint, p_p256dh: inscricao.keys.p256dh, p_auth: inscricao.keys.auth }));
+
+export const cancelarPushOrganizador = (endpoint) =>
+  demo ? Promise.resolve() :
+  executar(cliente().rpc('cancelar_push_organizador', { p_endpoint: endpoint }));
