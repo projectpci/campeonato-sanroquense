@@ -1,5 +1,6 @@
 // Templates das artes exportadas em PNG (1080×1350). Só montam HTML; o CSS está em compartilhar.css.
-import { escapar, escudo, formatarData } from './ui.js';
+import { escapar, escudo, formatarData, formatarHora } from './ui.js';
+import { htmlCampo, avatarJogador } from './escalacao.js';
 
 const hoje = () => new Date().toLocaleDateString('pt-BR');
 const sinal = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
@@ -80,6 +81,34 @@ export function arteArtilharia(campeonato, artilheiros) {
       <span class="arte-pts">${a.gols}</span>
     </div>`).join('');
   return moldura(campeonato.nome, 'Artilharia', campeonato, `<div class="arte-tabela">${corpo}</div>`);
+}
+
+// Escalação no campo (padrão das transmissões): time, próximo jogo, 11 titulares, reservas e técnico
+export function arteEscalacao(campeonato, time, { formacao, titulares, reservas = [] }, jogadores, jogo) {
+  const qr = qrCodeSite();
+  const adversario = jogo ? (jogo.mandante_id === time.id ? jogo.visitante : jogo.mandante) : null;
+  const infoJogo = jogo ? `x ${escapar(adversario.nome)} · ${formatarData(jogo.data_hora)} · ${formatarHora(jogo.data_hora)}` : '';
+  const banco = reservas.map((id) => jogadores.find((j) => j.id === id)).filter(Boolean)
+    .map((j) => `<span>${j.numero != null ? `<b>${j.numero}</b> ` : ''}${escapar(j.nome)}</span>`).join('');
+  const tecnico = time.tecnico_nome ? `
+    <div class="arte-esc__tecnico">${avatarJogador({ foto_url: time.tecnico_foto_url, numero: 'T' }, 'arte-esc__foto')}
+      <div><small>Técnico</small>${escapar(time.tecnico_nome)}</div></div>` : '';
+  return `
+    <header class="arte-esc__topo">
+      ${escudo(time, 48)}
+      <div class="arte-esc__titulo">
+        <h1>${escapar(time.nome)}</h1>
+        <p>Escalação · ${escapar(formacao)}${infoJogo ? ` · ${infoJogo}` : ''}</p>
+      </div>
+      ${adversario ? escudo(adversario, 48) : ''}
+    </header>
+    <div class="arte-esc__campo">${htmlCampo({ formacao, titulares, jogadores })}</div>
+    <footer class="arte-esc__base">
+      <div class="arte-esc__banco"><small>Reservas</small><div>${banco || '—'}</div>
+        <span class="arte__atualizado">${escapar(campeonato.nome)} · ${escapar(campeonato.local ?? '')}</span></div>
+      ${tecnico}
+      ${qr ? `<div class="arte__qr"><img src="${qr}" alt="QR code do site"></div>` : ''}
+    </footer>`;
 }
 
 // Insere (ou troca) a arte oculta no body e devolve o elemento

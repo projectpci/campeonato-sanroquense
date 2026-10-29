@@ -236,9 +236,47 @@ function gerarCodigo(timeId) {
   return novo;
 }
 
+// ---------- Área do clube (demo) ----------
+const escalacoes = new Map();
+function timeDoCodigo(codigo) {
+  const time = validarCodigo(codigo);
+  if (!time) throw Object.assign(new Error('Código do time inválido.'), { codigoInvalido: true });
+  return time.time_id;
+}
+
+function clubeSalvarJogador(codigo, j) {
+  const timeId = timeDoCodigo(codigo);
+  const existente = j.id ? jogadores.find((x) => x.id === j.id && x.time_id === timeId) : null;
+  const dados = { nome: j.nome.trim(), numero: j.numero ?? null, posicao: j.posicao || null, foto_url: j.foto_url || null, ativo: true };
+  if (existente) Object.assign(existente, dados);
+  else jogadores.push({ id: proximoId(jogadores), time_id: timeId, ...dados });
+  return { id: existente?.id ?? jogadores.at(-1).id };
+}
+
+function clubeApagarJogador(codigo, id) {
+  const timeId = timeDoCodigo(codigo);
+  const i = jogadores.findIndex((x) => x.id === id && x.time_id === timeId);
+  if (i >= 0) jogadores[i].ativo = false;
+  return { ok: true };
+}
+
+function clubeSalvarTecnico(codigo, nome, fotoUrl) {
+  const time = timePorId(timeDoCodigo(codigo));
+  Object.assign(time, { tecnico_nome: nome?.trim() || null, tecnico_foto_url: fotoUrl || null });
+  return { ok: true };
+}
+
+const clubeBuscarEscalacao = (codigo) => escalacoes.get(timeDoCodigo(codigo)) ?? { time_id: timeDoCodigo(codigo) };
+function clubeSalvarEscalacao(codigo, escalacao) {
+  const timeId = timeDoCodigo(codigo);
+  escalacoes.set(timeId, { time_id: timeId, ...escalacao, atualizado_em: new Date().toISOString() });
+  return { ok: true };
+}
+
 export const dadosDemo = {
   salvarTime, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo,
   publicarPost, comentarPost, apagarPost, apagarPostDoTime, apagarComentario, gerarCodigo, validarCodigo,
+  clubeSalvarJogador, clubeApagarJogador, clubeSalvarTecnico, clubeBuscarEscalacao, clubeSalvarEscalacao,
   listarPosts: () => [...posts].sort((a, b) => b.criado_em.localeCompare(a.criado_em)).map(montarPost),
   listarCodigos: () => [...codigos].map(([time_id, codigo]) => ({ time_id, codigo })),
   buscarCampeonato: () => campeonato,

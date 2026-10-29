@@ -58,7 +58,9 @@ function telaLogin() {
       // O Supabase Auth exige e-mail: "admsr" vira "admsr@sanroquense.app" (a conta é criada com esse e-mail)
       const usuario = dados.get('email').trim().toLowerCase();
       await entrar(usuario.includes('@') ? usuario : `${usuario}@${DOMINIO_USUARIO}`, dados.get('senha'));
-      await iniciar();
+      // Entrou: abre o painel direto (sem reler a sessão, que logo após o login pode ainda não estar disponível)
+      mostrarCarregando(app);
+      await carregar();
     } catch (erro) {
       toast(`Não foi possível entrar: ${erro.message}`, true);
     }
@@ -366,7 +368,7 @@ function linhaGol(nomeLista, gol = {}) {
 function dialogoResultado(jogo, jogadores) {
   const lado = (time, adversario, rotulo) => ({ time, adversario, rotulo });
   const lados = [lado(jogo.mandante, jogo.visitante, 'mandante'), lado(jogo.visitante, jogo.mandante, 'visitante')];
-  const datalist = (timeId) => `<datalist id="dl-${timeId}">${jogadores.filter((j) => j.time_id === timeId)
+  const datalist = (timeId) => `<datalist id="dl-${timeId}">${jogadores.filter((j) => j.time_id === timeId && j.ativo !== false)
     .map((j) => `<option value="${escapar(j.nome)}">`).join('')}</datalist>`;
   const golsDoTime = (timeId) => (jogo.gols ?? []).filter((g) => g.time_id === timeId);
 

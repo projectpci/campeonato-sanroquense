@@ -350,3 +350,48 @@ a.time__nome { color: var(--cor-texto); }
 .header__sino svg { width: 22px; height: 22px; }
 .header__sino--ativo { color: var(--cor-primaria); border-color: var(--cor-borda-neon); }
 .header__sino--ativo::after { content: ''; position: absolute; top: 8px; right: 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--cor-primaria); border: 2px solid var(--cor-fundo); }
+
+/* ---------- Área do clube ---------- */
+.escolha-times { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--esp-2); }
+.escolha-time { display: flex; align-items: center; gap: var(--esp-2); padding: var(--esp-2); border: 1px solid var(--cor-borda); border-radius: var(--raio); cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: .9rem; }
+.escolha-time input { position: absolute; opacity: 0; pointer-events: none; }
+.escolha-time:has(input:checked) { border-color: var(--cor-primaria); background: var(--cor-fundo-3); box-shadow: var(--cor-brilho); }
+.escolha-time:has(input:focus-visible) { outline: 2px solid var(--cor-primaria); }
+.tabela tbody tr.linha--destaque { background: var(--cor-fundo-3); outline: 2px solid var(--cor-primaria); outline-offset: -2px; }
+.chips--quebra { flex-wrap: wrap; overflow: visible; }
+.form__linha { display: grid; grid-template-columns: 1fr 1fr; gap: var(--esp-3); }
+
+.avatar { width: 48px; height: 48px; flex: none; border-radius: 50%; object-fit: cover; border: 2px solid var(--cor-borda-neon); background: var(--cor-fundo-3); }
+.avatar--vazio { display: inline-grid; place-items: center; font-family: var(--fonte-destaque); color: var(--cor-primaria); }
+.avatar--grande { width: 120px; height: 120px; justify-self: center; }
+.elenco__item { display: flex; align-items: center; gap: var(--esp-3); padding: var(--esp-2) var(--esp-3); }
+.elenco__nome { flex: 1; display: grid; min-width: 0; }
+.elenco__nome strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lista-escolha { display: grid; gap: var(--esp-2); max-height: 55vh; overflow-y: auto; }
+.lista-escolha__item { display: flex; align-items: center; gap: var(--esp-3); padding: var(--esp-2); text-align: left; border: 1px solid var(--cor-borda); border-radius: var(--raio); background: var(--cor-fundo-2); color: var(--cor-texto); cursor: pointer; }
+.lista-escolha__item span { display: grid; }
+.lista-escolha__item--ativo { border-color: var(--cor-primaria); }
+
+/* Campo (vertical, ataque em cima) */
+.campo {
+  position: relative; width: 100%; aspect-ratio: 2 / 3; margin: var(--esp-3) 0; border-radius: var(--raio);
+  border: 2px solid var(--cor-linha-campo);
+  background: repeating-linear-gradient(180deg, var(--cor-gramado) 0 10%, var(--cor-gramado-2) 10% 20%);
+}
+.campo__linha--meio { position: absolute; left: 0; right: 0; top: 50%; border-top: 2px solid var(--cor-linha-campo); }
+.campo__circulo { position: absolute; left: 50%; top: 50%; width: 28%; aspect-ratio: 1; transform: translate(-50%, -50%); border: 2px solid var(--cor-linha-campo); border-radius: 50%; }
+.campo__area, .campo__pequena { position: absolute; left: 50%; transform: translateX(-50%); border: 2px solid var(--cor-linha-campo); }
+.campo__area { width: 56%; height: 15%; }
+.campo__pequena { width: 26%; height: 6%; }
+.campo__area--topo, .campo__pequena--topo { top: -2px; }
+.campo__area--base, .campo__pequena--base { bottom: -2px; }
+.campo__vaga {
+  position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 2px; width: 72px;
+  padding: 0; border: 0; background: none; color: var(--cor-texto); cursor: pointer; font: inherit;
+}
+.campo__foto { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid var(--cor-texto); background: var(--cor-fundo-2); display: inline-grid; place-items: center; font-family: var(--fonte-destaque); color: var(--cor-primaria); }
+.campo__foto--vazio { border-style: dashed; color: var(--cor-texto); background: var(--cor-vaga-vazia); font-size: 1.4rem; }
+.campo__nome { max-width: 72px; padding: 0 4px; border-radius: 4px; background: var(--cor-fundo); font-size: .72rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.campo__nome b { color: var(--cor-primaria); }
+.campo__vaga--vazia .campo__nome { background: none; color: var(--cor-texto-2); }

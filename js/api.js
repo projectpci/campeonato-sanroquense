@@ -244,3 +244,41 @@ export const inscreverPush = (inscricao, times) =>
 export const cancelarPush = (endpoint) =>
   demo ? Promise.resolve() :
   executar(cliente().rpc('cancelar_push', { p_endpoint: endpoint }));
+
+// ---------- Área do clube (acesso pelo código do time, sem login) ----------
+// As funções do banco devolvem { erro: 'codigo' } quando o código não vale mais (trocado pelo organizador)
+async function rpcClube(nome, parametros) {
+  const resposta = await executar(cliente().rpc(nome, parametros));
+  if (resposta?.erro === 'codigo') throw Object.assign(new Error('Código do time inválido. Peça o código novo ao organizador.'), { codigoInvalido: true });
+  return resposta;
+}
+
+export async function enviarFotoElenco(timeId, foto) {
+  if (demo) return URL.createObjectURL(foto);
+  const caminho = `fotos/${timeId}/${crypto.randomUUID()}.jpg`;
+  const { error } = await cliente().storage.from('elenco').upload(caminho, foto, { contentType: 'image/jpeg' });
+  if (error) throw new Error(error.message);
+  return cliente().storage.from('elenco').getPublicUrl(caminho).data.publicUrl;
+}
+
+export const clubeSalvarJogador = (codigo, j) =>
+  demo ? dadosDemo.clubeSalvarJogador(codigo, j) :
+  rpcClube('clube_salvar_jogador', {
+    p_codigo: codigo, p_id: j.id ?? null, p_nome: j.nome, p_numero: j.numero ?? null, p_posicao: j.posicao || null, p_foto_url: j.foto_url || null,
+  });
+
+export const clubeApagarJogador = (codigo, id) =>
+  demo ? dadosDemo.clubeApagarJogador(codigo, id) :
+  rpcClube('clube_apagar_jogador', { p_codigo: codigo, p_id: id });
+
+export const clubeSalvarTecnico = (codigo, nome, fotoUrl) =>
+  demo ? dadosDemo.clubeSalvarTecnico(codigo, nome, fotoUrl) :
+  rpcClube('clube_salvar_tecnico', { p_codigo: codigo, p_nome: nome, p_foto_url: fotoUrl || null });
+
+export const clubeBuscarEscalacao = (codigo) =>
+  demo ? dadosDemo.clubeBuscarEscalacao(codigo) :
+  rpcClube('clube_buscar_escalacao', { p_codigo: codigo });
+
+export const clubeSalvarEscalacao = (codigo, { formacao, titulares, reservas }) =>
+  demo ? dadosDemo.clubeSalvarEscalacao(codigo, { formacao, titulares, reservas }) :
+  rpcClube('clube_salvar_escalacao', { p_codigo: codigo, p_formacao: formacao, p_titulares: titulares, p_reservas: reservas });

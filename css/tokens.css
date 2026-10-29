@@ -17,6 +17,10 @@
   --cor-borda-neon:       #2BD94F;
 
   /* Texto */
+  --cor-gramado:          #0E5A2A;
+  --cor-gramado-2:        #0B4A22;
+  --cor-linha-campo:      rgba(255, 255, 255, .55);
+  --cor-vaga-vazia:       rgba(0, 0, 0, .25);
   --cor-texto:            #FFFFFF;
   --cor-texto-2:          #B9C7BC;
   --cor-texto-inverso:    #04140A;
