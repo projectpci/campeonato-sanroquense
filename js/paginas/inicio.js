@@ -101,7 +101,7 @@ function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }
       ${htmlArtilheiros(artilharia)}
       ${CANAL_WHATSAPP ? `<p class="centro"><a class="botao" href="${escapar(CANAL_WHATSAPP)}" target="_blank" rel="noopener">${icone('whatsapp')} Entrar no canal do WhatsApp</a></p>` : ''}
       <p class="rodape-frase">Juntos pelo futebol de nossa comunidade!</p>
-      <p class="centro texto-pequeno"><a class="texto-2" href="index.html">Trocar perfil</a></p>`;
+      <p class="centro texto-pequeno"><a class="texto-2" href="instalar.html">Instalar o app</a> · <a class="texto-2" href="index.html">Trocar perfil</a></p>`;
     botaoAvisos(document.getElementById('avisos-geral'));
 }
 

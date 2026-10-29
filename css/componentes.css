@@ -328,3 +328,16 @@ a.time__nome { color: var(--cor-texto); }
 .avisos { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-3); margin: var(--esp-3) 0; }
 .avisos .texto-2 { flex: 1 1 200px; }
 .avisos .botao { white-space: nowrap; }
+
+/* Tutorial de instalação */
+.passos { list-style: none; margin: var(--esp-4) 0; padding: 0; display: grid; gap: var(--esp-3); }
+.passo { display: grid; grid-template-columns: 32px 56px 1fr; align-items: center; gap: var(--esp-3); padding: var(--esp-3); border: 1px solid var(--cor-borda); border-radius: var(--raio); background: var(--cor-fundo-2); }
+.passo__numero { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--cor-primaria); color: var(--cor-texto-inverso); font-family: var(--fonte-destaque); }
+.passo__figura { display: grid; place-items: center; width: 56px; height: 56px; border-radius: var(--raio); border: 1px solid var(--cor-borda); color: var(--cor-primaria); }
+.passo__figura svg { width: 30px; height: 30px; }
+.passo strong { font-size: 1.1rem; }
+.passo b { color: var(--cor-primaria); }
+.passo p { margin: var(--esp-1) 0 0; }
+.ajuda { margin: var(--esp-4) 0; padding: var(--esp-3); border: 1px solid var(--cor-borda); border-radius: var(--raio); }
+.ajuda summary { cursor: pointer; font-weight: 700; }
+.ajuda ul { margin: var(--esp-2) 0 0; padding-left: var(--esp-4); color: var(--cor-texto-2); }
