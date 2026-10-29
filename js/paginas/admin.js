@@ -3,7 +3,8 @@ import {
   buscarSessao, entrar, sair, listarTimes, listarRodadas, listarJogos, listarJogadores,
   salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo,
 } from '../api.js';
-import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, toast, formatarData } from '../ui.js';
+import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
+import { cartaoJogo } from '../cartaoJogo.js';
 
 const app = document.getElementById('app');
 const estado = { aba: 'confrontos', rodadaId: null };
@@ -74,7 +75,7 @@ async function iniciar() {
 
 async function carregar() {
   try {
-    const [times, rodadas, jogos, jogadores, codigos] = await Promise.all([listarTimes(), listarRodadas(), listarJogos(), listarJogadores(), listarCodigos()]);
+    const [times, rodadas, jogos, jogadores, codigos] = await Promise.all([listarTimes(), listarRodadas(), listarJogos(), listarJogadores(), estado.aba === 'times' ? listarCodigos() : []]);
     const abas = [['confrontos', 'Confrontos e resultados'], ['times', 'Times']];
     app.innerHTML = `
       <div class="admin__topo">
@@ -82,14 +83,12 @@ async function carregar() {
         <div class="form__acoes">
           <a class="botao botao--secundario" href="mural.html">Mural</a>
           <button class="botao botao--secundario" id="btn-csv">Exportar CSV</button>
-          <button class="botao botao--secundario" id="btn-sair">Sair</button>
         </div>
       </div>
       <div class="chips" role="tablist">${abas.map(([id, rotulo]) =>
         `<button class="chip${estado.aba === id ? ' chip--ativo' : ''}" data-aba="${id}">${rotulo}</button>`).join('')}</div>
       <div id="aba"></div>`;
     app.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { estado.aba = b.dataset.aba; carregar(); }));
-    document.getElementById('btn-sair').addEventListener('click', sairDoPainel);
     document.getElementById('btn-csv').addEventListener('click', () => exportarCsv(jogos, rodadas));
     const aba = document.getElementById('aba');
     if (estado.aba === 'times') abaTimes(aba, times, codigos);
@@ -210,29 +209,56 @@ function abaConfrontos(aba, { times, rodadas, jogos, jogadores }) {
   document.getElementById('nova-rodada').addEventListener('click', () => dialogoRodada(rodadas));
   document.getElementById('editar-rodada')?.addEventListener('click', () => dialogoRodada(rodadas, rodada));
   document.getElementById('novo-confronto')?.addEventListener('click', () => dialogoConfronto(rodada, times, dosJogos));
-  aba.querySelectorAll('[data-editar-jogo]').forEach((b) =>
-    b.addEventListener('click', () => dialogoConfronto(rodada, times, dosJogos, dosJogos.find((j) => j.id === Number(b.dataset.editarJogo)))));
-  aba.querySelectorAll('[data-resultado]').forEach((b) =>
-    b.addEventListener('click', () => dialogoResultado(jogos.find((j) => j.id === Number(b.dataset.resultado)), jogadores)));
-  aba.querySelectorAll('[data-iniciar]').forEach((b) => b.addEventListener('click', () =>
-    executar(() => atualizarPlacarAoVivo(Number(b.dataset.iniciar), 0, 0), 'Jogo iniciado — placar ao vivo ligado')));
+  aba.querySelectorAll('[data-menu]').forEach((b) => b.addEventListener('click', () =>
+    menuDoJogo(jogos.find((j) => j.id === Number(b.dataset.menu)), { rodada, times, dosJogos, jogadores })));
+  // +/− do placar ao vivo: atualiza a tela na hora e grava em segundo plano (volta ao banco se falhar)
   aba.querySelectorAll('[data-gol]').forEach((b) => b.addEventListener('click', () => {
     const [id, lado, delta] = b.dataset.gol.split(':');
     const jogo = jogos.find((j) => j.id === Number(id));
-    const gm = Math.max(0, (jogo.gols_mandante ?? 0) + (lado === 'm' ? Number(delta) : 0));
-    const gv = Math.max(0, (jogo.gols_visitante ?? 0) + (lado === 'v' ? Number(delta) : 0));
-    executar(() => atualizarPlacarAoVivo(jogo.id, gm, gv));
+    jogo.gols_mandante = Math.max(0, (jogo.gols_mandante ?? 0) + (lado === 'm' ? Number(delta) : 0));
+    jogo.gols_visitante = Math.max(0, (jogo.gols_visitante ?? 0) + (lado === 'v' ? Number(delta) : 0));
+    abaConfrontos(aba, { times, rodadas, jogos, jogadores });
+    Promise.resolve().then(() => atualizarPlacarAoVivo(jogo.id, jogo.gols_mandante, jogo.gols_visitante))
+      .catch((erro) => { toast(erro.message, true); carregar(); });
   }));
-  aba.querySelectorAll('[data-cancelar-vivo]').forEach((b) => b.addEventListener('click', () => {
-    if (confirm('Cancelar o jogo ao vivo? O placar parcial será apagado e o jogo volta para agendado.')) {
-      executar(() => reabrirJogo(Number(b.dataset.cancelarVivo)), 'Jogo voltou para agendado');
-    }
-  }));
-  aba.querySelectorAll('[data-excluir]').forEach((b) => b.addEventListener('click', () => {
-    const jogo = jogos.find((j) => j.id === Number(b.dataset.excluir));
+}
+
+// Engrenagem do card: todas as ações do jogo numa lista grande, fácil de tocar no celular
+function menuDoJogo(jogo, { rodada, times, dosJogos, jogadores }) {
+  const itens = [];
+  if (jogo.status === 'agendado') {
+    itens.push(['Lançar resultado', () => dialogoResultado(jogo, jogadores)]);
+    itens.push(['Iniciar ao vivo', () => executar(() => atualizarPlacarAoVivo(jogo.id, 0, 0), 'Jogo iniciado — placar ao vivo ligado')]);
+  } else if (jogo.status === 'ao_vivo') {
+    itens.push(['Encerrar jogo', () => dialogoResultado(jogo, jogadores)]);
+    itens.push(['Cancelar ao vivo', () => {
+      if (confirm('Cancelar o jogo ao vivo? O placar parcial será apagado e o jogo volta para agendado.')) {
+        executar(() => reabrirJogo(jogo.id), 'Jogo voltou para agendado');
+      }
+    }]);
+  } else {
+    itens.push(['Corrigir resultado', () => dialogoResultado(jogo, jogadores)]);
+  }
+  itens.push(['Editar confronto', () => dialogoConfronto(rodada, times, dosJogos, jogo)]);
+  itens.push(['Excluir', () => {
     const aviso = jogo.status === 'encerrado' ? 'Este jogo já foi encerrado e a classificação será recalculada. Excluir?' : 'Excluir este confronto?';
     if (confirm(aviso)) executar(() => excluirJogo(jogo.id), 'Confronto excluído');
-  }));
+  }, true]);
+
+  const d = abrirDialogo(`
+    <div class="form menu-jogo">
+      <h2>${escapar(jogo.mandante.nome)} × ${escapar(jogo.visitante.nome)}</h2>
+      ${itens.map(([rotulo, , perigo], i) =>
+        `<button class="botao ${perigo ? 'botao--perigo' : 'botao--secundario'}" data-i="${i}">${rotulo}</button>`).join('')}
+      <button class="link-botao" data-fechar>Fechar</button>
+    </div>`);
+  d.addEventListener('click', (e) => {
+    if (e.target === d || e.target.closest('[data-fechar]')) return d.close();
+    const botao = e.target.closest('[data-i]');
+    if (!botao) return;
+    d.close();
+    itens[Number(botao.dataset.i)][1]();
+  });
 }
 
 // Backup: baixa todos os jogos (com autores dos gols) em CSV, abre direto no Excel
@@ -250,31 +276,16 @@ function exportarCsv(jogos, rodadas) {
 }
 
 function cartaoAdmin(j) {
-  const encerrado = j.status === 'encerrado';
-  const aoVivo = j.status === 'ao_vivo';
-  const placar = encerrado || aoVivo ? `${j.gols_mandante} × ${j.gols_visitante}` : '×';
   // Placar ao vivo: +/− por time (atualiza para a torcida em tempo real)
   const controle = (lado, nome) => `
     <div class="aovivo__time"><span class="texto-2 texto-pequeno">${escapar(nome)}</span>
       <button class="botao botao--secundario" data-gol="${j.id}:${lado}:-1" aria-label="Tirar gol de ${escapar(nome)}">−</button>
       <button class="botao" data-gol="${j.id}:${lado}:1" aria-label="Gol de ${escapar(nome)}">+ Gol</button></div>`;
-  return `
-    <article class="card jogo">
-      <div class="jogo__confronto">
-        <div class="jogo__time">${escudo(j.mandante, 48)}<span>${escapar(j.mandante.nome)}</span></div>
-        <div class="jogo__centro"><strong class="jogo__placar">${placar}</strong></div>
-        <div class="jogo__time">${escudo(j.visitante, 48)}<span>${escapar(j.visitante.nome)}</span></div>
-      </div>
-      ${aoVivo ? `<div class="aovivo"><span class="selo selo--aovivo">Ao vivo</span>
-        <div class="aovivo__controles">${controle('m', j.mandante.nome)}${controle('v', j.visitante.nome)}</div></div>` : ''}
-      <div class="form__acoes">
-        <button class="botao botao--perigo" data-excluir="${j.id}">Excluir</button>
-        <button class="botao botao--secundario" data-editar-jogo="${j.id}">Editar</button>
-        ${aoVivo ? `<button class="botao botao--secundario" data-cancelar-vivo="${j.id}">Cancelar ao vivo</button>` : ''}
-        ${j.status === 'agendado' ? `<button class="botao botao--secundario" data-iniciar="${j.id}">Iniciar ao vivo</button>` : ''}
-        <button class="botao" data-resultado="${j.id}">${encerrado ? 'Corrigir resultado' : aoVivo ? 'Encerrar jogo' : 'Lançar resultado'}</button>
-      </div>
-    </article>`;
+  return cartaoJogo(j, {
+    acao: `<button class="engrenagem" data-menu="${j.id}" aria-label="Ações do jogo" title="Ações do jogo">${icone('engrenagem')}</button>`,
+    rodape: j.status === 'ao_vivo'
+      ? `<div class="aovivo"><div class="aovivo__controles">${controle('m', j.mandante.nome)}${controle('v', j.visitante.nome)}</div></div>` : '',
+  });
 }
 
 function dialogoRodada(rodadas, rodada = {}) {

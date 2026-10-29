@@ -233,3 +233,14 @@ export async function gerarCodigo(timeId) {
   await executar(cliente().from('codigos_times').upsert({ time_id: timeId, codigo }));
   return codigo;
 }
+
+// ---------- Avisos (Web Push) ----------
+export const inscreverPush = (inscricao, times) =>
+  demo ? Promise.resolve() :
+  executar(cliente().rpc('inscrever_push', {
+    p_endpoint: inscricao.endpoint, p_p256dh: inscricao.keys.p256dh, p_auth: inscricao.keys.auth, p_times: times,
+  }));
+
+export const cancelarPush = (endpoint) =>
+  demo ? Promise.resolve() :
+  executar(cliente().rpc('cancelar_push', { p_endpoint: endpoint }));

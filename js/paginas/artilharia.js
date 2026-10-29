@@ -1,6 +1,7 @@
 import { buscarArtilharia, buscarCampeonato, listarTimes } from '../api.js';
 import { posicoesComEmpate } from '../classificacao.js';
 import { assinarMudancas } from '../realtime.js';
+import { carregarComCache } from '../cache.js';
 import { compartilharImagem } from '../compartilhar.js';
 import { arteArtilharia, inserirArte } from '../artes.js';
 import { botaoCompartilhar, montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone } from '../ui.js';
@@ -23,13 +24,16 @@ function linhaArtilheiro(a) {
     </li>`;
 }
 
-async function carregar() {
-  try {
-    const [artilheiros, times] = await Promise.all([buscarArtilharia(timeFiltro || undefined), listarTimes()]);
+const buscar = async () => {
+  const [artilheiros, times, campeonato] = await Promise.all([buscarArtilharia(timeFiltro || undefined), listarTimes(), buscarCampeonato()]);
+  return { artilheiros, times, campeonato };
+};
+
+function desenhar({ artilheiros, times, campeonato }) {
     const opcoes = times.map((t) => `<option value="${t.id}"${String(t.id) === timeFiltro ? ' selected' : ''}>${escapar(t.nome)}</option>`).join('');
     // A view já ordena por gols; empates dividem a posição (dentro do filtro atual)
     const lista = posicoesComEmpate(artilheiros.map((a) => ({ ...a, gols: Number(a.gols) })));
-    dados = { campeonato: await buscarCampeonato(), lista };
+    dados = { campeonato, lista };
     app.innerHTML = `
       <label class="filtro"><span class="sr-only">Filtrar por time</span>
         <select id="filtro-time"><option value="">Todos os times</option>${opcoes}</select></label>
@@ -41,6 +45,11 @@ async function carregar() {
       timeFiltro = e.target.value;
       carregar();
     });
+}
+
+async function carregar() {
+  try {
+    await carregarComCache(`artilharia_${timeFiltro || 'todos'}`, buscar, desenhar);
   } catch (erro) {
     mostrarAviso(app, `Não foi possível carregar a artilharia: ${erro.message}`);
   }

@@ -1,10 +1,10 @@
 // Service worker: abre rápido e mostra a última tabela conhecida quando o celular está sem sinal.
 // Suba VERSAO a cada deploy para limpar o cache antigo.
-const VERSAO = 'v2';
+const VERSAO = 'v4';
 const CACHE = `sanroquense-${VERSAO}`;
 
 const NUCLEO = [
-  './', 'index.html', 'inicio.html', 'confrontos.html', 'classificacao.html', 'artilharia.html', 'admin.html',
+  './', 'index.html', 'inicio.html', 'confrontos.html', 'classificacao.html', 'artilharia.html', 'admin.html', 'time.html',
   'css/tokens.css', 'css/base.css', 'css/componentes.css', 'css/compartilhar.css',
   'mural.html', 'assets/escudo-padrao.svg', 'manifest.webmanifest',
 ];
@@ -60,3 +60,22 @@ async function cachePrimeiro(request) {
     .catch(() => guardada);
   return guardada ?? atualizar;
 }
+
+// Avisos (Web Push): mostra a notificação e, ao tocar, abre o app
+self.addEventListener('push', (evento) => {
+  let d = {};
+  try { d = evento.data.json(); } catch { /* sem conteúdo */ }
+  evento.waitUntil(self.registration.showNotification(d.titulo || 'Campeonato Sanroquense', {
+    body: d.corpo || '', icon: 'assets/icones/icone-192.png', badge: 'assets/icones/icone-192.png',
+    tag: d.tag, renotify: true, data: { url: d.url || 'inicio.html' },
+  }));
+});
+
+self.addEventListener('notificationclick', (evento) => {
+  evento.notification.close();
+  const alvo = new URL(evento.notification.data?.url || 'inicio.html', self.registration.scope).href;
+  evento.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((janelas) => {
+    const aberta = janelas.find((j) => j.url.startsWith(self.registration.scope));
+    return aberta ? aberta.focus().then((j) => j.navigate(alvo)) : self.clients.openWindow(alvo);
+  }));
+});

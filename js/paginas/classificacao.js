@@ -1,6 +1,7 @@
 import { buscarCampeonato, buscarClassificacao, listarJogosEncerrados } from '../api.js';
 import { ordenarClassificacao } from '../classificacao.js';
 import { assinarMudancas } from '../realtime.js';
+import { carregarComCache } from '../cache.js';
 import { compartilharImagem } from '../compartilhar.js';
 import { arteClassificacao, inserirArte } from '../artes.js';
 import { botaoCompartilhar, montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone } from '../ui.js';
@@ -19,7 +20,7 @@ function htmlTabela(linhas) {
   const corpo = linhas.map((t) => `
     <tr>
       ${celulaPosicao(t.posicao)}
-      <td class="time"><span class="time__nome">${escudo(t, 32)} ${escapar(t.nome)}</span></td>
+      <td class="time"><a class="time__nome" href="time.html?id=${t.time_id}">${escudo(t, 32)} ${escapar(t.nome)}</a></td>
       <td class="pts">${t.pts}</td>
       <td>${t.j}</td><td>${t.v}</td><td>${t.e}</td><td>${t.d}</td>
       <td class="col-extra">${t.gp}</td><td class="col-extra">${t.gc}</td>
@@ -40,9 +41,12 @@ function htmlTabela(linhas) {
 const app = document.getElementById('app');
 let dados = null;
 
-async function carregar() {
-  try {
-    const [campeonato, linhas, jogos] = await Promise.all([buscarCampeonato(), buscarClassificacao(), listarJogosEncerrados()]);
+const buscar = async () => {
+  const [campeonato, linhas, jogos] = await Promise.all([buscarCampeonato(), buscarClassificacao(), listarJogosEncerrados()]);
+  return { campeonato, linhas, jogos };
+};
+
+function desenhar({ campeonato, linhas, jogos }) {
     const ordenadas = ordenarClassificacao(linhas, jogos);
     dados = { campeonato, ordenadas };
     const ultima = jogos.map((j) => j.atualizado_em).filter(Boolean).sort().pop();
@@ -53,6 +57,11 @@ async function carregar() {
       ${htmlTabela(ordenadas)}
       <p class="texto-2 texto-pequeno">${atualizado}</p>
       <p class="texto-2 texto-pequeno">J = Jogos · V = Vitórias · E = Empates · D = Derrotas · GP = Gols pró · GC = Gols contra · SG = Saldo de gols · PTS = Pontos</p>`;
+}
+
+async function carregar() {
+  try {
+    await carregarComCache('classificacao', buscar, desenhar);
   } catch (erro) {
     mostrarAviso(app, `Não foi possível carregar a classificação: ${erro.message}`);
   }

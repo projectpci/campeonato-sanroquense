@@ -79,3 +79,5 @@
 4. `Execute a Fase 4: arte da classificação idêntica ao banner em assets/banner-referencia.png.`
 
 - [x] Calendario oficial carregado no Supabase (10 rodadas, 45 jogos, 13/09/2026 a 14/02/2027; Jogo 1 13h30, Jogo 2 15h40; rodada = jogos ate um time repetir)
+
+- [x] Fase 8: cache da última visita, destaque do início (jogos de hoje/próximo dia), página do time (time.html), avisos Web Push (Edge Function avisar-push), engrenagem de ações no painel — ver docs/10-avisos-e-time.md

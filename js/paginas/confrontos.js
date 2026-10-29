@@ -1,6 +1,7 @@
 import { buscarCampeonato, listarRodadas, listarJogos } from '../api.js';
 import { assinarMudancas } from '../realtime.js';
 import { cartaoJogo } from '../cartaoJogo.js';
+import { carregarComCache } from '../cache.js';
 import { compartilharImagem } from '../compartilhar.js';
 import { arteRodada, inserirArte } from '../artes.js';
 import { botaoCompartilhar, montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, formatarData } from '../ui.js';
@@ -41,11 +42,17 @@ function renderizar(rodadas, jogos) {
   app.querySelector('.chip--ativo')?.scrollIntoView({ inline: 'center', block: 'nearest' });
 }
 
+const buscar = async () => {
+  const [campeonato, rodadas, jogos] = await Promise.all([buscarCampeonato(), listarRodadas(), listarJogos()]);
+  return { campeonato, rodadas, jogos };
+};
+
 async function carregar() {
   try {
-    const [campeonato, rodadas, jogos] = await Promise.all([buscarCampeonato(), listarRodadas(), listarJogos()]);
-    dados = { campeonato };
-    renderizar(rodadas, jogos);
+    await carregarComCache('confrontos', buscar, ({ campeonato, rodadas, jogos }) => {
+      dados = { campeonato };
+      renderizar(rodadas, jogos);
+    });
   } catch (erro) {
     mostrarAviso(app, `Não foi possível carregar os confrontos: ${erro.message}`);
   }

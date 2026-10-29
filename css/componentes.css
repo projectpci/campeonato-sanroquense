@@ -293,3 +293,38 @@ body.entrada-corpo { padding: 0; }
 .post__previa { max-height: 220px; width: 100%; object-fit: contain; border-radius: var(--raio); background: var(--cor-fundo); }
 .admin__codigo { margin-top: var(--esp-1); font-size: .9rem; color: var(--cor-texto-2); }
 .admin__codigo code { color: var(--cor-primaria); font-weight: 800; letter-spacing: .05em; }
+
+/* Engrenagem discreta do card (só no painel do organizador) e menu de ações do jogo */
+.jogo__topo-dir { display: flex; align-items: center; gap: var(--esp-2); }
+.engrenagem { display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--cor-texto-2); cursor: pointer; }
+.engrenagem svg { width: 20px; height: 20px; }
+.engrenagem:hover, .engrenagem:focus-visible { color: var(--cor-primaria); background: var(--cor-borda); }
+.menu-jogo { min-width: min(320px, 80vw); }
+.menu-jogo h2 { text-align: center; }
+.menu-jogo .botao { width: 100%; min-height: 48px; }
+.menu-jogo .link-botao { justify-self: center; padding: var(--esp-2); }
+
+/* Topo do painel mais enxuto no celular */
+.admin__topo { gap: var(--esp-2); }
+.admin__topo .botao { min-height: 40px; padding: 0 var(--esp-3); font-size: .95rem; }
+.admin__topo .form__acoes { margin-top: 0; flex-wrap: nowrap; }
+
+/* Página do time, destaque do início e avisos */
+.escudo--96 { width: 96px; height: 96px; }
+a.time__nome { color: var(--cor-texto); }
+.secao--destaque { border-left: 3px solid var(--cor-primaria); padding-left: var(--esp-3); }
+.time-topo { display: flex; align-items: center; gap: var(--esp-4); }
+.time-topo h2 { margin: 0; text-transform: uppercase; }
+.time-topo p { margin: var(--esp-1) 0 0; }
+.forma { display: flex; gap: var(--esp-1); margin-top: var(--esp-2); }
+.forma__item { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-family: var(--fonte-destaque); font-size: .8rem; color: var(--cor-texto-inverso); }
+.forma__item--v { background: var(--cor-positivo); }
+.forma__item--e { background: var(--cor-neutro); }
+.forma__item--d { background: var(--cor-negativo); }
+.estatisticas { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--esp-2); margin: var(--esp-3) 0; }
+.estatisticas__item { display: grid; place-items: center; padding: var(--esp-2); border: 1px solid var(--cor-borda); border-radius: var(--raio); }
+.estatisticas__item strong { font-family: var(--fonte-destaque); font-size: 1.3rem; }
+.estatisticas__item small { color: var(--cor-texto-2); text-transform: uppercase; }
+.avisos { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-3); margin: var(--esp-3) 0; }
+.avisos .texto-2 { flex: 1 1 200px; }
+.avisos .botao { white-space: nowrap; }

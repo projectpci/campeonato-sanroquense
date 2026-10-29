@@ -12,7 +12,8 @@ function listaGols(jogo, timeId) {
     .join('');
 }
 
-export function cartaoJogo(jogo) {
+// `extras` (só no painel do organizador): { acao } vai ao lado do selo de status, { rodape } vai no fim do card.
+export function cartaoJogo(jogo, extras = {}) {
   const encerrado = jogo.status === 'encerrado';
   const aoVivo = jogo.status === 'ao_vivo';
   const centro = encerrado || aoVivo
@@ -25,7 +26,10 @@ export function cartaoJogo(jogo) {
     <article class="card jogo">
       <header class="jogo__topo">
         <span class="texto-2 texto-pequeno">${escapar(data)}</span>
-        <span class="selo${encerrado ? ' selo--encerrado' : aoVivo ? ' selo--aovivo' : ''}">${rotuloStatus}</span>
+        <span class="jogo__topo-dir">
+          <span class="selo${encerrado ? ' selo--encerrado' : aoVivo ? ' selo--aovivo' : ''}">${rotuloStatus}</span>
+          ${extras.acao ?? ''}
+        </span>
       </header>
       <div class="jogo__confronto">
         <div class="jogo__time">${escudo(jogo.mandante, 48)}<span>${escapar(jogo.mandante.nome)}</span></div>
@@ -37,5 +41,6 @@ export function cartaoJogo(jogo) {
         <ul>${listaGols(jogo, jogo.mandante_id)}</ul>
         <ul>${listaGols(jogo, jogo.visitante_id)}</ul>
       </div>` : ''}
+      ${extras.rodape ?? ''}
     </article>`;
 }
