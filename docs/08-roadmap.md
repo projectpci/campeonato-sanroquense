@@ -83,3 +83,4 @@
 - [x] Fase 8: cache da última visita, destaque do início (jogos de hoje/próximo dia), página do time (time.html), avisos Web Push (Edge Function avisar-push), engrenagem de ações no painel — ver docs/10-avisos-e-time.md
 
 - [x] Fase 9: área do clube (clube.html) com calendário, resultados, tabela, artilharia, mural, elenco com foto e escalação compartilhável; freio contra códigos errados; painel abre direto após o login; app recarrega sozinho quando sai versão nova — ver docs/11-area-do-clube.md
+- [x] Correções urgentes: códigos fortes, freio no mural, limite de escudos, prévia og:image, autor do gol ligado ao elenco

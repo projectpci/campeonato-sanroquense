@@ -362,14 +362,19 @@ function linhaGol(nomeLista, gol = {}) {
       <input class="gol-qtd" type="number" min="1" value="${gol.quantidade ?? 1}" aria-label="Quantidade de gols">
       <label class="gol-contra"><input type="checkbox" ${gol.contra ? 'checked' : ''}> contra</label>
       <button type="button" class="botao botao--secundario gol-remover" aria-label="Remover autor">✕</button>
+      <small class="gol-aviso oculto"></small>
     </div>`;
 }
+
+// "Dudú", "dudu " e "DUDU" são o mesmo jogador
+const normalizarNome = (nome) => String(nome ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
 
 function dialogoResultado(jogo, jogadores) {
   const lado = (time, adversario, rotulo) => ({ time, adversario, rotulo });
   const lados = [lado(jogo.mandante, jogo.visitante, 'mandante'), lado(jogo.visitante, jogo.mandante, 'visitante')];
-  const datalist = (timeId) => `<datalist id="dl-${timeId}">${jogadores.filter((j) => j.time_id === timeId && j.ativo !== false)
-    .map((j) => `<option value="${escapar(j.nome)}">`).join('')}</datalist>`;
+  const elencoDe = (timeId) => jogadores.filter((j) => j.time_id === timeId && j.ativo !== false);
+  const datalist = (timeId) => `<datalist id="dl-${timeId}">${elencoDe(timeId)
+    .map((j) => `<option value="${escapar(j.nome)}"${j.numero != null ? ` label="${j.numero}"` : ''}>`).join('')}</datalist>`;
   const golsDoTime = (timeId) => (jogo.gols ?? []).filter((g) => g.time_id === timeId);
 
   const d = abrirDialogo(`
@@ -429,11 +434,25 @@ function dialogoResultado(jogo, jogadores) {
   };
 
   // Em gol contra o autor é do adversário: troca a lista de sugestões da linha
+  const timeDoAutor = (linha, timeId) => (linha.querySelector('.gol-contra input').checked
+    ? (timeId === jogo.mandante_id ? jogo.visitante_id : jogo.mandante_id) : timeId);
   const ajustarLista = (linha, timeId) => {
-    const contra = linha.querySelector('.gol-contra input').checked;
-    const alvo = contra ? (timeId === jogo.mandante_id ? jogo.visitante_id : jogo.mandante_id) : timeId;
-    linha.querySelector('.gol-nome').setAttribute('list', `dl-${alvo}`);
+    linha.querySelector('.gol-nome').setAttribute('list', `dl-${timeDoAutor(linha, timeId)}`);
   };
+
+  // Nome igual ao do elenco (sem acento/maiúscula) vira o nome cadastrado; nome fora do elenco ganha um aviso
+  const conferirElenco = (linha, timeId, corrigir = false) => {
+    const campo = linha.querySelector('.gol-nome');
+    const aviso = linha.querySelector('.gol-aviso');
+    const elenco = elencoDe(timeDoAutor(linha, timeId));
+    const achado = elenco.find((j) => normalizarNome(j.nome) === normalizarNome(campo.value));
+    if (corrigir && achado && campo.value !== achado.nome) campo.value = achado.nome;
+    const fora = elenco.length > 0 && campo.value.trim() && !achado;
+    aviso.textContent = fora ? 'Fora do elenco do clube: será cadastrado como jogador novo. Confira a grafia.' : '';
+    aviso.classList.toggle('oculto', !fora);
+  };
+  const conferirTodos = (corrigir) => d.querySelectorAll('.gols-time').forEach((bloco) =>
+    bloco.querySelectorAll('.gol-linha').forEach((l) => conferirElenco(l, Number(bloco.dataset.time), corrigir)));
 
   const coletar = () => [...d.querySelectorAll('.gols-time:not(.oculto)')].flatMap((bloco) =>
     [...bloco.querySelectorAll('.gol-linha')].map((linha) => ({
@@ -461,7 +480,17 @@ function dialogoResultado(jogo, jogadores) {
     d.querySelector('#salvar-resultado').disabled = !valido;
   };
 
-  d.addEventListener('input', (e) => { if (e.target.closest('.gol-contra')) ajustarLista(e.target.closest('.gol-linha'), Number(e.target.closest('.gols-time').dataset.time)); validar(); });
+  d.addEventListener('input', (e) => {
+    const linha = e.target.closest('.gol-linha');
+    if (linha) {
+      const timeId = Number(e.target.closest('.gols-time').dataset.time);
+      if (e.target.closest('.gol-contra')) ajustarLista(linha, timeId);
+      conferirElenco(linha, timeId);
+    }
+    validar();
+  });
+  // ao sair do campo (ou escolher da lista), padroniza a grafia do nome
+  d.addEventListener('change', (e) => { if (e.target.matches('.gol-nome')) { conferirTodos(true); validar(); } });
   d.addEventListener('click', (e) => {
     const add = e.target.closest('[data-add]');
     if (add) {
@@ -471,6 +500,7 @@ function dialogoResultado(jogo, jogadores) {
     if (e.target.closest('.gol-remover')) { e.target.closest('.gol-linha').remove(); validar(); }
   });
   d.querySelectorAll('.gols-time').forEach((bloco) => bloco.querySelectorAll('.gol-linha').forEach((l) => ajustarLista(l, Number(bloco.dataset.time))));
+  conferirTodos(false);
   d.querySelector('[data-fechar]').addEventListener('click', () => d.close());
   d.querySelector('#reabrir')?.addEventListener('click', () => {
     if (confirm('Reabrir o jogo apaga o placar e os gols lançados. Continuar?')) executar(async () => { await reabrirJogo(jogo.id); d.close(); }, 'Jogo reaberto');
@@ -482,6 +512,7 @@ function dialogoResultado(jogo, jogadores) {
     if (!naEtapaGols()) {
       if (gm + gv > 0) { abrirGols(); return; } // 0×0 não tem autores: salva direto
     } else if (d.querySelector('#salvar-resultado').disabled) return;
+    conferirTodos(true);
     executar(async () => { await salvarResultado(jogo.id, gm, gv, coletar()); d.close(); }, 'Resultado salvo ✔');
   });
   validar();

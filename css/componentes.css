@@ -396,3 +396,4 @@ a.time__nome { color: var(--cor-texto); }
 .campo__nome b { color: var(--cor-primaria); }
 .campo__vaga--vazia .campo__nome { background: none; color: var(--cor-texto-2); }
 .entrada__organizador { color: var(--cor-texto-2); text-decoration: underline; }
+.gol-aviso { grid-column: 1 / -1; color: var(--cor-ouro); }

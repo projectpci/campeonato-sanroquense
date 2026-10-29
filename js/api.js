@@ -193,9 +193,11 @@ export async function publicarPost({ codigo, descricao, foto, jogoId }) {
   if (demo) return dadosDemo.publicarPost({ codigo, descricao, foto, jogoId });
   const caminho = await enviarFotoMural(foto);
   if (codigo) {
-    return executar(cliente().rpc('publicar_post', {
+    const resposta = await executar(cliente().rpc('publicar_post', {
       p_codigo: codigo, p_descricao: descricao ?? '', p_foto_path: caminho, p_jogo_id: jogoId ?? null,
     }));
+    if (resposta?.erro === 'codigo') throw new Error('Código do time inválido. Peça o código ao organizador.');
+    return resposta;
   }
   return gravar('posts', { campeonato_id: CAMPEONATO_ID, autor: 'Organização', descricao: descricao || null, foto_path: caminho, jogo_id: jogoId ?? null });
 }
@@ -204,9 +206,12 @@ export const comentarPost = (postId, nome, texto) =>
   demo ? dadosDemo.comentarPost(postId, nome, texto) :
   executar(cliente().rpc('comentar_post', { p_post_id: postId, p_nome: nome, p_texto: texto }));
 
-export const apagarPostDoTime = (codigo, postId) =>
-  demo ? dadosDemo.apagarPostDoTime(codigo, postId) :
-  executar(cliente().rpc('apagar_post_time', { p_codigo: codigo, p_post_id: postId }));
+export async function apagarPostDoTime(codigo, postId) {
+  if (demo) return dadosDemo.apagarPostDoTime(codigo, postId);
+  const resposta = await executar(cliente().rpc('apagar_post_time', { p_codigo: codigo, p_post_id: postId }));
+  if (resposta?.erro === 'codigo') throw new Error('Código do time inválido. Peça o código ao organizador.');
+  return resposta;
+}
 
 // Moderação do organizador
 export async function apagarPost(post) {

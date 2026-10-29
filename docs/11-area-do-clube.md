@@ -26,3 +26,10 @@ Calendário · Resultados · Tabela (linha do clube destacada) · Artilharia do 
 
 ## Trocar o código de um clube
 Organizador → Times → "gerar novo". O código antigo para de funcionar na hora (no clube e no mural).
+
+## Correções de segurança e qualidade (migração `mural_com_freio_de_codigo`)
+- Códigos de todos os times trocados por códigos fortes (6 caracteres, sem 0/O, 1/I/L). Os antigos deixaram de valer.
+- `publicar_post` e `apagar_post_time` passam pelo mesmo freio (`codigo_do_time`) e devolvem `{ "erro": "codigo" }`.
+- Bucket `escudos`: só PNG/JPEG/WebP até 500 KB.
+- Prévia dos links no WhatsApp: `assets/compartilhar.jpg` (1200×630) em `og:image` de todas as páginas.
+- Lançar resultado: o nome do autor é padronizado pelo elenco do clube ("dudú" vira "Dudu"); nome fora do elenco mostra aviso.
