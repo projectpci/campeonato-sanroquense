@@ -1,4 +1,4 @@
-import { buscarArtilharia, buscarCampeonato, listarTimes } from '../api.js';
+import { buscarArtilharia, buscarCampeonato, listarTimes, listarJogos } from '../api.js';
 import { posicoesComEmpate } from '../classificacao.js';
 import { assinarMudancas } from '../realtime.js';
 import { carregarComCache } from '../cache.js';
@@ -24,12 +24,19 @@ function linhaArtilheiro(a) {
     </li>`;
 }
 
+// Jogos encerrados cujos gols não têm autor lançado (ex.: rodadas jogadas antes do app)
+function jogosSemAutor(jogos) {
+  const filtro = Number(timeFiltro) || null;
+  return jogos.filter((j) => j.status === 'encerrado' && (!filtro || j.mandante_id === filtro || j.visitante_id === filtro)
+    && (j.gols ?? []).reduce((s, g) => s + g.quantidade, 0) < (j.gols_mandante ?? 0) + (j.gols_visitante ?? 0)).length;
+}
+
 const buscar = async () => {
-  const [artilheiros, times, campeonato] = await Promise.all([buscarArtilharia(timeFiltro || undefined), listarTimes(), buscarCampeonato()]);
-  return { artilheiros, times, campeonato };
+  const [artilheiros, times, campeonato, jogos] = await Promise.all([buscarArtilharia(timeFiltro || undefined), listarTimes(), buscarCampeonato(), listarJogos()]);
+  return { artilheiros, times, campeonato, semAutor: jogosSemAutor(jogos) };
 };
 
-function desenhar({ artilheiros, times, campeonato }) {
+function desenhar({ artilheiros, times, campeonato, semAutor = 0 }) {
     const opcoes = times.map((t) => `<option value="${t.id}"${String(t.id) === timeFiltro ? ' selected' : ''}>${escapar(t.nome)}</option>`).join('');
     // A view já ordena por gols; empates dividem a posição (dentro do filtro atual)
     const lista = posicoesComEmpate(artilheiros.map((a) => ({ ...a, gols: Number(a.gols) })));
@@ -40,6 +47,7 @@ function desenhar({ artilheiros, times, campeonato }) {
       ${lista.length
         ? `<ol class="lista">${lista.map(linhaArtilheiro).join('')}</ol>`
         : '<p class="carregando">Nenhum gol registrado ainda.</p>'}
+      ${semAutor ? `<p class="aviso texto-pequeno">${semAutor} jogo${semAutor === 1 ? '' : 's'} sem autor dos gols registrado (rodadas anteriores ao app): esses gols contam na tabela, mas não na artilharia.</p>` : ''}
       <p class="texto-2 texto-pequeno">Gols contra não entram na artilharia.</p>`;
     document.getElementById('filtro-time').addEventListener('change', (e) => {
       timeFiltro = e.target.value;
