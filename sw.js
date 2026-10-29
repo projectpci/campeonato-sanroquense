@@ -1,6 +1,6 @@
 // Service worker: abre rápido e mostra a última tabela conhecida quando o celular está sem sinal.
 // Suba VERSAO a cada deploy para limpar o cache antigo.
-const VERSAO = 'v5';
+const VERSAO = 'v6';
 const CACHE = `sanroquense-${VERSAO}`;
 
 const NUCLEO = [
@@ -35,15 +35,16 @@ self.addEventListener('fetch', (evento) => {
   // Dados e o código do próprio site: rede primeiro (sempre a versão nova); imagens, fontes e bibliotecas: cache primeiro
   const ehDados = url.hostname.endsWith('.supabase.co') && url.pathname.includes('/rest/');
   const ehCodigo = url.origin === location.origin && /(\.(html|js|css|webmanifest)|\/)$/.test(url.pathname);
-  evento.respondWith(ehDados || ehCodigo ? redePrimeiro(request) : cachePrimeiro(request));
+  evento.respondWith(ehDados || ehCodigo ? redePrimeiro(request, ehCodigo) : cachePrimeiro(request));
 });
 
-async function redePrimeiro(request) {
+// `revalidar`: o GitHub Pages deixa o navegador guardar os arquivos por 10 min; aqui sempre pergunta se mudou (304 é barato)
+async function redePrimeiro(request, revalidar = false) {
   const cache = await caches.open(CACHE);
   // Sinal fraco: se a rede não responde em 4 s e há cópia guardada, usa a cópia
   const limite = new Promise((resolve) => setTimeout(() => resolve(null), 4000));
   try {
-    const rede = fetch(request).then((resposta) => {
+    const rede = fetch(revalidar ? new Request(request, { cache: 'no-cache' }) : request).then((resposta) => {
       if (resposta.status === 200) cache.put(request, resposta.clone());
       return resposta;
     });
