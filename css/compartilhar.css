@@ -49,11 +49,11 @@
 .arte-esc__titulo h1 { margin: 0; font-family: var(--fonte-titulo); font-size: 64px; line-height: 1.1; color: var(--cor-primaria); text-shadow: var(--cor-brilho); text-transform: uppercase; }
 .arte-esc__titulo p { margin: 8px 0 0; font-size: 30px; font-weight: 800; text-transform: uppercase; }
 .arte-esc__campo { flex: 1; min-height: 0; display: flex; justify-content: center; }
-.arte-esc__campo .campo { height: 100%; width: auto; margin: 0; border-width: 4px; background: var(--cor-gramado); } /* html2canvas não desenha gradiente repetido */
-.arte .campo__vaga { width: 150px; gap: 6px; }
-.arte .campo__foto { width: 92px; height: 92px; border-width: 4px; font-size: 40px; }
-.arte .campo__nome { max-width: 150px; font-size: 22px; padding: 2px 8px; }
-.arte .campo__linha--meio, .arte .campo__circulo, .arte .campo__area, .arte .campo__pequena { border-width: 3px; }
+.arte-esc__campo .gramado { height: 100%; width: auto; max-width: none; margin: 0; border-width: 4px; background: var(--cor-gramado); } /* html2canvas não desenha gradiente repetido */
+.arte .gramado__vaga { width: 150px; gap: 6px; }
+.arte .gramado__foto { width: 92px; height: 92px; border-width: 4px; font-size: 40px; }
+.arte .gramado__nome { max-width: 150px; font-size: 22px; padding: 2px 8px; }
+.arte .gramado__linha--meio, .arte .gramado__circulo, .arte .gramado__area, .arte .gramado__pequena { border-width: 3px; }
 .arte-esc__base { display: flex; gap: 24px; align-items: center; }
 .arte-esc__banco { flex: 1; display: grid; gap: 8px; font-size: 24px; }
 .arte-esc__banco small, .arte-esc__tecnico small { display: block; font-family: var(--fonte-destaque); font-size: 22px; color: var(--cor-primaria); text-transform: uppercase; }

@@ -54,10 +54,24 @@ async function telaEntrada(mensagem = '') {
         <label class="escolha-time"><input type="radio" name="time" value="${t.id}" ${String(t.id) === salvo ? 'checked' : ''} required>
           ${escudo(t, 48)}<span>${escapar(t.nome)}</span></label>`).join('')}</div>
       <label class="campo">Código de acesso
-        <input name="codigo" required autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="12"></label>
+        <span class="senha">
+          <input class="senha__campo" name="codigo" type="password" required maxlength="12" placeholder="••••••"
+            autocapitalize="characters" autocomplete="current-password" spellcheck="false">
+          <button class="senha__ver" type="button" aria-label="Mostrar código" aria-pressed="false">Mostrar</button>
+        </span></label>
       ${mensagem ? `<p class="aviso">${escapar(mensagem)}</p>` : ''}
       <button class="botao" type="submit">Entrar</button>
     </form>`;
+  const ver = app.querySelector('.senha__ver');
+  ver.addEventListener('click', () => {
+    const campo = app.querySelector('.senha__campo');
+    const mostrar = campo.type === 'password';
+    campo.type = mostrar ? 'text' : 'password';
+    ver.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+    ver.setAttribute('aria-pressed', String(mostrar));
+    ver.setAttribute('aria-label', mostrar ? 'Ocultar código' : 'Mostrar código');
+    campo.focus();
+  });
   document.getElementById('form-clube').addEventListener('submit', async (e) => {
     e.preventDefault();
     const dados = new FormData(e.target);

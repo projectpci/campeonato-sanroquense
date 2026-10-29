@@ -37,16 +37,16 @@ export function htmlCampo({ formacao, titulares = {}, jogadores = [], interativo
     const j = porId.get(Number(titulares[i]));
     const tag = interativo ? 'button' : 'div';
     return `
-      <${tag} class="campo__vaga${j ? '' : ' campo__vaga--vazia'}" ${interativo ? `type="button" data-vaga="${i}"` : ''} style="left:${x}%;top:${y}%">
-        ${j ? avatarJogador(j, 'campo__foto') : `<span class="campo__foto campo__foto--vazio">+</span>`}
-        <span class="campo__nome">${j ? `${j.foto_url && j.numero != null ? `<b>${j.numero}</b> ` : ''}${escapar(primeiroNome(j.nome))}` : rotulo}</span>
+      <${tag} class="gramado__vaga${j ? '' : ' gramado__vaga--vazia'}" ${interativo ? `type="button" data-vaga="${i}"` : ''} style="left:${x}%;top:${y}%">
+        ${j ? avatarJogador(j, 'gramado__foto') : `<span class="gramado__foto gramado__foto--vazio">+</span>`}
+        <span class="gramado__nome">${j ? `${j.foto_url && j.numero != null ? `<b>${j.numero}</b> ` : ''}${escapar(primeiroNome(j.nome))}` : rotulo}</span>
       </${tag}>`;
   }).join('');
   return `
-    <div class="campo">
-      <span class="campo__linha campo__linha--meio"></span><span class="campo__circulo"></span>
-      <span class="campo__area campo__area--topo"></span><span class="campo__area campo__area--base"></span>
-      <span class="campo__pequena campo__pequena--topo"></span><span class="campo__pequena campo__pequena--base"></span>
+    <div class="gramado">
+      <span class="gramado__linha gramado__linha--meio"></span><span class="gramado__circulo"></span>
+      <span class="gramado__area gramado__area--topo"></span><span class="gramado__area gramado__area--base"></span>
+      <span class="gramado__pequena gramado__pequena--topo"></span><span class="gramado__pequena gramado__pequena--base"></span>
       ${vagas}
     </div>`;
 }

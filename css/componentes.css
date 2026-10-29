@@ -374,26 +374,33 @@ a.time__nome { color: var(--cor-texto); }
 .lista-escolha__item--ativo { border-color: var(--cor-primaria); }
 
 /* Campo (vertical, ataque em cima) */
-.campo {
+.gramado {
   position: relative; width: 100%; aspect-ratio: 2 / 3; margin: var(--esp-3) 0; border-radius: var(--raio);
   border: 2px solid var(--cor-linha-campo);
   background: repeating-linear-gradient(180deg, var(--cor-gramado) 0 10%, var(--cor-gramado-2) 10% 20%);
 }
-.campo__linha--meio { position: absolute; left: 0; right: 0; top: 50%; border-top: 2px solid var(--cor-linha-campo); }
-.campo__circulo { position: absolute; left: 50%; top: 50%; width: 28%; aspect-ratio: 1; transform: translate(-50%, -50%); border: 2px solid var(--cor-linha-campo); border-radius: 50%; }
-.campo__area, .campo__pequena { position: absolute; left: 50%; transform: translateX(-50%); border: 2px solid var(--cor-linha-campo); }
-.campo__area { width: 56%; height: 15%; }
-.campo__pequena { width: 26%; height: 6%; }
-.campo__area--topo, .campo__pequena--topo { top: -2px; }
-.campo__area--base, .campo__pequena--base { bottom: -2px; }
-.campo__vaga {
+.gramado__linha--meio { position: absolute; left: 0; right: 0; top: 50%; border-top: 2px solid var(--cor-linha-campo); }
+.gramado__circulo { position: absolute; left: 50%; top: 50%; width: 28%; aspect-ratio: 1; transform: translate(-50%, -50%); border: 2px solid var(--cor-linha-campo); border-radius: 50%; }
+.gramado__area, .gramado__pequena { position: absolute; left: 50%; transform: translateX(-50%); border: 2px solid var(--cor-linha-campo); }
+.gramado__area { width: 56%; height: 15%; }
+.gramado__pequena { width: 26%; height: 6%; }
+.gramado__area--topo, .gramado__pequena--topo { top: -2px; }
+.gramado__area--base, .gramado__pequena--base { bottom: -2px; }
+.gramado__vaga {
   position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 2px; width: 72px;
   padding: 0; border: 0; background: none; color: var(--cor-texto); cursor: pointer; font: inherit;
 }
-.campo__foto { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid var(--cor-texto); background: var(--cor-fundo-2); display: inline-grid; place-items: center; font-family: var(--fonte-destaque); color: var(--cor-primaria); }
-.campo__foto--vazio { border-style: dashed; color: var(--cor-texto); background: var(--cor-vaga-vazia); font-size: 1.4rem; }
-.campo__nome { max-width: 72px; padding: 0 4px; border-radius: 4px; background: var(--cor-fundo); font-size: .72rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.campo__nome b { color: var(--cor-primaria); }
-.campo__vaga--vazia .campo__nome { background: none; color: var(--cor-texto-2); }
+.gramado__foto { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid var(--cor-texto); background: var(--cor-fundo-2); display: inline-grid; place-items: center; font-family: var(--fonte-destaque); color: var(--cor-primaria); }
+.gramado__foto--vazio { border-style: dashed; color: var(--cor-texto); background: var(--cor-vaga-vazia); font-size: 1.4rem; }
+.gramado__nome { max-width: 72px; padding: 0 4px; border-radius: 4px; background: var(--cor-fundo); font-size: .72rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gramado__nome b { color: var(--cor-primaria); }
+.gramado__vaga--vazia .gramado__nome { background: none; color: var(--cor-texto-2); }
 .entrada__organizador { color: var(--cor-texto-2); text-decoration: underline; }
 .gol-aviso { grid-column: 1 / -1; color: var(--cor-ouro); }
+
+/* Código de acesso no padrão de senha */
+.senha { display: flex; gap: var(--esp-2); max-width: 280px; }
+.campo .senha__campo { flex: 1; min-width: 0; font-family: var(--fonte-destaque); font-size: 1.2rem; letter-spacing: .3em; text-transform: uppercase; }
+.campo .senha__campo::placeholder { letter-spacing: .2em; color: var(--cor-texto-2); }
+.senha__ver { min-height: 44px; padding: 0 var(--esp-3); border: 1px solid var(--cor-borda); border-radius: var(--raio); background: var(--cor-fundo-2); color: var(--cor-primaria); cursor: pointer; font-size: .85rem; text-transform: uppercase; }
+.gramado { max-width: 420px; margin-left: auto; margin-right: auto; } /* no computador não fica gigante */
