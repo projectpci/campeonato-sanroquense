@@ -8,7 +8,7 @@ const times = nomesTimes.map((nome, i) => ({
 const idDe = (nome) => times.find((t) => t.nome === nome).id;
 const timePorId = (id) => times.find((t) => t.id === id);
 
-const campeonato = { id: 1, nome: '1º Campeonato Sanroquense', local: 'Campo Maicon Santos', organizacao: 'Pebinha e Duduzete' };
+const campeonato = { id: 1, nome: 'Campeonato SRP', local: 'Campo Maicon Santos', organizacao: 'Pebinha e Duduzete' };
 
 const rodadas = [
   { id: 1, campeonato_id: 1, numero: 1, data: '2026-10-18' },

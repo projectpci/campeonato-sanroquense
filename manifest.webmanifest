@@ -1,6 +1,6 @@
 {
-  "name": "1º Campeonato Sanroquense",
-  "short_name": "Sanroquense",
+  "name": "Campeonato SRP",
+  "short_name": "Campeonato SRP",
   "description": "Tabela, jogos e artilharia do campeonato de São Roque do Paraguaçu – BA",
   "start_url": "index.html",
   "scope": "./",

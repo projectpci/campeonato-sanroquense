@@ -1,4 +1,4 @@
-# ⚽ 1º Campeonato Sanroquense
+# ⚽ Campeonato SRP
 
 Sistema de tabela do campeonato regional de **São Roque do Paraguaçu – BA**.
 Local: Campo Maicon Santos · Organização: Pebinha e Duduzete.

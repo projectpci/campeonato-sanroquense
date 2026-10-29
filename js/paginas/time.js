@@ -45,7 +45,7 @@ function desenhar({ linhas, encerrados, jogos, artilharia }) {
   const ordenadas = ordenarClassificacao(linhas, encerrados);
   const t = ordenadas.find((l) => l.time_id === timeId);
   if (!t) { mostrarAviso(app, 'Time não encontrado.'); return; }
-  document.title = `${t.nome} · 1º Campeonato Sanroquense`;
+  document.title = `${t.nome} · Campeonato SRP`;
 
   const dele = jogos.filter((j) => j.mandante_id === timeId || j.visitante_id === timeId);
   const proximos = dele.filter((j) => j.status !== 'encerrado');

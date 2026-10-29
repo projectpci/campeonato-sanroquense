@@ -1,6 +1,6 @@
 // Service worker: abre rápido e mostra a última tabela conhecida quando o celular está sem sinal.
 // Suba VERSAO a cada deploy para limpar o cache antigo.
-const VERSAO = 'v4';
+const VERSAO = 'v5';
 const CACHE = `sanroquense-${VERSAO}`;
 
 const NUCLEO = [
@@ -24,7 +24,7 @@ self.addEventListener('activate', (evento) => {
   );
 });
 
-// Dados (REST do Supabase): rede primeiro, cache como reserva. Resto: usa o cache e atualiza ao fundo.
+// Dados (REST do Supabase) e código do site: rede primeiro, cache como reserva. Imagens, fontes e bibliotecas: cache primeiro.
 self.addEventListener('fetch', (evento) => {
   const { request } = evento;
   if (request.method !== 'GET') return;
@@ -32,15 +32,22 @@ self.addEventListener('fetch', (evento) => {
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
   if (url.pathname.includes('/auth/') || url.pathname.includes('/realtime/')) return;
 
+  // Dados e o código do próprio site: rede primeiro (sempre a versão nova); imagens, fontes e bibliotecas: cache primeiro
   const ehDados = url.hostname.endsWith('.supabase.co') && url.pathname.includes('/rest/');
-  evento.respondWith(ehDados ? redePrimeiro(request) : cachePrimeiro(request));
+  const ehCodigo = url.origin === location.origin && /(\.(html|js|css|webmanifest)|\/)$/.test(url.pathname);
+  evento.respondWith(ehDados || ehCodigo ? redePrimeiro(request) : cachePrimeiro(request));
 });
 
 async function redePrimeiro(request) {
   const cache = await caches.open(CACHE);
+  // Sinal fraco: se a rede não responde em 4 s e há cópia guardada, usa a cópia
+  const limite = new Promise((resolve) => setTimeout(() => resolve(null), 4000));
   try {
-    const resposta = await fetch(request);
-    if (resposta.status === 200) cache.put(request, resposta.clone());
+    const rede = fetch(request).then((resposta) => {
+      if (resposta.status === 200) cache.put(request, resposta.clone());
+      return resposta;
+    });
+    const resposta = await Promise.race([rede, limite.then(async () => (await cache.match(request)) ?? rede)]);
     return resposta;
   } catch (erro) {
     const guardada = await cache.match(request);
@@ -65,7 +72,7 @@ async function cachePrimeiro(request) {
 self.addEventListener('push', (evento) => {
   let d = {};
   try { d = evento.data.json(); } catch { /* sem conteúdo */ }
-  evento.waitUntil(self.registration.showNotification(d.titulo || 'Campeonato Sanroquense', {
+  evento.waitUntil(self.registration.showNotification(d.titulo || 'Campeonato SRP', {
     body: d.corpo || '', icon: 'assets/icones/icone-192.png', badge: 'assets/icones/icone-192.png',
     tag: d.tag, renotify: true, data: { url: d.url || 'inicio.html' },
   }));

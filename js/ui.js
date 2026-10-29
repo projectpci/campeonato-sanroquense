@@ -36,7 +36,7 @@ function htmlNav(ativa) {
 export function montarLayout(ativa) {
   document.body.insertAdjacentHTML('afterbegin', `
     <header class="header">
-      <a class="header__marca" href="${ativa ? 'inicio.html' : 'index.html'}">${icone('coroa')}<span>SAN<em>ROQUENSE</em></span></a>
+      <a class="header__marca" href="${ativa ? 'inicio.html' : 'index.html'}">${icone('coroa')}<span>CAMPEONATO <em>SRP</em></span></a>
       <nav class="nav header__nav" aria-label="Principal">${htmlNav(ativa)}</nav>
       <a class="header__sair" id="btn-sair-header" href="index.html">Sair</a>
     </header>`);

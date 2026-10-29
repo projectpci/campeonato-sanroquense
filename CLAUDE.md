@@ -1,9 +1,9 @@
-# CLAUDE.md — Campeonato Sanroquense
+# CLAUDE.md — Campeonato SRP
 
 > Instruções permanentes para o Claude Code neste repositório. Leia este arquivo e a pasta `docs/` antes de qualquer tarefa.
 
 ## O projeto
-Sistema web simples para gerenciar o **1º Campeonato Sanroquense** (São Roque do Paraguaçu – BA):
+Sistema web simples para gerenciar o **Campeonato SRP** (São Roque do Paraguaçu – BA):
 cadastro de times, confrontos por rodada (manuais), lançamento de placar com autores dos gols,
 classificação automática (critérios do Brasileirão) e artilharia. Tudo salvo em tempo real no **Supabase**,
 código versionado no **GitHub** e publicado no **GitHub Pages**.

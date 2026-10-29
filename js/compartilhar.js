@@ -31,7 +31,7 @@ export async function compartilharImagem(elemento, nomeArquivo = 'campeonato-san
 
   if (navigator.canShare?.({ files: [arquivo] })) {
     try {
-      await navigator.share({ files: [arquivo], title: '1º Campeonato Sanroquense', text: `Acompanhe o campeonato: ${new URL('./', location.href).href}` });
+      await navigator.share({ files: [arquivo], title: 'Campeonato SRP', text: `Acompanhe o campeonato: ${new URL('./', location.href).href}` });
     } catch (erro) {
       if (erro.name !== 'AbortError') throw erro; // usuário cancelou: ignora
     }
