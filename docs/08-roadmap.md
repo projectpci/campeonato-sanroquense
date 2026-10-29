@@ -77,3 +77,5 @@
 2. `Execute a Fase 2. Comece pela classificação e rode os testes de desempate.`
 3. `Execute a Fase 3 (admin.html), começando pelo login e cadastro de times.`
 4. `Execute a Fase 4: arte da classificação idêntica ao banner em assets/banner-referencia.png.`
+
+- [x] Calendario oficial carregado no Supabase (10 rodadas, 45 jogos, 13/09/2026 a 14/02/2027; Jogo 1 13h30, Jogo 2 15h40; rodada = jogos ate um time repetir)

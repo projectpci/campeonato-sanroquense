@@ -361,30 +361,59 @@ function dialogoResultado(jogo, jogadores) {
 
   const d = abrirDialogo(`
     <form class="form" id="form-resultado">
-      <h2>Resultado</h2>
-      <div class="placar-form">
-        <div class="jogo__time">${escudo(jogo.mandante, 48)}<span>${escapar(jogo.mandante.nome)}</span></div>
-        <input class="placar-input" type="number" min="0" name="gm" required value="${jogo.gols_mandante ?? 0}" aria-label="Gols ${escapar(jogo.mandante.nome)}">
-        <span>×</span>
-        <input class="placar-input" type="number" min="0" name="gv" required value="${jogo.gols_visitante ?? 0}" aria-label="Gols ${escapar(jogo.visitante.nome)}">
-        <div class="jogo__time">${escudo(jogo.visitante, 48)}<span>${escapar(jogo.visitante.nome)}</span></div>
-      </div>
-      ${datalist(jogo.mandante_id)}${datalist(jogo.visitante_id)}
-      ${lados.map(({ time }) => `
-        <fieldset class="gols-time" data-time="${time.id}">
-          <legend>Gols ${escapar(time.nome)} <span class="soma" data-soma="${time.id}"></span></legend>
-          <div class="gols-lista">${golsDoTime(time.id).map((g) => linhaGol(`dl-${time.id}`, g)).join('')}</div>
-          <button type="button" class="botao botao--secundario" data-add="${time.id}">+ adicionar autor</button>
-        </fieldset>`).join('')}
-      <div class="form__acoes">
-        ${jogo.status === 'encerrado' ? '<button class="botao botao--perigo" type="button" id="reabrir">Reabrir jogo</button>' : ''}
-        <button class="botao botao--secundario" type="button" data-fechar>Cancelar</button>
-        <button class="botao" type="submit" id="salvar-resultado">Salvar resultado</button>
-      </div>
+      <section class="form" data-etapa="placar">
+        <h2>Resultado</h2>
+        <div class="placar-form">
+          <div class="jogo__time">${escudo(jogo.mandante, 48)}<span>${escapar(jogo.mandante.nome)}</span></div>
+          <input class="placar-input" type="number" min="0" name="gm" required value="${jogo.gols_mandante ?? 0}" aria-label="Gols ${escapar(jogo.mandante.nome)}">
+          <span>×</span>
+          <input class="placar-input" type="number" min="0" name="gv" required value="${jogo.gols_visitante ?? 0}" aria-label="Gols ${escapar(jogo.visitante.nome)}">
+          <div class="jogo__time">${escudo(jogo.visitante, 48)}<span>${escapar(jogo.visitante.nome)}</span></div>
+        </div>
+        <div class="form__acoes">
+          ${jogo.status === 'encerrado' ? '<button class="botao botao--perigo" type="button" id="reabrir">Reabrir jogo</button>' : ''}
+          <button class="botao botao--secundario" type="button" data-fechar>Cancelar</button>
+          <button class="botao" type="submit" id="avancar">Informar gols</button>
+        </div>
+      </section>
+      <section class="form oculto" data-etapa="gols">
+        <h2>Quem fez os gols?</h2>
+        <p class="texto-2" id="resumo-placar"></p>
+        ${datalist(jogo.mandante_id)}${datalist(jogo.visitante_id)}
+        ${lados.map(({ time }) => `
+          <fieldset class="gols-time" data-time="${time.id}">
+            <legend>${escapar(time.nome)} <span class="soma" data-soma="${time.id}"></span></legend>
+            <div class="gols-lista">${golsDoTime(time.id).map((g) => linhaGol(`dl-${time.id}`, g)).join('')}</div>
+            <button type="button" class="botao botao--secundario" data-add="${time.id}">+ adicionar autor</button>
+          </fieldset>`).join('')}
+        <div class="form__acoes">
+          <button class="botao botao--secundario" type="button" id="voltar">Voltar ao placar</button>
+          <button class="botao" type="submit" id="salvar-resultado">Salvar resultado</button>
+        </div>
+      </section>
     </form>`);
 
   const form = d.querySelector('form');
   const placar = () => [Number(form.gm.value) || 0, Number(form.gv.value) || 0];
+  const etapa = (nome) => d.querySelectorAll('[data-etapa]').forEach((s) => s.classList.toggle('oculto', s.dataset.etapa !== nome));
+  const naEtapaGols = () => !d.querySelector('[data-etapa="gols"]').classList.contains('oculto');
+
+  // Só aparecem os times que marcaram; cada um começa com uma linha já com o total de gols
+  const abrirGols = () => {
+    const [gm, gv] = placar();
+    d.querySelector('#resumo-placar').textContent = `${jogo.mandante.nome} ${gm} × ${gv} ${jogo.visitante.nome}`;
+    for (const [time, gols] of [[jogo.mandante, gm], [jogo.visitante, gv]]) {
+      const bloco = d.querySelector(`.gols-time[data-time="${time.id}"]`);
+      bloco.classList.toggle('oculto', gols === 0);
+      const lista = bloco.querySelector('.gols-lista');
+      if (gols > 0 && !lista.children.length) {
+        lista.insertAdjacentHTML('beforeend', linhaGol(`dl-${time.id}`, { quantidade: gols }));
+        ajustarLista(lista.firstElementChild, time.id);
+      }
+    }
+    etapa('gols');
+    validar();
+  };
 
   // Em gol contra o autor é do adversário: troca a lista de sugestões da linha
   const ajustarLista = (linha, timeId) => {
@@ -393,7 +422,7 @@ function dialogoResultado(jogo, jogadores) {
     linha.querySelector('.gol-nome').setAttribute('list', `dl-${alvo}`);
   };
 
-  const coletar = () => [...d.querySelectorAll('.gols-time')].flatMap((bloco) =>
+  const coletar = () => [...d.querySelectorAll('.gols-time:not(.oculto)')].flatMap((bloco) =>
     [...bloco.querySelectorAll('.gol-linha')].map((linha) => ({
       time_id: Number(bloco.dataset.time),
       jogador_nome: linha.querySelector('.gol-nome').value.trim(),
@@ -433,9 +462,13 @@ function dialogoResultado(jogo, jogadores) {
   d.querySelector('#reabrir')?.addEventListener('click', () => {
     if (confirm('Reabrir o jogo apaga o placar e os gols lançados. Continuar?')) executar(async () => { await reabrirJogo(jogo.id); d.close(); }, 'Jogo reaberto');
   });
+  d.querySelector('#voltar').addEventListener('click', () => etapa('placar'));
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const [gm, gv] = placar();
+    if (!naEtapaGols()) {
+      if (gm + gv > 0) { abrirGols(); return; } // 0×0 não tem autores: salva direto
+    } else if (d.querySelector('#salvar-resultado').disabled) return;
     executar(async () => { await salvarResultado(jogo.id, gm, gv, coletar()); d.close(); }, 'Resultado salvo ✔');
   });
   validar();
