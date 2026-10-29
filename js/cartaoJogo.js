@@ -1,5 +1,5 @@
 // Renderiza o card de um jogo (usado em Confrontos e Início).
-import { escapar, escudo, formatarData, formatarHora } from './ui.js';
+import { escapar, escudo, formatarData, horaDoJogo } from './ui.js';
 
 function listaGols(jogo, timeId) {
   return (jogo.gols ?? [])
@@ -18,7 +18,7 @@ export function cartaoJogo(jogo, extras = {}) {
   const aoVivo = jogo.status === 'ao_vivo';
   const centro = encerrado || aoVivo
     ? `<strong class="jogo__placar">${jogo.gols_mandante} <span>×</span> ${jogo.gols_visitante}</strong>`
-    : `<span class="jogo__versus">×</span><span class="texto-2 texto-pequeno">${escapar(formatarHora(jogo.data_hora))}</span>`;
+    : `<span class="jogo__versus">×</span><span class="texto-2 texto-pequeno">${escapar(horaDoJogo(jogo))}</span>`;
   const rotuloStatus = { agendado: 'Agendado', ao_vivo: 'Ao vivo', encerrado: 'Encerrado', adiado: 'Adiado', wo: 'W.O.' }[jogo.status];
   const data = jogo.data_hora ? formatarData(jogo.data_hora) : '';
 

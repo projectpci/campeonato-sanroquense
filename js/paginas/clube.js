@@ -11,7 +11,7 @@ import { prepararFoto } from '../imagem.js';
 import { compartilharImagem } from '../compartilhar.js';
 import { arteEscalacao, inserirArte } from '../artes.js';
 import { FORMACOES, FORMACAO_PADRAO, POSICOES, htmlCampo, avatarJogador } from '../escalacao.js';
-import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData, formatarHora, tempoRelativo } from '../ui.js';
+import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData, horaDoJogo, tempoRelativo } from '../ui.js';
 
 const app = document.getElementById('app');
 const CHAVE_CODIGO = 'mural_codigo'; // o mesmo do mural: entrou no clube, já publica no mural como o time
@@ -197,7 +197,7 @@ function htmlHero() {
           <div class="clube-hero__confronto">
             ${escudo(time, 32)}<b>×</b>${escudo(adversarioDe(jogo), 32)}
             <span><strong>${escapar(adversarioDe(jogo).nome)}</strong>
-              <small>${jogo.data_hora ? `${formatarData(jogo.data_hora)} · ${formatarHora(jogo.data_hora)}` : 'A definir'} · ${emCasa(jogo) ? 'Mandante' : 'Visitante'}</small></span>
+              <small>${jogo.data_hora ? `${formatarData(jogo.data_hora)} · ${horaDoJogo(jogo)}` : 'A definir'} · ${emCasa(jogo) ? 'Mandante' : 'Visitante'}</small></span>
           </div>
         </div>` : ''}
     </section>`;
@@ -246,9 +246,9 @@ function htmlPartida(j) {
     ? `<span class="partida__placar"><b>${r.meus} × ${r.deles}</b><i class="forma__item forma__item--${r.letra}">${r.letra.toUpperCase()}</i></span>`
     : j.status === 'ao_vivo'
       ? `<span class="partida__placar"><b>${j.gols_mandante ?? 0} × ${j.gols_visitante ?? 0}</b><i class="selo selo--aovivo">Ao vivo</i></span>`
-      : data && data < new Date()
+      : data && (j.horario_definido === false ? new Date(data).setHours(23, 59) : data) < new Date()
         ? '<span class="partida__hora">—<small>aguardando resultado</small></span>'
-        : `<span class="partida__hora">${data ? formatarHora(j.data_hora) : '—'}<small>${data ? escapar(quando(j.data_hora)) : ''}</small></span>`;
+        : `<span class="partida__hora">${data ? horaDoJogo(j) : '—'}<small>${data ? escapar(quando(j.data_hora)) : ''}</small></span>`;
   return `
     <a class="partida" href="time.html?id=${adv.id}">
       <span class="partida__data">${data ? `<b>${data.getDate()}</b>${data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}` : '—'}</span>

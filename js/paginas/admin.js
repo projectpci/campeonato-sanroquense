@@ -328,13 +328,18 @@ function dialogoConfronto(rodada, times, jogosDaRodada, jogo = null) {
   const livres = times.filter((t) => (t.ativo || [jogo?.mandante_id, jogo?.visitante_id].includes(t.id)) && !ocupados.has(t.id));
   const opcoes = (selecionado) => livres.map((t) => `<option value="${t.id}"${t.id === selecionado ? ' selected' : ''}>${escapar(t.nome)}</option>`).join('');
   const dataLocal = jogo?.data_hora ? new Date(new Date(jogo.data_hora) - new Date(jogo.data_hora).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+  const aDefinir = jogo?.horario_definido === false;
   const d = abrirDialogo(`
     <form class="form" method="dialog">
       <h2>${jogo ? 'Editar' : 'Novo'} confronto · Rodada ${rodada.numero}</h2>
       ${livres.length < 2 ? '<p class="aviso">Não há times livres suficientes nesta rodada.</p>' : ''}
       <label class="campo">Mandante<select name="mandante" required>${opcoes(jogo?.mandante_id)}</select></label>
       <label class="campo">Visitante<select name="visitante" required>${opcoes(jogo?.visitante_id)}</select></label>
-      <label class="campo">Data e hora (opcional)<input type="datetime-local" name="data_hora" value="${dataLocal}"></label>
+      <div class="form__linha">
+        <label class="campo">Data<input type="date" name="data" value="${dataLocal.slice(0, 10)}"></label>
+        <label class="campo">Hora<input type="time" name="hora" value="${aDefinir ? '' : dataLocal.slice(11, 16)}" ${aDefinir ? 'disabled' : ''}></label>
+      </div>
+      <label class="campo campo--check"><input type="checkbox" name="a_definir" ${aDefinir ? 'checked' : ''}> Horário a definir</label>
       <div class="form__acoes">
         <button class="botao botao--secundario" type="button" data-fechar>Cancelar</button>
         <button class="botao" type="submit" ${livres.length < 2 ? 'disabled' : ''}>Salvar</button>
@@ -343,13 +348,19 @@ function dialogoConfronto(rodada, times, jogosDaRodada, jogo = null) {
   const visitante = d.querySelector('[name=visitante]');
   if (!jogo && visitante.options.length > 1) visitante.selectedIndex = 1;
   d.querySelector('[data-fechar]').addEventListener('click', () => d.close());
+  const campoHora = d.querySelector('[name=hora]');
+  d.querySelector('[name=a_definir]').addEventListener('change', (e) => { campoHora.disabled = e.target.checked; });
   d.querySelector('form').addEventListener('submit', (e) => {
     e.preventDefault();
     const dados = new FormData(e.target);
+    const data = dados.get('data');
+    const semHora = Boolean(dados.get('a_definir')) || !dados.get('hora');
     executar(async () => {
       await salvarJogo({
         ...(jogo ? { id: jogo.id } : {}), rodada_id: rodada.id, mandante_id: Number(dados.get('mandante')), visitante_id: Number(dados.get('visitante')),
-        data_hora: dados.get('data_hora') ? new Date(dados.get('data_hora')).toISOString() : null,
+        // sem hora: guarda o dia ao meio-dia (evita trocar de dia pelo fuso) e marca "a definir"
+        data_hora: data ? new Date(`${data}T${semHora ? '12:00' : dados.get('hora')}`).toISOString() : null,
+        horario_definido: !(data && semHora),
       });
       d.close();
     }, 'Confronto salvo ✔');

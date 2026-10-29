@@ -101,6 +101,9 @@ export const formatarData = (iso) =>
 export const formatarHora = (iso) =>
   iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
 
+// Hora do jogo, ou "A definir" quando só a data está marcada (horario_definido = false)
+export const horaDoJogo = (jogo) => (jogo.horario_definido === false ? 'A definir' : formatarHora(jogo.data_hora));
+
 // Botão flutuante "Compartilhar": roda `aoClicar` mostrando o estado "Gerando imagem..."
 export function botaoCompartilhar(aoClicar) {
   const botao = document.createElement('button');

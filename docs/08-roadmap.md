@@ -86,3 +86,4 @@
 - [x] Correções urgentes: códigos fortes, freio no mural, limite de escudos, prévia og:image, autor do gol ligado ao elenco
 - [x] Mural com aprovação do organizador; área do clube com visual de app de jogo (cartas, folha de escolha, auto-escalar, pódio)
 - [x] Rodada padrão = a mais recente pelo calendário (js/rodadas.js + tests/rodadas.test.mjs) em Confrontos, painel e Início
+- [x] Horário a definir (jogos.horario_definido): Real Barça SR × Rua Nova remarcado para 01/11; painel tem Data, Hora e 'Horário a definir'

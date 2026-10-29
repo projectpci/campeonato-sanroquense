@@ -1,5 +1,5 @@
 // Templates das artes exportadas em PNG (1080×1350). Só montam HTML; o CSS está em compartilhar.css.
-import { escapar, escudo, formatarData, formatarHora } from './ui.js';
+import { escapar, escudo, formatarData, horaDoJogo } from './ui.js';
 import { htmlCampo, avatarJogador } from './escalacao.js';
 
 const hoje = () => new Date().toLocaleDateString('pt-BR');
@@ -87,7 +87,7 @@ export function arteArtilharia(campeonato, artilheiros) {
 export function arteEscalacao(campeonato, time, { formacao, titulares, reservas = [] }, jogadores, jogo) {
   const qr = qrCodeSite();
   const adversario = jogo ? (jogo.mandante_id === time.id ? jogo.visitante : jogo.mandante) : null;
-  const infoJogo = jogo ? `x ${escapar(adversario.nome)} · ${formatarData(jogo.data_hora)} · ${formatarHora(jogo.data_hora)}` : '';
+  const infoJogo = jogo ? `x ${escapar(adversario.nome)} · ${formatarData(jogo.data_hora)} · ${horaDoJogo(jogo)}` : '';
   const banco = reservas.map((id) => jogadores.find((j) => j.id === id)).filter(Boolean)
     .map((j) => `<span>${j.numero != null ? `<b>${j.numero}</b> ` : ''}${escapar(j.nome)}</span>`).join('');
   const tecnico = time.tecnico_nome ? `
