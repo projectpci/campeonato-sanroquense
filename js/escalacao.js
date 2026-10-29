@@ -27,7 +27,7 @@ const primeiroNome = (nome) => {
 
 export function avatarJogador(j, classe = 'avatar') {
   if (j?.foto_url) return `<img class="${classe}" src="${escapar(j.foto_url)}" alt="">`;
-  return `<span class="${classe} ${classe}--vazio">${escapar(j?.numero ?? j?.posicao ?? '?')}</span>`;
+  return `<span class="${classe} ${classe.split(" ")[0]}--sem-foto">${escapar(j?.numero ?? j?.posicao ?? '?')}</span>`;
 }
 
 // Campo com as 11 vagas. `interativo`: vagas viram botões (tela do clube); senão, só desenho (arte)

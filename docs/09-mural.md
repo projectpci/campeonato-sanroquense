@@ -152,3 +152,9 @@ create policy "mural remover" on storage.objects for delete to authenticated usi
 1. Mural → **+ Publicar foto** → informa o código (fica salvo no aparelho) → escolhe foto, descrição e, se quiser, o jogo.
 2. A foto é reduzida no celular e enviada ao bucket `mural`.
 3. `publicar_post` valida o código e cria a publicação; o Realtime atualiza o mural de todos.
+
+## Aprovação pelo organizador (migração `mural_aprovacao`)
+- `posts.aprovado` (padrão `false`) e `posts.aprovado_em`. Foto de time entra como pendente; a do organizador já sai aprovada.
+- RLS: o público (e o realtime) só vê `aprovado = true`; o organizador vê tudo. Comentários só em publicação aprovada.
+- No mural, o organizador vê a fila **Aguardando aprovação** com "Aprovar e publicar" / "Recusar". O painel mostra um contador no botão Mural.
+- O clube vê as próprias fotos na hora (aba Mural da área do clube, função `clube_meus_posts`), com o selo "Em análise" ou "No mural".

@@ -204,6 +204,7 @@ async function publicarPost({ codigo, descricao, foto, jogoId }) {
   const novo = {
     id: proximoId(posts), campeonato_id: 1, time_id: time?.time_id ?? null, autor: time?.nome ?? 'Organização',
     descricao: descricao?.trim() || null, foto_path: await lerComoDataUrl(foto), jogo_id: jogoId ?? null, criado_em: new Date().toISOString(),
+    aprovado: !time, // time aguarda o organizador aprovar
   };
   posts.push(novo);
 }
@@ -234,6 +235,18 @@ function gerarCodigo(timeId) {
   const novo = `${semAcento(timePorId(timeId).nome).slice(0, 3).toUpperCase()}${Math.floor(100 + Math.random() * 900)}`;
   codigos.set(timeId, novo);
   return novo;
+}
+
+function aprovarPost(id) {
+  const post = posts.find((p) => p.id === id);
+  if (post) post.aprovado = true;
+}
+
+function clubeMeusPosts(codigo) {
+  const time = validarCodigo(codigo);
+  if (!time) throw Object.assign(new Error('Código do time inválido.'), { codigoInvalido: true });
+  return posts.filter((p) => p.time_id === time.time_id).sort((a, b) => b.criado_em.localeCompare(a.criado_em))
+    .map((p) => ({ ...p, aprovado: p.aprovado !== false, comentarios: comentarios.filter((c) => c.post_id === p.id).length }));
 }
 
 // ---------- Área do clube (demo) ----------
@@ -276,7 +289,7 @@ function clubeSalvarEscalacao(codigo, escalacao) {
 export const dadosDemo = {
   salvarTime, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo,
   publicarPost, comentarPost, apagarPost, apagarPostDoTime, apagarComentario, gerarCodigo, validarCodigo,
-  clubeSalvarJogador, clubeApagarJogador, clubeSalvarTecnico, clubeBuscarEscalacao, clubeSalvarEscalacao,
+  aprovarPost, clubeMeusPosts, clubeSalvarJogador, clubeApagarJogador, clubeSalvarTecnico, clubeBuscarEscalacao, clubeSalvarEscalacao,
   listarPosts: () => [...posts].sort((a, b) => b.criado_em.localeCompare(a.criado_em)).map(montarPost),
   listarCodigos: () => [...codigos].map(([time_id, codigo]) => ({ time_id, codigo })),
   buscarCampeonato: () => campeonato,

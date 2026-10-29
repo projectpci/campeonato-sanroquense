@@ -33,3 +33,10 @@ Organizador → Times → "gerar novo". O código antigo para de funcionar na ho
 - Bucket `escudos`: só PNG/JPEG/WebP até 500 KB.
 - Prévia dos links no WhatsApp: `assets/compartilhar.jpg` (1200×630) em `og:image` de todas as páginas.
 - Lançar resultado: o nome do autor é padronizado pelo elenco do clube ("dudú" vira "Dudu"); nome fora do elenco mostra aviso.
+
+## Visual (estilo app de jogo)
+Topo com escudo, forma (V/E/D), posição, pontos, jogos, elenco e próximo jogo com contagem; abas com ícone fixas ao rolar;
+Jogos com controle Calendário/Resultados; artilharia em pódio; elenco em cartas (cor por linha: goleiro, defesa, meio, ataque)
+com filtro; escolha de jogador numa folha que sobe de baixo, com busca e filtro "da posição"/"todos" (tocar em quem já está no
+campo troca os dois de lugar); botão "Auto" escala pelas posições; banco em avatares; barra fixa Salvar/Compartilhar;
+posição do jogador escolhida por botões; foto com prévia em círculo. Aviso ao sair com escalação não salva.

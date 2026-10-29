@@ -1,34 +1,55 @@
-// Área do clube: o time entra com o código de acesso (o mesmo do mural) e tem calendário, resultados,
-// tabela, artilharia, mural, elenco (técnico e jogadores com foto) e escalação para compartilhar.
+// Área do clube: o time entra com o código de acesso (o mesmo do mural) e tem jogos, tabela, artilharia,
+// elenco (técnico e jogadores com foto), escalação para compartilhar e o mural do clube.
 import {
   listarTimes, listarJogos, buscarClassificacao, listarJogosEncerrados, buscarArtilharia, buscarCampeonato, listarJogadores,
   validarCodigo, enviarFotoElenco, clubeSalvarJogador, clubeApagarJogador, clubeSalvarTecnico, clubeBuscarEscalacao, clubeSalvarEscalacao,
+  clubeMeusPosts, publicarPost, urlFoto,
 } from '../api.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
 import { assinarMudancas } from '../realtime.js';
-import { cartaoJogo } from '../cartaoJogo.js';
 import { prepararFoto } from '../imagem.js';
 import { compartilharImagem } from '../compartilhar.js';
 import { arteEscalacao, inserirArte } from '../artes.js';
 import { FORMACOES, FORMACAO_PADRAO, POSICOES, htmlCampo, avatarJogador } from '../escalacao.js';
-import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, toast } from '../ui.js';
+import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData, formatarHora, tempoRelativo } from '../ui.js';
 
 const app = document.getElementById('app');
 const CHAVE_CODIGO = 'mural_codigo'; // o mesmo do mural: entrou no clube, já publica no mural como o time
 const CHAVE_TIME = 'clube_time';
-const ABAS = [['calendario', 'Calendário'], ['resultados', 'Resultados'], ['tabela', 'Tabela'], ['artilharia', 'Artilharia'],
-  ['elenco', 'Elenco'], ['escalacao', 'Escalação'], ['mural', 'Mural']];
+
+const traco = (caminho) => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${caminho}</svg>`;
+const ICONES = {
+  jogos: traco('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
+  elenco: traco('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.6.2 4.6 1.9 5.3 5.4"/>'),
+  escalacao: traco('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 12h16"/><circle cx="12" cy="12" r="2.5"/><path d="M9 3v3h6V3M9 21v-3h6v3"/>'),
+  sair: traco('<path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3M10 8l-4 4 4 4M6 12h10"/>'),
+  camera: traco('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'),
+  mais: traco('<path d="M12 5v14M5 12h14"/>'),
+  busca: traco('<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>'),
+  varinha: traco('<path d="M4 20L16 8M14 4v2M18 8h2M17 5l1.5-1.5M12 6l2 2"/>'),
+};
+const ABAS = [
+  ['jogos', 'Jogos', ICONES.jogos], ['tabela', 'Tabela', icone('tabela')], ['artilharia', 'Artilharia', icone('artilharia')],
+  ['elenco', 'Elenco', ICONES.elenco], ['escalacao', 'Escalação', ICONES.escalacao], ['mural', 'Mural', icone('mural')],
+];
+
+// Posição da vaga → grupo do elenco (para sugerir e preencher automático)
+const GRUPO_DA_VAGA = { GOL: 'GOL', ZAG: 'ZAG', LD: 'LAT', LE: 'LAT', ALD: 'LAT', ALE: 'LAT', VOL: 'VOL', MC: 'MEI', MEI: 'MEI', MD: 'MEI', ME: 'MEI', PD: 'ATA', PE: 'ATA', ATA: 'ATA' };
+const LINHAS = [['todos', 'Todos', null], ['gol', 'Goleiros', ['GOL']], ['def', 'Defesa', ['ZAG', 'LAT']], ['mei', 'Meio', ['VOL', 'MEI']], ['ata', 'Ataque', ['ATA']]];
+const linhaDe = (posicao) => LINHAS.find(([, , grupos]) => grupos?.includes(posicao))?.[0] ?? 'sem';
+const nomePosicao = (p) => POSICOES.find(([sigla]) => sigla === p)?.[1] ?? 'Sem posição';
 const ORDEM_POSICAO = Object.fromEntries(POSICOES.map(([p], i) => [p, i]));
-const estado = { codigo: '', time: null, aba: 'calendario', dados: null, escalacao: null, alterada: false };
+
+const estado = { codigo: '', time: null, aba: 'jogos', subJogos: 'proximos', filtroElenco: 'todos', dados: null, escalacao: null, alterada: false, posts: null };
 
 // localStorage pode estar bloqueado (aba anônima): nunca deixa quebrar a página
 const guardado = (chave) => { try { return localStorage.getItem(chave) ?? ''; } catch { return ''; } };
 const guardar = (chave, valor) => { try { localStorage.setItem(chave, valor); } catch { /* sem armazenamento */ } };
 const esquecer = (chave) => { try { localStorage.removeItem(chave); } catch { /* sem armazenamento */ } };
 
-function abrirDialogo(html) {
+function abrirDialogo(html, classe = '') {
   document.querySelector('dialog.dialogo')?.remove();
-  const d = Object.assign(document.createElement('dialog'), { className: 'dialogo', innerHTML: html });
+  const d = Object.assign(document.createElement('dialog'), { className: `dialogo ${classe}`, innerHTML: html });
   d.addEventListener('close', () => d.remove());
   d.addEventListener('click', (e) => { if (e.target === d || e.target.closest('[data-fechar]')) d.close(); });
   document.body.append(d);
@@ -44,10 +65,11 @@ function tratarErro(erro) {
 
 // ---------- Entrada (time + código) ----------
 async function telaEntrada(mensagem = '') {
-  const times = (await listarTimes()).filter((t) => t.ativo !== false);
+  let times;
+  try { times = (await listarTimes()).filter((t) => t.ativo !== false); } catch (erro) { mostrarAviso(app, `Não foi possível carregar os times: ${erro.message}`); return; }
   const salvo = guardado(CHAVE_TIME);
   app.innerHTML = `
-    <form class="card form" id="form-clube">
+    <form class="card form clube-entrada" id="form-clube">
       <h2>Área do clube</h2>
       <p class="texto-2">Escolha o seu time e digite o código de acesso enviado pelo organizador.</p>
       <div class="escolha-times">${times.map((t) => `
@@ -60,7 +82,7 @@ async function telaEntrada(mensagem = '') {
           <button class="senha__ver" type="button" aria-label="Mostrar código" aria-pressed="false">Mostrar</button>
         </span></label>
       ${mensagem ? `<p class="aviso">${escapar(mensagem)}</p>` : ''}
-      <button class="botao" type="submit">Entrar</button>
+      <button class="botao botao--grande" type="submit">Entrar</button>
     </form>`;
   const ver = app.querySelector('.senha__ver');
   ver.addEventListener('click', () => {
@@ -96,7 +118,7 @@ async function telaEntrada(mensagem = '') {
 
 function sairDoClube(mensagem = '') {
   esquecer(CHAVE_CODIGO);
-  Object.assign(estado, { codigo: '', time: null, escalacao: null, alterada: false, aba: 'calendario' });
+  Object.assign(estado, { codigo: '', time: null, escalacao: null, alterada: false, posts: null, aba: 'jogos' });
   telaEntrada(mensagem);
 }
 
@@ -136,36 +158,115 @@ const elenco = () => estado.dados.jogadores
 
 const jogosDoTime = () => estado.dados.jogos.filter((j) => j.mandante_id === estado.time.id || j.visitante_id === estado.time.id);
 const proximoJogo = () => jogosDoTime().find((j) => j.status !== 'encerrado');
+const adversarioDe = (j) => (j.mandante_id === estado.time.id ? j.visitante : j.mandante);
+const emCasa = (j) => j.mandante_id === estado.time.id;
+function resultadoDe(j) {
+  const meus = emCasa(j) ? j.gols_mandante : j.gols_visitante;
+  const deles = emCasa(j) ? j.gols_visitante : j.gols_mandante;
+  return { meus, deles, letra: meus > deles ? 'v' : meus < deles ? 'd' : 'e' };
+}
+const diasAte = (iso) => Math.round((new Date(new Date(iso).toDateString()) - new Date(new Date().toDateString())) / 86400000);
+const quando = (iso) => { const n = diasAte(iso); return n < 0 ? '' : n === 0 ? 'hoje' : n === 1 ? 'amanhã' : `em ${n} dias`; };
 
 // ---------- Tela ----------
-function desenhar() {
-  const { time } = estado;
-  app.innerHTML = `
-    <section class="time-topo card card--neon">
-      ${escudo(time, 96)}
-      <div><h2>${escapar(time.nome)}</h2><p class="texto-2">Área do clube</p>
-        <button class="link-botao texto-pequeno" data-sair-clube>Sair do clube</button></div>
-    </section>
-    <div class="chips" role="tablist" aria-label="Seções do clube">${ABAS.map(([id, rotulo]) =>
-      `<button class="chip${estado.aba === id ? ' chip--ativo' : ''}" data-aba="${id}">${rotulo}</button>`).join('')}</div>
-    <div id="aba-clube"></div>`;
-  app.querySelector('[data-sair-clube]').addEventListener('click', () => sairDoClube());
-  app.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { estado.aba = b.dataset.aba; desenhar(); }));
-  app.querySelector('.chip--ativo')?.scrollIntoView({ inline: 'center', block: 'nearest' });
-  SECOES[estado.aba](document.getElementById('aba-clube'));
+function htmlHero() {
+  const { time, dados } = estado;
+  const linha = ordenarClassificacao(dados.linhas, dados.encerrados).find((l) => l.time_id === time.id);
+  const forma = jogosDoTime().filter((j) => j.status === 'encerrado').reverse().slice(0, 5).map((j) => resultadoDe(j).letra);
+  const jogo = proximoJogo();
+  return `
+    <section class="clube-hero">
+      <button class="clube-hero__sair" data-sair-clube aria-label="Sair do clube" title="Sair do clube">${ICONES.sair}</button>
+      <div class="clube-hero__time">
+        ${escudo(time, 96)}
+        <div>
+          <small>Área do clube</small>
+          <h2>${escapar(time.nome)}</h2>
+          ${forma.length ? `<div class="forma">${forma.map((r) => `<span class="forma__item forma__item--${r}">${r.toUpperCase()}</span>`).join('')}</div>` : ''}
+        </div>
+      </div>
+      <div class="clube-hero__numeros">
+        <div><strong>${linha ? `${linha.posicao}º` : '—'}</strong><small>Posição</small></div>
+        <div><strong>${linha?.pts ?? 0}</strong><small>Pontos</small></div>
+        <div><strong>${linha?.j ?? 0}</strong><small>Jogos</small></div>
+        <div><strong>${elenco().length}</strong><small>Elenco</small></div>
+      </div>
+      ${jogo ? `
+        <div class="clube-hero__proximo">
+          <span class="texto-pequeno">Próximo jogo${jogo.data_hora ? ` · ${escapar(quando(jogo.data_hora))}` : ''}</span>
+          <div class="clube-hero__confronto">
+            ${escudo(time, 32)}<b>×</b>${escudo(adversarioDe(jogo), 32)}
+            <span><strong>${escapar(adversarioDe(jogo).nome)}</strong>
+              <small>${jogo.data_hora ? `${formatarData(jogo.data_hora)} · ${formatarHora(jogo.data_hora)}` : 'A definir'} · ${emCasa(jogo) ? 'Mandante' : 'Visitante'}</small></span>
+          </div>
+        </div>` : ''}
+    </section>`;
 }
 
-const listaJogos = (jogos, vazio) => jogos.length ? jogos.map(cartaoJogo).join('') : `<p class="carregando">${vazio}</p>`;
+function desenhar() {
+  app.innerHTML = `
+    ${htmlHero()}
+    <nav class="clube-abas" role="tablist" aria-label="Seções do clube">${ABAS.map(([id, rotulo, svg]) => `
+      <button class="clube-aba${estado.aba === id ? ' clube-aba--ativa' : ''}" role="tab" aria-selected="${estado.aba === id}" data-aba="${id}">
+        ${svg}<span>${rotulo}</span>${id === 'escalacao' && estado.alterada ? '<i class="ponto" aria-label="não salva"></i>' : ''}</button>`).join('')}</nav>
+    <div id="aba-clube" class="clube-conteudo"></div>`;
+  app.querySelector('[data-sair-clube]').addEventListener('click', () => {
+    if (!estado.alterada || confirm('A escalação tem alterações não salvas. Sair mesmo assim?')) sairDoClube();
+  });
+  app.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => trocarAba(b.dataset.aba)));
+  app.querySelector('.clube-aba--ativa')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  desenharAba();
+}
+
+function trocarAba(aba) {
+  estado.aba = aba;
+  app.querySelectorAll('[data-aba]').forEach((b) => {
+    const ativa = b.dataset.aba === aba;
+    b.classList.toggle('clube-aba--ativa', ativa);
+    b.setAttribute('aria-selected', String(ativa));
+  });
+  desenharAba();
+}
+
+function desenharAba() {
+  const alvo = document.getElementById('aba-clube');
+  alvo.classList.remove('clube-conteudo--entrar');
+  void alvo.offsetWidth; // reinicia a animação de entrada
+  alvo.classList.add('clube-conteudo--entrar');
+  SECOES[estado.aba](alvo);
+}
+
+// ---------- Seções ----------
+function htmlPartida(j) {
+  const adv = adversarioDe(j);
+  const data = j.data_hora ? new Date(j.data_hora) : null;
+  const encerrado = j.status === 'encerrado';
+  const r = encerrado ? resultadoDe(j) : null;
+  const direita = encerrado
+    ? `<span class="partida__placar"><b>${r.meus} × ${r.deles}</b><i class="forma__item forma__item--${r.letra}">${r.letra.toUpperCase()}</i></span>`
+    : j.status === 'ao_vivo'
+      ? `<span class="partida__placar"><b>${j.gols_mandante ?? 0} × ${j.gols_visitante ?? 0}</b><i class="selo selo--aovivo">Ao vivo</i></span>`
+      : `<span class="partida__hora">${data ? formatarHora(j.data_hora) : '—'}<small>${data ? escapar(quando(j.data_hora)) : ''}</small></span>`;
+  return `
+    <a class="partida" href="time.html?id=${adv.id}">
+      <span class="partida__data">${data ? `<b>${data.getDate()}</b>${data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}` : '—'}</span>
+      <span class="partida__adv">${escudo(adv, 32)}<span><strong>${escapar(adv.nome)}</strong>
+        <small>R${j.rodada?.numero ?? '?'} · ${emCasa(j) ? 'Mandante' : 'Visitante'}</small></span></span>
+      ${direita}
+    </a>`;
+}
 
 const SECOES = {
-  calendario(alvo) {
-    alvo.innerHTML = `<section class="secao"><h3>Próximos jogos</h3>
-      ${listaJogos(jogosDoTime().filter((j) => j.status !== 'encerrado'), 'Nenhum jogo agendado.')}</section>`;
-  },
-
-  resultados(alvo) {
-    alvo.innerHTML = `<section class="secao"><h3>Resultados</h3>
-      ${listaJogos(jogosDoTime().filter((j) => j.status === 'encerrado').reverse(), 'Nenhum jogo encerrado ainda.')}</section>`;
+  jogos(alvo) {
+    const todos = jogosDoTime();
+    const lista = estado.subJogos === 'proximos' ? todos.filter((j) => j.status !== 'encerrado') : todos.filter((j) => j.status === 'encerrado').reverse();
+    alvo.innerHTML = `
+      <div class="segmentos" role="tablist">
+        <button class="segmento${estado.subJogos === 'proximos' ? ' segmento--ativo' : ''}" data-sub="proximos">Calendário</button>
+        <button class="segmento${estado.subJogos === 'resultados' ? ' segmento--ativo' : ''}" data-sub="resultados">Resultados</button>
+      </div>
+      <div class="partidas">${lista.map(htmlPartida).join('') || `<p class="vazio">${estado.subJogos === 'proximos' ? 'Nenhum jogo agendado.' : 'Nenhum jogo encerrado ainda.'}</p>`}</div>`;
+    alvo.querySelectorAll('[data-sub]').forEach((b) => b.addEventListener('click', () => { estado.subJogos = b.dataset.sub; SECOES.jogos(alvo); }));
   },
 
   tabela(alvo) {
@@ -183,140 +284,216 @@ const SECOES = {
   },
 
   artilharia(alvo) {
+    const fotos = new Map(estado.dados.jogadores.map((j) => [j.id, j]));
     const doTime = posicoesComEmpate(estado.dados.artilharia.filter((a) => a.time_id === estado.time.id).map((a) => ({ ...a, gols: Number(a.gols) })));
-    alvo.innerHTML = `<section class="secao"><h3>Artilheiros do clube</h3>
-      ${doTime.length ? `<ol class="lista">${doTime.map((a) => `
+    const podio = doTime.slice(0, 3);
+    alvo.innerHTML = doTime.length ? `
+      <div class="podio">${podio.map((a, i) => `
+        <div class="podio__item podio__item--${i + 1}">
+          ${avatarJogador(fotos.get(a.jogador_id)?.foto_url ? fotos.get(a.jogador_id) : { numero: `${a.posicao}º` }, 'avatar avatar--medio')}
+          <strong>${escapar(a.jogador)}</strong><span class="podio__gols">${a.gols}<small> gol${a.gols === 1 ? '' : 's'}</small></span>
+        </div>`).join('')}</div>
+      ${doTime.length > 3 ? `<ol class="lista">${doTime.slice(3).map((a) => `
         <li class="artilheiro"><span class="artilheiro__pos">${a.posicao}º</span>
-          <div><div class="artilheiro__nome">${escapar(a.jogador)}</div></div>
-          <span class="artilheiro__gols">${a.gols}</span></li>`).join('')}</ol>` : '<p class="carregando">Nenhum gol do clube ainda.</p>'}
-      <p class="texto-2 texto-pequeno"><a href="artilharia.html">Artilharia geral →</a></p></section>`;
-  },
-
-  mural(alvo) {
-    alvo.innerHTML = `<section class="card secao">
-      <h3>Mural</h3>
-      <p class="texto-2">Você já está identificado como <b>${escapar(estado.time.nome)}</b>: no mural, as fotos saem com o nome e o escudo do clube.</p>
-      <a class="botao" href="mural.html">Abrir o mural e publicar foto</a></section>`;
+          <div><div class="artilheiro__nome">${escapar(a.jogador)}</div></div><span class="artilheiro__gols">${a.gols}</span></li>`).join('')}</ol>` : ''}
+      <p class="texto-2 texto-pequeno"><a href="artilharia.html">Artilharia geral →</a></p>`
+      : '<p class="vazio">Nenhum gol do clube ainda.</p>';
   },
 
   elenco(alvo) {
     const { time } = estado;
-    const jogadores = elenco();
+    const todos = elenco();
+    const grupos = LINHAS.find(([id]) => id === estado.filtroElenco)?.[2];
+    const jogadores = grupos ? todos.filter((j) => grupos.includes(j.posicao)) : todos;
     alvo.innerHTML = `
-      <section class="secao"><h3>Técnico</h3>
-        <div class="card elenco__item">
-          ${avatarJogador({ foto_url: time.tecnico_foto_url, numero: 'T' })}
-          <div class="elenco__nome"><strong>${escapar(time.tecnico_nome || 'Sem técnico cadastrado')}</strong></div>
-          <button class="botao botao--secundario" data-editar-tecnico>Editar</button>
-        </div></section>
-      <section class="secao"><h3>Jogadores (${jogadores.length})</h3>
-        ${jogadores.map((j) => `
-          <div class="card elenco__item">
-            ${avatarJogador(j)}
-            <div class="elenco__nome"><strong>${j.numero != null ? `${j.numero} · ` : ''}${escapar(j.nome)}</strong>
-              <span class="texto-2 texto-pequeno">${escapar(POSICOES.find(([p]) => p === j.posicao)?.[1] ?? 'Sem posição')}</span></div>
-            <button class="botao botao--secundario" data-editar-jogador="${j.id}">Editar</button>
-          </div>`).join('') || '<p class="carregando">Nenhum jogador cadastrado.</p>'}
-        <button class="botao" data-novo-jogador>+ Adicionar jogador</button>
-      </section>`;
+      <button class="tecnico" data-editar-tecnico>
+        ${avatarJogador({ foto_url: time.tecnico_foto_url, numero: 'T' }, 'avatar avatar--medio')}
+        <span><small>Técnico</small><strong>${escapar(time.tecnico_nome || 'Cadastrar técnico')}</strong></span>
+        <span class="tecnico__editar">Editar</span>
+      </button>
+      <div class="chips" aria-label="Filtrar por posição">${LINHAS.map(([id, rotulo, g]) => {
+        const qtd = g ? todos.filter((j) => g.includes(j.posicao)).length : todos.length;
+        return `<button class="chip${estado.filtroElenco === id ? ' chip--ativo' : ''}" data-filtro="${id}">${rotulo} <small>${qtd}</small></button>`;
+      }).join('')}</div>
+      <div class="cartas">
+        ${jogadores.map((j) => htmlCarta(j, `data-editar-jogador="${j.id}"`)).join('')}
+        <button class="carta carta--nova" data-novo-jogador>${ICONES.mais}<span>Adicionar jogador</span></button>
+      </div>`;
     alvo.querySelector('[data-editar-tecnico]').addEventListener('click', dialogoTecnico);
-    alvo.querySelector('[data-novo-jogador]').addEventListener('click', () => dialogoJogador({}));
+    alvo.querySelector('[data-novo-jogador]').addEventListener('click', () => dialogoJogador({ posicao: grupos?.[0] ?? '' }));
+    alvo.querySelectorAll('[data-filtro]').forEach((b) => b.addEventListener('click', () => { estado.filtroElenco = b.dataset.filtro; SECOES.elenco(alvo); }));
     alvo.querySelectorAll('[data-editar-jogador]').forEach((b) =>
-      b.addEventListener('click', () => dialogoJogador(jogadores.find((j) => j.id === Number(b.dataset.editarJogador)))));
+      b.addEventListener('click', () => dialogoJogador(todos.find((j) => j.id === Number(b.dataset.editarJogador)))));
   },
 
   escalacao(alvo) {
     const esc = estado.escalacao;
     const jogadores = elenco();
     const ativos = new Set(jogadores.map((j) => j.id));
-    // tira quem saiu do elenco
-    for (const [vaga, id] of Object.entries(esc.titulares)) if (!ativos.has(Number(id))) delete esc.titulares[vaga];
+    for (const [vaga, id] of Object.entries(esc.titulares)) if (!ativos.has(Number(id))) delete esc.titulares[vaga]; // saiu do elenco
     esc.reservas = esc.reservas.filter((id) => ativos.has(id));
     const titulares = new Set(Object.values(esc.titulares).map(Number));
-    const jogo = proximoJogo();
-    const adversario = jogo && (jogo.mandante_id === estado.time.id ? jogo.visitante : jogo.mandante);
+    const banco = jogadores.filter((j) => !titulares.has(j.id));
 
     alvo.innerHTML = `
-      <div class="chips" aria-label="Formação">${Object.keys(FORMACOES).map((f) =>
-        `<button class="chip${f === esc.formacao ? ' chip--ativo' : ''}" data-formacao="${f}">${f}</button>`).join('')}</div>
-      ${jogo ? `<p class="texto-2 texto-pequeno">Próximo jogo: <b>${escapar(estado.time.nome)} × ${escapar(adversario.nome)}</b></p>` : ''}
+      <div class="escalacao__barra">
+        <label class="seletor"><span class="sr-only">Formação</span>
+          <select data-formacao>${Object.keys(FORMACOES).map((f) => `<option${f === esc.formacao ? ' selected' : ''}>${f}</option>`).join('')}</select></label>
+        <span class="escalacao__contador${titulares.size === 11 ? ' escalacao__contador--ok' : ''}">${titulares.size}/11</span>
+        <button class="botao botao--secundario botao--icone" data-auto title="Preencher automático pelas posições">${ICONES.varinha}<span>Auto</span></button>
+      </div>
       ${jogadores.length ? '' : '<p class="aviso">Cadastre os jogadores na aba Elenco para escalar o time.</p>'}
       ${htmlCampo({ formacao: esc.formacao, titulares: esc.titulares, jogadores, interativo: true })}
-      <p class="texto-2 texto-pequeno centro">Toque numa posição para escolher o jogador · ${titulares.size}/11 escalados</p>
-      <section class="secao"><h3>Reservas</h3>
-        <div class="chips chips--quebra">${jogadores.filter((j) => !titulares.has(j.id)).map((j) =>
-          `<button class="chip${esc.reservas.includes(j.id) ? ' chip--ativo' : ''}" data-reserva="${j.id}">${j.numero != null ? `${j.numero} · ` : ''}${escapar(j.nome)}</button>`).join('') || '<span class="texto-2 texto-pequeno">Todos os jogadores estão no campo.</span>'}</div>
+      <p class="centro texto-pequeno"><button class="link-botao" data-limpar>Limpar escalação</button></p>
+      <section class="secao">
+        <h3>Banco <small class="texto-2">${esc.reservas.length} reserva${esc.reservas.length === 1 ? '' : 's'} · toque para marcar</small></h3>
+        <div class="banco">${banco.map((j) => `
+          <button class="banco__item${esc.reservas.includes(j.id) ? ' banco__item--ativo' : ''}" data-reserva="${j.id}" aria-pressed="${esc.reservas.includes(j.id)}">
+            ${avatarJogador(j, 'avatar')}<span>${escapar(j.nome.split(' ')[0])}</span></button>`).join('') || '<span class="texto-2 texto-pequeno">Todos os jogadores estão no campo.</span>'}</div>
       </section>
-      ${estado.alterada ? '<p class="aviso">Alterações ainda não salvas.</p>' : ''}
-      <div class="form__acoes">
-        <button class="botao botao--secundario" data-limpar>Limpar</button>
-        <button class="botao botao--secundario" data-salvar-escalacao>Salvar</button>
-        <button class="botao" data-compartilhar-escalacao>Compartilhar imagem</button>
+      <div class="barra-acoes">
+        <button class="botao botao--secundario" data-salvar-escalacao>${estado.alterada ? 'Salvar alterações' : 'Salvo ✔'}</button>
+        <button class="botao" data-compartilhar-escalacao>${icone('whatsapp')} Compartilhar</button>
       </div>`;
 
-    const mudou = () => { estado.alterada = true; SECOES.escalacao(alvo); };
-    alvo.querySelectorAll('[data-formacao]').forEach((b) => b.addEventListener('click', () => { esc.formacao = b.dataset.formacao; mudou(); }));
+    const mudou = () => { estado.alterada = true; app.querySelector('[data-aba="escalacao"]').innerHTML = `${ICONES.escalacao}<span>Escalação</span><i class="ponto" aria-label="não salva"></i>`; SECOES.escalacao(alvo); };
+    alvo.querySelector('[data-formacao]').addEventListener('change', (e) => { esc.formacao = e.target.value; mudou(); });
     alvo.querySelectorAll('[data-vaga]').forEach((b) => b.addEventListener('click', () => escolherJogador(Number(b.dataset.vaga), jogadores, mudou)));
     alvo.querySelectorAll('[data-reserva]').forEach((b) => b.addEventListener('click', () => {
       const id = Number(b.dataset.reserva);
       esc.reservas = esc.reservas.includes(id) ? esc.reservas.filter((r) => r !== id) : [...esc.reservas, id];
       mudou();
     }));
+    alvo.querySelector('[data-auto]').addEventListener('click', () => { preencherAutomatico(jogadores); mudou(); toast('Time escalado pelas posições. Ajuste à vontade.'); });
     alvo.querySelector('[data-limpar]').addEventListener('click', () => {
       if (confirm('Tirar todos os jogadores do campo e do banco?')) { esc.titulares = {}; esc.reservas = []; mudou(); }
     });
     alvo.querySelector('[data-salvar-escalacao]').addEventListener('click', () => salvarEscalacao(alvo));
-    alvo.querySelector('[data-compartilhar-escalacao]').addEventListener('click', (e) => compartilharEscalacao(e.currentTarget, jogadores, jogo));
+    alvo.querySelector('[data-compartilhar-escalacao]').addEventListener('click', (e) => compartilharEscalacao(e.currentTarget, jogadores));
+  },
+
+  async mural(alvo) {
+    alvo.innerHTML = `
+      <button class="botao botao--grande" data-publicar>${ICONES.camera} Publicar foto do clube</button>
+      <p class="texto-2 texto-pequeno">As fotos aparecem aqui na hora. No mural geral, entram depois que o organizador aprovar.</p>
+      <div class="galeria" id="galeria-clube">${'<span class="galeria__item esqueleto__bloco"></span>'.repeat(4)}</div>
+      <p class="texto-2 texto-pequeno"><a href="mural.html">Ver o mural geral →</a></p>`;
+    alvo.querySelector('[data-publicar]').addEventListener('click', dialogoPublicar);
+    try {
+      estado.posts = await clubeMeusPosts(estado.codigo);
+      if (estado.aba !== 'mural') return;
+      document.getElementById('galeria-clube').innerHTML = estado.posts.map((p) => `
+        <figure class="galeria__item">
+          <img src="${escapar(urlFoto(p.foto_path))}" loading="lazy" alt="${escapar(p.descricao ?? 'Foto do clube')}">
+          <span class="galeria__selo ${p.aprovado ? 'galeria__selo--ok' : ''}">${p.aprovado ? 'No mural' : 'Em análise'}</span>
+          <figcaption>${escapar(tempoRelativo(p.criado_em))}${p.comentarios ? ` · ${p.comentarios} 💬` : ''}</figcaption>
+        </figure>`).join('') || '<p class="vazio">Nenhuma foto publicada ainda.</p>';
+    } catch (erro) { tratarErro(erro); }
   },
 };
 
+function htmlCarta(j, atributos = '', extra = '') {
+  return `
+    <button class="carta carta--${linhaDe(j.posicao)}" ${atributos}>
+      <span class="carta__foto">${j.foto_url ? `<img src="${escapar(j.foto_url)}" alt="" loading="lazy">` : `<span>${escapar((j.nome || '?').slice(0, 1))}</span>`}</span>
+      ${j.numero != null ? `<span class="carta__numero">${j.numero}</span>` : ''}
+      <span class="carta__posicao">${escapar(j.posicao ?? '—')}</span>
+      <span class="carta__nome">${escapar(j.nome)}</span>
+      ${extra}
+    </button>`;
+}
+
 // ---------- Escalação ----------
+const ondeEsta = (id) => Object.entries(estado.escalacao.titulares).find(([, j]) => Number(j) === id)?.[0];
+
+function preencherAutomatico(jogadores) {
+  const esc = estado.escalacao;
+  const vagas = FORMACOES[esc.formacao];
+  const usados = new Set();
+  const titulares = {};
+  vagas.forEach(([rotulo], i) => { // 1º: quem joga na posição da vaga
+    const j = jogadores.find((x) => !usados.has(x.id) && x.posicao === GRUPO_DA_VAGA[rotulo]);
+    if (j) { titulares[i] = j.id; usados.add(j.id); }
+  });
+  vagas.forEach(([rotulo], i) => { // 2º: completa com quem sobrou (goleiro só no gol)
+    if (titulares[i] != null) return;
+    const j = jogadores.find((x) => !usados.has(x.id) && (rotulo === 'GOL' || x.posicao !== 'GOL'));
+    if (j) { titulares[i] = j.id; usados.add(j.id); }
+  });
+  esc.titulares = titulares;
+  esc.reservas = esc.reservas.filter((id) => !usados.has(id));
+}
+
 function escolherJogador(vaga, jogadores, mudou) {
   const esc = estado.escalacao;
-  const atual = Number(esc.titulares[vaga]);
-  const ondeEsta = (id) => Object.entries(esc.titulares).find(([, j]) => Number(j) === id)?.[0];
+  const rotulo = FORMACOES[esc.formacao][vaga][0];
+  const grupo = GRUPO_DA_VAGA[rotulo];
+  const atual = esc.titulares[vaga] != null ? Number(esc.titulares[vaga]) : null;
+  let filtro = jogadores.some((j) => j.posicao === grupo) ? 'sugeridos' : 'todos';
+  let busca = '';
+
   const d = abrirDialogo(`
-    <div class="form">
-      <h2>Escolher jogador</h2>
-      <div class="lista-escolha">${jogadores.map((j) => `
-        <button class="lista-escolha__item${j.id === atual ? ' lista-escolha__item--ativo' : ''}" data-jogador="${j.id}">
-          ${avatarJogador(j)}
-          <span><strong>${j.numero != null ? `${j.numero} · ` : ''}${escapar(j.nome)}</strong>
-            <small class="texto-2">${escapar(POSICOES.find(([p]) => p === j.posicao)?.[1] ?? '')}${ondeEsta(j.id) != null && j.id !== atual ? ' · já está no campo' : ''}</small></span>
-        </button>`).join('')}</div>
-      <div class="form__acoes">
-        ${esc.titulares[vaga] != null ? '<button class="botao botao--secundario" data-vazia>Deixar vazia</button>' : ''}
-        <button class="botao botao--secundario" data-fechar>Cancelar</button>
+    <div class="form folha">
+      <div class="folha__topo"><h2>Escolher · ${escapar(rotulo)}</h2><button class="botao botao--secundario" data-fechar>Fechar</button></div>
+      <label class="busca">${ICONES.busca}<input type="search" placeholder="Buscar jogador" aria-label="Buscar jogador"></label>
+      <div class="segmentos">
+        <button class="segmento" data-filtro-folha="sugeridos">${escapar(nomePosicao(grupo))}s</button>
+        <button class="segmento" data-filtro-folha="todos">Todos</button>
       </div>
-    </div>`);
+      <div class="cartas cartas--folha" data-lista></div>
+      ${atual != null ? '<button class="botao botao--secundario" data-vazia>Deixar posição vazia</button>' : ''}
+    </div>`, 'dialogo--folha');
+
+  const lista = d.querySelector('[data-lista]');
+  const pintar = () => {
+    d.querySelectorAll('[data-filtro-folha]').forEach((b) => b.classList.toggle('segmento--ativo', b.dataset.filtroFolha === filtro));
+    const termo = busca.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+    const visiveis = jogadores.filter((j) => (filtro === 'todos' || j.posicao === grupo)
+      && (!termo || `${j.nome} ${j.numero ?? ''}`.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().includes(termo)));
+    lista.innerHTML = visiveis.map((j) => {
+      const onde = ondeEsta(j.id);
+      const marca = j.id === atual ? '<span class="carta__marca">Nesta posição</span>'
+        : onde != null ? `<span class="carta__marca">No campo · ${escapar(FORMACOES[esc.formacao][onde][0])}</span>`
+          : esc.reservas.includes(j.id) ? '<span class="carta__marca">No banco</span>' : '';
+      return htmlCarta(j, `data-jogador="${j.id}"${j.id === atual ? ' aria-current="true"' : ''}`, marca);
+    }).join('') || '<p class="vazio">Nenhum jogador encontrado.</p>';
+  };
+  d.querySelector('input[type=search]').addEventListener('input', (e) => { busca = e.target.value; pintar(); });
   d.addEventListener('click', (e) => {
-    const item = e.target.closest('[data-jogador]');
+    const f = e.target.closest('[data-filtro-folha]');
+    if (f) { filtro = f.dataset.filtroFolha; pintar(); return; }
     if (e.target.closest('[data-vazia]')) { delete esc.titulares[vaga]; d.close(); mudou(); return; }
+    const item = e.target.closest('[data-jogador]');
     if (!item) return;
     const id = Number(item.dataset.jogador);
     const anterior = ondeEsta(id);
-    if (anterior != null) delete esc.titulares[anterior]; // trocou de posição
+    if (anterior != null && anterior !== String(vaga)) { // já estava no campo: troca de lugar com quem está aqui
+      if (atual != null) esc.titulares[anterior] = atual; else delete esc.titulares[anterior];
+    }
     esc.titulares[vaga] = id;
     esc.reservas = esc.reservas.filter((r) => r !== id);
     d.close();
     mudou();
   });
+  pintar();
 }
 
 async function salvarEscalacao(alvo) {
   try {
     await clubeSalvarEscalacao(estado.codigo, estado.escalacao);
     estado.alterada = false;
+    app.querySelector('[data-aba="escalacao"] .ponto')?.remove();
     toast('Escalação salva ✔');
     SECOES.escalacao(alvo);
   } catch (erro) { tratarErro(erro); }
 }
 
-async function compartilharEscalacao(botao, jogadores, jogo) {
+async function compartilharEscalacao(botao, jogadores) {
+  if (Object.keys(estado.escalacao.titulares).length < 11 && !confirm('A escalação ainda não tem 11 jogadores. Compartilhar assim mesmo?')) return;
   botao.disabled = true;
   toast('Gerando imagem...');
   try {
-    const arte = inserirArte('arte-escalacao', arteEscalacao(estado.dados.campeonato, estado.time, estado.escalacao, jogadores, jogo));
+    const arte = inserirArte('arte-escalacao', arteEscalacao(estado.dados.campeonato, estado.time, estado.escalacao, jogadores, proximoJogo()));
     await compartilharImagem(arte, `escalacao-${estado.time.sigla ?? 'time'}.jpg`.toLowerCase());
   } catch (erro) {
     toast(`Não foi possível gerar a imagem: ${erro.message}`, true);
@@ -326,18 +503,19 @@ async function compartilharEscalacao(botao, jogadores, jogo) {
 }
 
 // ---------- Elenco ----------
-function campoFoto(urlAtual) {
+function campoFoto(urlAtual, rotulo) {
   return `
-    <label class="campo">Foto (opcional)<input type="file" name="foto" accept="image/*"></label>
-    <img class="avatar avatar--grande previa-foto${urlAtual ? '' : ' oculto'}" src="${escapar(urlAtual ?? '')}" alt="Prévia da foto">`;
+    <label class="foto-escolha">
+      <input type="file" name="foto" accept="image/*" class="sr-only">
+      <span class="foto-escolha__circulo">${urlAtual ? `<img src="${escapar(urlAtual)}" alt="">` : ICONES.camera}</span>
+      <span class="texto-pequeno">${urlAtual ? 'Trocar foto' : rotulo}</span>
+    </label>`;
 }
 
 function ligarPrevia(d) {
   d.querySelector('[name=foto]').addEventListener('change', (e) => {
     const arquivo = e.target.files[0];
-    const previa = d.querySelector('.previa-foto');
-    previa.classList.toggle('oculto', !arquivo);
-    if (arquivo) previa.src = URL.createObjectURL(arquivo);
+    if (arquivo) d.querySelector('.foto-escolha__circulo').innerHTML = `<img src="${URL.createObjectURL(arquivo)}" alt="Prévia da foto">`;
   });
 }
 
@@ -352,13 +530,12 @@ function dialogoJogador(jogador) {
   const d = abrirDialogo(`
     <form class="form">
       <h2>${jogador.id ? 'Editar jogador' : 'Novo jogador'}</h2>
-      <label class="campo">Nome*<input name="nome" required maxlength="40" value="${escapar(jogador.nome ?? '')}"></label>
-      <div class="form__linha">
-        <label class="campo">Número<input name="numero" type="number" min="0" max="99" inputmode="numeric" value="${jogador.numero ?? ''}"></label>
-        <label class="campo">Posição<select name="posicao"><option value="">—</option>${POSICOES.map(([p, nome]) =>
-          `<option value="${p}"${jogador.posicao === p ? ' selected' : ''}>${nome}</option>`).join('')}</select></label>
-      </div>
-      ${campoFoto(jogador.foto_url)}
+      ${campoFoto(jogador.foto_url, 'Adicionar foto')}
+      <label class="campo">Nome*<input name="nome" required maxlength="40" autocomplete="off" value="${escapar(jogador.nome ?? '')}"></label>
+      <label class="campo campo--curto">Número<input name="numero" type="number" min="0" max="99" inputmode="numeric" value="${jogador.numero ?? ''}"></label>
+      <fieldset class="opcoes"><legend>Posição</legend>${POSICOES.map(([p, nome]) => `
+        <label class="opcao opcao--${linhaDe(p)}"><input type="radio" name="posicao" value="${p}"${jogador.posicao === p ? ' checked' : ''}><span>${nome}</span></label>`).join('')}
+      </fieldset>
       <div class="form__acoes">
         ${jogador.id ? '<button class="botao botao--perigo" type="button" data-remover>Remover</button>' : ''}
         <button class="botao botao--secundario" type="button" data-fechar>Cancelar</button>
@@ -379,7 +556,7 @@ function dialogoJogador(jogador) {
       const fotoUrl = await fotoEnviada(d, jogador.foto_url);
       await clubeSalvarJogador(estado.codigo, {
         id: jogador.id, nome: String(dados.get('nome')).trim(), foto_url: fotoUrl,
-        numero: dados.get('numero') === '' ? null : Number(dados.get('numero')), posicao: dados.get('posicao'),
+        numero: dados.get('numero') === '' ? null : Number(dados.get('numero')), posicao: dados.get('posicao') ?? '',
       });
       d.close();
       toast('Jogador salvo ✔');
@@ -396,8 +573,8 @@ function dialogoTecnico() {
   const d = abrirDialogo(`
     <form class="form">
       <h2>Técnico</h2>
-      <label class="campo">Nome<input name="nome" maxlength="40" value="${escapar(time.tecnico_nome ?? '')}"></label>
-      ${campoFoto(time.tecnico_foto_url)}
+      ${campoFoto(time.tecnico_foto_url, 'Adicionar foto')}
+      <label class="campo">Nome<input name="nome" maxlength="40" autocomplete="off" value="${escapar(time.tecnico_nome ?? '')}"></label>
       <div class="form__acoes">
         <button class="botao botao--secundario" type="button" data-fechar>Cancelar</button>
         <button class="botao" type="submit">Salvar</button>
@@ -421,12 +598,54 @@ function dialogoTecnico() {
   });
 }
 
+// ---------- Mural do clube ----------
+function dialogoPublicar() {
+  const jogos = jogosDoTime().map((j) => `<option value="${j.id}">R${j.rodada?.numero ?? '?'} · ${escapar(j.mandante.nome)} × ${escapar(j.visitante.nome)}</option>`).join('');
+  const d = abrirDialogo(`
+    <form class="form">
+      <h2>Publicar foto</h2>
+      <label class="foto-escolha foto-escolha--larga">
+        <input type="file" name="foto" accept="image/*" required class="sr-only">
+        <span class="foto-escolha__quadro">${ICONES.camera}<span class="texto-pequeno">Toque para escolher a foto</span></span>
+      </label>
+      <label class="campo">Descrição<textarea name="descricao" maxlength="500" placeholder="Conte como foi o jogo..."></textarea></label>
+      <label class="campo">Jogo (opcional)<select name="jogo"><option value="">Nenhum</option>${jogos}</select></label>
+      <p class="texto-2 texto-pequeno">Aparece no painel do clube na hora. No mural geral, depois da aprovação do organizador.</p>
+      <div class="form__acoes">
+        <button class="botao botao--secundario" type="button" data-fechar>Cancelar</button>
+        <button class="botao" type="submit">Enviar</button>
+      </div>
+    </form>`);
+  d.querySelector('[name=foto]').addEventListener('change', (e) => {
+    const arquivo = e.target.files[0];
+    if (arquivo) d.querySelector('.foto-escolha__quadro').innerHTML = `<img src="${URL.createObjectURL(arquivo)}" alt="Prévia da foto">`;
+  });
+  d.querySelector('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const dados = new FormData(e.target);
+    const enviar = e.target.querySelector('[type=submit]');
+    enviar.disabled = true;
+    try {
+      toast('Enviando foto...');
+      const foto = await prepararFoto(dados.get('foto'));
+      await publicarPost({ codigo: estado.codigo, descricao: dados.get('descricao'), foto, jogoId: dados.get('jogo') ? Number(dados.get('jogo')) : null });
+      d.close();
+      toast('Foto enviada! Já aparece aqui; no mural geral, após aprovação.');
+      if (estado.aba === 'mural') desenharAba();
+    } catch (erro) {
+      tratarErro(erro);
+      enviar.disabled = false;
+    }
+  });
+}
+
 // ---------- Início ----------
 montarLayout('inicio');
 document.querySelector('.faixa')?.remove();
 if (checarConfiguracao(app)) {
   estado.codigo = guardado(CHAVE_CODIGO);
   if (estado.codigo && guardado(CHAVE_TIME)) { mostrarCarregando(app); carregar(); } else telaEntrada();
-  // Realtime: não redesenha com uma janela aberta (alguém editando o elenco)
-  assinarMudancas(() => { if (estado.time && !document.querySelector('dialog[open]')) carregar(); });
+  // Realtime: não redesenha com uma janela aberta (alguém editando o elenco) nem com a escalação por salvar
+  assinarMudancas(() => { if (estado.time && !document.querySelector('dialog[open]') && !estado.alterada) carregar(); });
+  window.addEventListener('beforeunload', (e) => { if (estado.alterada) e.preventDefault(); });
 }

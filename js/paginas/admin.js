@@ -1,7 +1,7 @@
 // Área do organizador: login, confrontos/resultados e times.
 import {
   buscarSessao, entrar, sair, listarTimes, listarRodadas, listarJogos, listarJogadores,
-  salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo,
+  salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo, contarPostsPendentes,
 } from '../api.js';
 import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
@@ -77,13 +77,14 @@ async function iniciar() {
 
 async function carregar() {
   try {
-    const [times, rodadas, jogos, jogadores, codigos] = await Promise.all([listarTimes(), listarRodadas(), listarJogos(), listarJogadores(), estado.aba === 'times' ? listarCodigos() : []]);
+    const [times, rodadas, jogos, jogadores, codigos, pendentes] = await Promise.all([listarTimes(), listarRodadas(), listarJogos(), listarJogadores(),
+      estado.aba === 'times' ? listarCodigos() : [], contarPostsPendentes().catch(() => 0)]);
     const abas = [['confrontos', 'Confrontos e resultados'], ['times', 'Times']];
     app.innerHTML = `
       <div class="admin__topo">
         <h2>Organizador</h2>
         <div class="form__acoes">
-          <a class="botao botao--secundario" href="mural.html">Mural</a>
+          <a class="botao botao--secundario" href="mural.html">Mural${pendentes ? ` <span class="contador" title="Fotos aguardando aprovação">${pendentes}</span>` : ''}</a>
           <button class="botao botao--secundario" id="btn-csv">Exportar CSV</button>
         </div>
       </div>

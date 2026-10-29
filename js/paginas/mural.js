@@ -1,7 +1,7 @@
 // Mural: fotos com descrição e comentários. Times publicam com o código do time; o organizador modera.
 import {
   listarPosts, listarJogos, urlFoto, validarCodigo, publicarPost, comentarPost,
-  apagarPostDoTime, apagarPost, apagarComentario, buscarSessao,
+  apagarPostDoTime, apagarPost, apagarComentario, buscarSessao, aprovarPost,
 } from '../api.js';
 import { prepararFoto } from '../imagem.js';
 import { assinarMudancas } from '../realtime.js';
@@ -101,10 +101,29 @@ function restaurarRascunhos({ textos, foco }) {
   }
 }
 
+// Fila de aprovação (só o organizador vê): publicações de time aguardando
+function htmlPendente(p) {
+  return `
+    <article class="card post post--pendente">
+      <header class="post__topo">${p.time ? escudo(p.time, 32) : ''}
+        <div><strong>${escapar(p.autor)}</strong><span class="texto-2 texto-pequeno">${tempoRelativo(p.criado_em)} · aguardando aprovação</span></div>
+      </header>
+      <img class="post__foto" src="${escapar(urlFoto(p.foto_path))}" loading="lazy" alt="Foto enviada por ${escapar(p.autor)}">
+      ${p.descricao ? `<p class="post__descricao post__corpo">${escapar(p.descricao)}</p>` : ''}
+      <div class="form__acoes post__corpo">
+        <button class="botao botao--perigo" data-apagar-post="${p.id}">Recusar</button>
+        <button class="botao" data-aprovar="${p.id}">Aprovar e publicar</button>
+      </div>
+    </article>`;
+}
+
 function renderizar() {
   const rascunhos = capturarRascunhos();
+  const visiveis = estado.posts.filter((p) => p.aprovado !== false);
+  const pendentes = estado.organizador ? estado.posts.filter((p) => p.aprovado === false) : [];
   app.innerHTML = `${htmlBarra()}
-    ${estado.posts.length ? estado.posts.map(htmlPost).join('')
+    ${pendentes.length ? `<section class="secao fila-aprovacao"><h3>Aguardando aprovação (${pendentes.length})</h3>${pendentes.map(htmlPendente).join('')}</section>` : ''}
+    ${visiveis.length ? visiveis.map(htmlPost).join('')
       : '<p class="carregando">Nenhuma publicação ainda. Seja o primeiro a postar uma foto!</p>'}`;
   restaurarRascunhos(rascunhos);
 }
@@ -139,7 +158,8 @@ function abrirDialogoPublicar() {
       <img class="post__previa oculto" alt="Prévia da foto">
       <label class="campo">Descrição<textarea name="descricao" maxlength="500" placeholder="Conte como foi o jogo..."></textarea></label>
       <label class="campo">Jogo (opcional)<select name="jogo"><option value="">Nenhum</option>${jogos}</select></label>
-      <p class="texto-2 texto-pequeno">Publique só fotos do campeonato. O organizador pode remover qualquer publicação.</p>
+      <p class="texto-2 texto-pequeno">${estado.organizador ? 'Publique só fotos do campeonato.'
+        : 'A foto entra no mural depois que o organizador aprovar. No painel do clube ela aparece na hora.'}</p>
       <div class="form__acoes">
         <button class="botao botao--secundario" type="button" data-fechar>Cancelar</button>
         <button class="botao" type="submit">Publicar</button>
@@ -172,7 +192,7 @@ function abrirDialogoPublicar() {
       await publicarPost({ codigo, descricao: dados.get('descricao'), foto, jogoId: dados.get('jogo') ? Number(dados.get('jogo')) : null });
       if (codigo) guardar(CHAVE_CODIGO, codigo);
       d.close();
-      toast('Foto publicada ✔');
+      toast(codigo ? 'Foto enviada! Ela entra no mural depois da aprovação do organizador.' : 'Foto publicada ✔');
       await carregar();
     } catch (erro) {
       toast(erro.message, true);
@@ -187,6 +207,7 @@ app.addEventListener('click', async (e) => {
   if (!botao) return;
   try {
     if (botao.hasAttribute('data-publicar')) abrirDialogoPublicar();
+    else if (botao.dataset.aprovar) { await aprovarPost(Number(botao.dataset.aprovar)); toast('Publicação aprovada ✔'); await carregar(); }
     else if (botao.hasAttribute('data-trocar-codigo')) { esquecer(CHAVE_CODIGO); estado.time = null; renderizar(); abrirDialogoPublicar(); }
     else if (botao.dataset.apagarPost) {
       const post = estado.posts.find((p) => p.id === Number(botao.dataset.apagarPost));

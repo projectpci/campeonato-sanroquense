@@ -199,7 +199,8 @@ export async function publicarPost({ codigo, descricao, foto, jogoId }) {
     if (resposta?.erro === 'codigo') throw new Error('Código do time inválido. Peça o código ao organizador.');
     return resposta;
   }
-  return gravar('posts', { campeonato_id: CAMPEONATO_ID, autor: 'Organização', descricao: descricao || null, foto_path: caminho, jogo_id: jogoId ?? null });
+  // publicação do organizador já sai aprovada
+  return gravar('posts', { campeonato_id: CAMPEONATO_ID, autor: 'Organização', descricao: descricao || null, foto_path: caminho, jogo_id: jogoId ?? null, aprovado: true, aprovado_em: new Date().toISOString() });
 }
 
 export const comentarPost = (postId, nome, texto) =>
@@ -218,6 +219,18 @@ export async function apagarPost(post) {
   if (demo) return dadosDemo.apagarPost(post.id);
   await executar(cliente().from('posts').delete().eq('id', post.id));
   await cliente().storage.from('mural').remove([post.foto_path]); // melhor esforço
+}
+
+// Moderação: publicação de time só aparece para todos depois de aprovada
+export const aprovarPost = (id) =>
+  demo ? dadosDemo.aprovarPost(id) :
+  gravar('posts', { id, aprovado: true, aprovado_em: new Date().toISOString() });
+
+export async function contarPostsPendentes() {
+  if (demo) return dadosDemo.listarPosts().filter((p) => p.aprovado === false).length;
+  const { count, error } = await cliente().from('posts').select('id', { count: 'exact', head: true }).eq('aprovado', false);
+  if (error) throw new Error(error.message);
+  return count ?? 0;
 }
 
 export const apagarComentario = (id) =>
@@ -287,3 +300,9 @@ export const clubeBuscarEscalacao = (codigo) =>
 export const clubeSalvarEscalacao = (codigo, { formacao, titulares, reservas }) =>
   demo ? dadosDemo.clubeSalvarEscalacao(codigo, { formacao, titulares, reservas }) :
   rpcClube('clube_salvar_escalacao', { p_codigo: codigo, p_formacao: formacao, p_titulares: titulares, p_reservas: reservas });
+
+// Publicações do próprio clube, inclusive as que aguardam aprovação
+export async function clubeMeusPosts(codigo) {
+  if (demo) return dadosDemo.clubeMeusPosts(codigo);
+  return (await rpcClube('clube_meus_posts', { p_codigo: codigo })).posts ?? [];
+}
