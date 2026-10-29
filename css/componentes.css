@@ -395,3 +395,4 @@ a.time__nome { color: var(--cor-texto); }
 .campo__nome { max-width: 72px; padding: 0 4px; border-radius: 4px; background: var(--cor-fundo); font-size: .72rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .campo__nome b { color: var(--cor-primaria); }
 .campo__vaga--vazia .campo__nome { background: none; color: var(--cor-texto-2); }
+.entrada__organizador { color: var(--cor-texto-2); text-decoration: underline; }
