@@ -6,3 +6,6 @@
 Thumbs.db
 .vscode/
 node_modules/
+
+# Imagens de divulgação com os códigos de acesso dos clubes (não publicar no GitHub)
+divulgacao/
