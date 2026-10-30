@@ -108,3 +108,4 @@
 - [x] Time do coração perguntado na 1ª entrada (por aparelho), Configurações do torcedor, torcedores declarados na área do clube e ranking de torcidas no ADM
 - [x] Bug da abertura travada (só "Início"): resgate automático do cache, instalação do SW sem cópia velha e app sempre abrindo na tela inicial
 - [x] "+ Adicionar confronto" saiu da aba Jogos e foi para Ajustes → Novo confronto (escolhe a rodada)
+- [x] Navegação mais rápida: código guardado por versão no service worker (sem ~7 idas e voltas por página), Supabase e config carregando juntos, bolinha online mais leve

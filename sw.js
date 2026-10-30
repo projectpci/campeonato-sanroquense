@@ -1,6 +1,6 @@
 // Service worker: abre rápido e mostra a última tabela conhecida quando o celular está sem sinal.
-// Suba VERSAO a cada deploy para limpar o cache antigo.
-const VERSAO = 'v38';
+// Suba VERSAO a cada deploy: o código (html, js, css) fica guardado por versão e só muda quando ela sobe.
+const VERSAO = 'v39';
 const CACHE = `sanroquense-${VERSAO}`;
 // Fotos do mural e do elenco (Storage): cache à parte, com limite, para não encher o celular
 const CACHE_IMAGENS = 'sanroquense-imagens';
@@ -10,6 +10,12 @@ const NUCLEO = [
   './', 'index.html', 'inicio.html', 'confrontos.html', 'classificacao.html', 'artilharia.html', 'admin.html', 'time.html', 'instalar.html', 'clube.html', 'elenco.html',
   'css/tokens.css', 'css/base.css', 'css/componentes.css', 'css/compartilhar.css',
   'mural.html', 'assets/escudo-padrao.svg', 'manifest.webmanifest', 'assets/compartilhar.jpg',
+  // todos os módulos: a versão nova chega inteira de uma vez (nunca mistura arquivo novo com velho)
+  ...['api', 'artes', 'avisos', 'cache', 'cartaoJogo', 'classificacao', 'compartilhar', 'compartilharJogo', 'config',
+    'configTorcedor', 'elencoTime', 'escalacao', 'feed', 'imagem', 'jogoExtras', 'meuTime', 'presenca', 'probabilidade',
+    'pwa', 'rankings', 'realtime', 'resgate', 'rodadas', 'supabase', 'tabelas', 'torcidaOnline', 'ui'].map((m) => `js/${m}.js`),
+  ...['admin', 'artilharia', 'classificacao', 'clube', 'confrontos', 'elenco', 'entrada', 'inicio', 'instalar', 'mural', 'time']
+    .map((p) => `js/paginas/${p}.js`),
 ];
 
 self.addEventListener('install', (evento) => {
@@ -28,7 +34,8 @@ self.addEventListener('activate', (evento) => {
   );
 });
 
-// Dados (REST do Supabase) e código do site: rede primeiro, cache como reserva. Imagens, fontes e bibliotecas: cache primeiro.
+// Dados (REST do Supabase): rede primeiro, cache como reserva. Código do site: o da versão guardada.
+// Imagens, fontes e bibliotecas: cache primeiro.
 self.addEventListener('fetch', (evento) => {
   const { request } = evento;
   if (request.method !== 'GET') return;
@@ -36,20 +43,32 @@ self.addEventListener('fetch', (evento) => {
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
   if (url.pathname.includes('/auth/') || url.pathname.includes('/realtime/')) return;
 
-  // Dados e o código do próprio site: rede primeiro (sempre a versão nova); imagens, fontes e bibliotecas: cache primeiro
   const ehDados = url.hostname.endsWith('.supabase.co') && url.pathname.includes('/rest/');
   const ehCodigo = url.origin === location.origin && /(\.(html|js|css|webmanifest)|\/)$/.test(url.pathname);
   const ehFoto = url.hostname.endsWith('.supabase.co') && url.pathname.includes('/storage/');
-  evento.respondWith(ehDados || ehCodigo ? redePrimeiro(request, ehCodigo) : cachePrimeiro(request, ehFoto ? CACHE_IMAGENS : CACHE));
+  if (ehDados) evento.respondWith(redePrimeiro(request));
+  else if (ehCodigo) evento.respondWith(codigoDaVersao(request, url));
+  else evento.respondWith(cachePrimeiro(request, ehFoto ? CACHE_IMAGENS : CACHE));
 });
 
-// `revalidar`: o GitHub Pages deixa o navegador guardar os arquivos por 10 min; aqui sempre pergunta se mudou (304 é barato)
-async function redePrimeiro(request, revalidar = false) {
+// Código: sai direto do cache desta versão, sem perguntar ao servidor arquivo por arquivo
+// (antes cada página esperava ~7 idas e voltas em cascata, uma por nível de import: era a lentidão ao navegar).
+// O que não estiver guardado vem da rede e fica guardado nesta versão.
+async function codigoDaVersao(request, url) {
+  const cache = await caches.open(CACHE);
+  const guardada = await cache.match(request, { ignoreSearch: true });
+  if (guardada && !guardada.redirected) return guardada;
+  const resposta = await fetch(url.href, { cache: 'no-cache', credentials: 'same-origin' });
+  if (resposta.status === 200 && !resposta.redirected) cache.put(url.origin + url.pathname, resposta.clone());
+  return resposta;
+}
+
+async function redePrimeiro(request) {
   const cache = await caches.open(CACHE);
   // Sinal fraco: se a rede não responde em 4 s e há cópia guardada, usa a cópia
   const limite = new Promise((resolve) => setTimeout(() => resolve(null), 4000));
   try {
-    const rede = fetch(revalidar ? new Request(request, { cache: 'no-cache' }) : request).then((resposta) => {
+    const rede = fetch(request).then((resposta) => {
       if (resposta.status === 200) cache.put(request, resposta.clone());
       return resposta;
     });

@@ -2,12 +2,9 @@
 // Versão FIXA do supabase-js: uma atualização do CDN não pode quebrar o site no meio do campeonato.
 const SUPABASE_ESM = 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
-let config = null;
-try {
-  config = await import('./config.js');
-} catch {
-  config = null;
-}
+// config.js e a biblioteca carregam ao mesmo tempo (antes um esperava o outro: uma ida e volta a mais em cada página)
+const [resultadoConfig, resultadoSdk] = await Promise.allSettled([import('./config.js'), import(SUPABASE_ESM)]);
+const config = resultadoConfig.status === 'fulfilled' ? resultadoConfig.value : null;
 
 export const configurado = Boolean(
   config && config.SUPABASE_URL && !config.SUPABASE_URL.includes('SEU-PROJETO')
@@ -24,6 +21,6 @@ export const CANAL_WHATSAPP = config?.CANAL_WHATSAPP_URL ?? '';
 
 export let supabase = null;
 if (configurado) {
-  const { createClient } = await import(SUPABASE_ESM);
-  supabase = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
+  if (resultadoSdk.status !== 'fulfilled') throw resultadoSdk.reason; // sem a biblioteca o app não abre (js/resgate.js tenta de novo)
+  supabase = resultadoSdk.value.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
 }

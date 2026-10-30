@@ -36,7 +36,7 @@
 - **`assets/banner-referencia.png` (2,2 MB)** não é carregado pelo app; serve só de referência visual no repositório.
 
 ## Como manter estável
-1. A cada mudança no código: subir `VERSAO` em `sw.js` (o app recarrega sozinho na versão nova).
+1. A cada mudança no código: subir `VERSAO` em `sw.js` (obrigatório: o código fica guardado por versão; o app recarrega sozinho na nova). Módulo novo entra na lista `NUCLEO`.
 2. Rodar `node tests/classificacao.test.mjs && node tests/rodadas.test.mjs` antes de enviar.
 3. Testar em 360 px (Início, Tabela, Clube e painel) e conferir o console.
 
@@ -55,3 +55,11 @@
 - O app sempre abre na tela inicial (`index.html`, `start_url` do manifest); o perfil em uso fica com "Continuar" e entra direto (sem pedir código/senha de novo). App instalado que volta do segundo plano depois de 3 min também volta para a tela inicial (`js/pwa.js`).
 - `js/resgate.js` (script comum em todas as páginas): se a página não iniciar em 10 s ou um módulo falhar (arquivos novos e antigos misturados logo após um deploy), limpa o cache do código e recarrega uma vez; se falhar de novo, mostra "Tentar de novo". Cada página marca `window.__appIniciou` (`montarLayout` e tela inicial).
 - Service worker: a instalação busca o núcleo com `cache: 'reload'` (nunca guarda a cópia velha do navegador).
+
+## Navegação lenta (v39)
+- Causa: o service worker perguntava ao GitHub, arquivo por arquivo, se cada módulo tinha mudado (rede primeiro com revalidação). Como um módulo só é descoberto depois que o anterior chega, cada página esperava ~7 idas e voltas em cascata antes de buscar os dados (~1,5 s num PC rápido; vários segundos no 4G), e o app é multipágina: toda troca de aba repetia isso.
+- Agora o código (html, js, css) fica guardado **por versão**: a instalação baixa todos os módulos (lista `NUCLEO` em `sw.js`) e as páginas saem direto do cache, sem rede. Só os dados do Supabase seguem rede primeiro.
+- `js/supabase.js` carrega `config.js` e a biblioteca ao mesmo tempo (antes em sequência).
+- A bolinha "online" pisca só com opacidade (o `box-shadow` animado redesenhava a tela a cada quadro).
+- Medido no uso parado: nenhuma tarefa longa em 10 s, ~420 elementos na página, sem vazamento de temporizador ou observador.
+- **Atenção:** com o código guardado por versão, se `VERSAO` não subir o celular continua com o código antigo. Módulo novo: incluir o nome na lista de `NUCLEO` (se esquecer, ele é baixado na primeira vez e guardado, mas fica fora da troca atômica de versão).
