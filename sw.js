@@ -1,6 +1,6 @@
 // Service worker: abre rápido e mostra a última tabela conhecida quando o celular está sem sinal.
 // Suba VERSAO a cada deploy: o código (html, js, css) fica guardado por versão e só muda quando ela sobe.
-const VERSAO = 'v41';
+const VERSAO = 'v42';
 const CACHE = `sanroquense-${VERSAO}`;
 // Fotos do mural e do elenco (Storage): cache à parte, com limite, para não encher o celular
 const CACHE_IMAGENS = 'sanroquense-imagens';
@@ -13,7 +13,7 @@ const NUCLEO = [
   // todos os módulos: a versão nova chega inteira de uma vez (nunca mistura arquivo novo com velho)
   ...['api', 'artes', 'avisos', 'cache', 'cartaoJogo', 'classificacao', 'compartilhar', 'compartilharJogo', 'config',
     'configTorcedor', 'elencoTime', 'escalacao', 'feed', 'golsDoJogo', 'imagem', 'jogoExtras', 'meuTime', 'presenca', 'probabilidade',
-    'pwa', 'rankings', 'realtime', 'resgate', 'rodadas', 'sumula', 'supabase', 'tabelas', 'torcidaOnline', 'ui'].map((m) => `js/${m}.js`),
+    'pwa', 'rankings', 'realtime', 'resgate', 'rodadas', 'sumula', 'supabase', 'tabelas', 'torcidaOnline', 'torcidometro', 'ui'].map((m) => `js/${m}.js`),
   ...['admin', 'artilharia', 'classificacao', 'clube', 'confrontos', 'elenco', 'entrada', 'inicio', 'instalar', 'mural', 'time']
     .map((p) => `js/paginas/${p}.js`),
 ];

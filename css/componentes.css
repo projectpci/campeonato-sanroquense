@@ -1268,3 +1268,22 @@ button.escolha-time--ativo { border-color: var(--cor-primaria); background: var(
 .confronto .campo select, .confronto .campo input { min-width: 0; }
 .sumula__coluna-nome .escudo { width: 24px; height: 24px; }
 .confronto .form__acoes .botao { flex: 1 1 auto; }
+
+/* ================= v42: torcidômetro (barra no topo de todas as páginas) ================= */
+.torcidometro { margin: 0 0 var(--esp-3); border-radius: var(--raio-grande); background: var(--cor-fundo-2); border: 1px solid var(--cor-borda); overflow: hidden; }
+body.painel--login .torcidometro { display: none; }
+.torcidometro__barra { display: flex; align-items: center; gap: var(--esp-3); width: 100%; min-height: 48px; padding: 0 var(--esp-3); background: transparent; border: 0; color: var(--cor-texto); font: inherit; text-align: left; cursor: pointer; }
+.torcidometro__titulo { flex: none; font-family: var(--fonte-destaque); text-transform: uppercase; letter-spacing: .03em; font-size: .9rem; }
+.torcidometro__lider { flex: 1; display: flex; align-items: center; gap: 6px; min-width: 0; font-size: .9rem; }
+.torcidometro__lider b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--fonte-destaque); font-weight: 400; text-transform: uppercase; }
+.torcidometro__lider em { flex: none; font-style: normal; font-family: var(--fonte-destaque); color: var(--cor-primaria); }
+.torcidometro__lider .escudo { width: 24px; height: 24px; flex: none; }
+.torcidometro__online { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--cor-texto-2); }
+.torcidometro__seta { flex: none; color: var(--cor-texto-2); transition: transform .15s ease; }
+.torcidometro__barra[aria-expanded="true"] .torcidometro__seta { transform: rotate(180deg); }
+.torcidometro__lista { display: grid; gap: var(--esp-2); padding: 0 var(--esp-3) var(--esp-3); }
+.torcidometro__lista[hidden] { display: none; }
+.torcidometro__total { margin: 0; color: var(--cor-texto-2); }
+.torcidometro__total strong { font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.4rem; color: var(--cor-primaria); }
+.torcidas__linha--meu { padding: 2px var(--esp-2); margin: 0 calc(-1 * var(--esp-2)); border-radius: var(--raio); background: var(--cor-fundo-3); box-shadow: inset 0 0 0 1px var(--cor-borda-neon); }
+@media (max-width: 380px) { .torcidometro__titulo { font-size: .8rem; } }

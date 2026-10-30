@@ -40,7 +40,7 @@ function htmlNav(ativa, paginas = PAGINAS) {
 
 // Monta header + navegação. `ativa` = id da página (ou null no admin, que não aparece na nav pública).
 // `opcoes.paginas`: menu próprio (painel do organizador) · `opcoes.inicio`: destino da marca · `opcoes.sino`: sino de avisos
-export function montarLayout(ativa, { paginas = PAGINAS, inicio = ativa ? 'inicio.html' : 'index.html', sino = Boolean(ativa) && paginas === PAGINAS } = {}) {
+export function montarLayout(ativa, { paginas = PAGINAS, inicio = ativa ? 'inicio.html' : 'index.html', sino = Boolean(ativa) && paginas === PAGINAS, torcidometro = true } = {}) {
   document.body.insertAdjacentHTML('afterbegin', `
     <header class="header">
       <a class="header__marca" href="${inicio}">${icone('coroa')}<span>CAMPEONATO <em>SRP</em></span></a>
@@ -70,6 +70,8 @@ export function montarLayout(ativa, { paginas = PAGINAS, inicio = ativa ? 'inici
   }
   // Sino de avisos no cabeçalho das páginas públicas (carregado depois, para não atrasar a tela)
   if (sino) import('./avisos.js').then((m) => m.sinoNoCabecalho()).catch(() => {});
+  // Torcidômetro: barra compacta no topo de todas as páginas
+  if (torcidometro) import('./torcidometro.js').then((m) => m.montarTorcidometro()).catch(() => {});
 }
 
 // Perfil em uso (torcedor, clube ou organizador): o app abre direto nele até a pessoa tocar em "Sair"

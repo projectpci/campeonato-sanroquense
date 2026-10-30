@@ -1,7 +1,7 @@
 // Área do organizador: login, confrontos/resultados e times.
 import {
   buscarSessao, entrar, sair, listarTimes, listarRodadas, listarJogos, listarJogadores, buscarClassificacao, buscarArtilharia,
-  salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo, contarPostsPendentes, listarPicosOnline, torcidaDeclarada,
+  salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo, contarPostsPendentes, listarPicosOnline,
 } from '../api.js';
 import { montarLayout, marcarNav, definirModo, mostrarPerfil, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
@@ -219,34 +219,6 @@ function ligarAoVivo() {
   });
 }
 
-// ---------- Torcidas (Ajustes): torcedores declarados por time + quantos estão online agora ----------
-let onlineAgora = null;
-let pararTorcidas = null;
-function htmlTorcidas(times, declarados) {
-  const total = Object.values(declarados).reduce((a, b) => a + b, 0);
-  const maior = Math.max(1, ...Object.values(declarados));
-  const linhas = times.filter((t) => t.ativo !== false)
-    .map((t) => ({ t, n: declarados[t.id] ?? 0, on: onlineAgora?.torcida?.[t.id] ?? 0 }))
-    .sort((a, b) => b.n - a.n || a.t.nome.localeCompare(b.t.nome));
-  return `
-    <p class="torcidas__total"><strong>${total}</strong> ${total === 1 ? 'torcedor declarou' : 'torcedores declararam'} um time · <span class="ponto-online" aria-hidden="true"></span> ${onlineAgora?.torcedores ?? 0} torcedores online agora</p>
-    <ol class="torcidas">${linhas.map(({ t, n, on }, i) => `
-      <li class="torcidas__linha">
-        <span class="torcidas__pos">${i + 1}º</span>${escudo(t, 32)}
-        <span class="torcidas__nome">${escapar(t.nome)}<i style="width:${Math.round((n / maior) * 100)}%"></i></span>
-        <span class="torcidas__n"><strong>${n}</strong>${total ? `<small>${Math.round((n / total) * 100)}%</small>` : ''}</span>
-        <span class="torcidas__on${on ? '' : ' torcidas__on--zero'}" title="Online agora">● ${on}</span>
-      </li>`).join('')}</ol>
-    <p class="texto-2 texto-pequeno">Declarados: cada aparelho que escolheu o time do coração conta 1. ● = torcedores desse time com o app aberto agora.</p>`;
-}
-async function ligarTorcidas(alvo, times) {
-  const declarados = await torcidaDeclarada().catch(() => ({}));
-  const pintar = () => { if (alvo.isConnected) alvo.innerHTML = htmlTorcidas(times, declarados); else pararTorcidas?.(); };
-  pararTorcidas?.();
-  pararTorcidas = aoMudarOnline((r) => { onlineAgora = r; pintar(); });
-  pintar();
-}
-
 function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
   aba.innerHTML = `
     <section class="ajuste">
@@ -258,10 +230,6 @@ function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
             <select id="rodada-novo-confronto">${rodadas.map((r) => `<option value="${r.id}"${r.id === (estado.rodadaId ?? rodadaAtual(rodadas, jogos)) ? ' selected' : ''}>Rodada ${r.numero}${r.data ? ` · ${formatarData(r.data)}` : ''}</option>`).join('')}</select></label>
           <button class="botao" id="novo-confronto">+ Adicionar confronto</button>
         </div>` : '<p class="texto-2 texto-pequeno">Crie a primeira rodada em Jogos (+ Rodada).</p>'}
-    </section>
-    <section class="ajuste">
-      <h3>❤️ Torcidas</h3>
-      <div id="ajuste-torcidas"><p class="texto-2 texto-pequeno">Contando as torcidas…</p></div>
     </section>
     <section class="ajuste">
       <h3>Avisos no celular</h3>
@@ -281,7 +249,6 @@ function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
       <h3>Conta</h3>
       <button class="botao botao--perigo" id="btn-sair-painel">Sair do painel</button>
     </section>`;
-  ligarTorcidas(document.getElementById('ajuste-torcidas'), times);
   document.getElementById('novo-confronto')?.addEventListener('click', () => {
     const rodada = rodadas.find((r) => r.id === Number(document.getElementById('rodada-novo-confronto').value));
     estado.rodadaId = rodada.id; // ao voltar para Jogos, já abre nesta rodada
