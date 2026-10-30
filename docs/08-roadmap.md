@@ -109,3 +109,4 @@
 - [x] Bug da abertura travada (só "Início"): resgate automático do cache, instalação do SW sem cópia velha e app sempre abrindo na tela inicial
 - [x] "+ Adicionar confronto" saiu da aba Jogos e foi para Ajustes → Novo confronto (escolhe a rodada)
 - [x] Navegação mais rápida: código guardado por versão no service worker (sem ~7 idas e voltas por página), Supabase e config carregando juntos, bolinha online mais leve
+- [x] Crédito discreto "Desenvolvido por Caio Cavalcante" no rodapé da tela inicial e do Início (sw v40)

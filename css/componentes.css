@@ -1190,3 +1190,7 @@ button.escolha-time--ativo { border-color: var(--cor-primaria); background: var(
 .novo-confronto { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--esp-2); align-items: center; }
 .novo-confronto select { width: 100%; }
 @media (max-width: 380px) { .novo-confronto { grid-template-columns: 1fr; } }
+
+/* Crédito do desenvolvedor: discreto, no rodapé */
+.credito { margin: var(--esp-3) 0 0; text-align: center; font-size: .7rem; letter-spacing: .04em; font-weight: 500; color: color-mix(in srgb, var(--cor-texto-2) 60%, transparent); }
+.entrada .credito { margin: 0; }
