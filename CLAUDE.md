@@ -29,6 +29,7 @@ código versionado no **GitHub** e publicado no **GitHub Pages**.
 | `docs/09-mural.md` | Mural: fotos, descrição e comentários (SQL, regras, segurança) |
 | `docs/10-avisos-e-time.md` | Cache da última visita, destaque do início, página do time e avisos (Web Push) |
 | `docs/11-area-do-clube.md` | Área do clube: acesso por código, elenco com foto, escalação e arte |
+| `docs/12-craque-escalacao-estatisticas.md` | Escalação publicada, elenco público, craque do jogo, estatísticas e story 9:16 |
 
 ## Regras de código
 1. **Mobile-first.** Testar sempre em 360px de largura. Nada de rolagem horizontal na página (só dentro da tabela, se inevitável).

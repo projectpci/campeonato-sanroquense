@@ -25,7 +25,39 @@ export async function gerarImagem(elemento) {
   }
 }
 
+// Formato da imagem: post (4:5, feed e conversa do WhatsApp) ou story (9:16, status e Instagram)
+function escolherFormato() {
+  return new Promise((resolver) => {
+    document.querySelector('dialog.dialogo')?.remove();
+    const d = Object.assign(document.createElement('dialog'), {
+      className: 'dialogo formato',
+      innerHTML: `
+        <div class="form">
+          <h2>Compartilhar como</h2>
+          <div class="formato__opcoes">
+            <button class="formato__opcao" data-formato="post"><span class="formato__forma formato__forma--post"></span><strong>Post</strong><small>Conversa e feed</small></button>
+            <button class="formato__opcao" data-formato="story"><span class="formato__forma formato__forma--story"></span><strong>Story</strong><small>Status e Instagram</small></button>
+          </div>
+          <button class="botao botao--secundario" data-cancelar>Cancelar</button>
+        </div>`,
+    });
+    let escolha = null;
+    d.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-formato]');
+      if (b) escolha = b.dataset.formato;
+      if (b || e.target === d || e.target.closest('[data-cancelar]')) d.close();
+    });
+    d.addEventListener('close', () => { d.remove(); resolver(escolha); });
+    document.body.append(d);
+    d.showModal();
+  });
+}
+
 export async function compartilharImagem(elemento, nomeArquivo = 'campeonato-sanroquense.jpg') {
+  const formato = await escolherFormato();
+  if (!formato) return; // cancelou
+  elemento.classList.toggle('arte--story', formato === 'story');
+  if (formato === 'story') nomeArquivo = nomeArquivo.replace(/.jpg$/, '-story.jpg');
   const blob = await gerarImagem(elemento);
   const arquivo = new File([blob], nomeArquivo, { type: 'image/jpeg' });
 

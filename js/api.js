@@ -18,7 +18,8 @@ const SELECT_JOGO = `
   mandante:times!jogos_mandante_id_fkey(id, nome, sigla, escudo_url),
   visitante:times!jogos_visitante_id_fkey(id, nome, sigla, escudo_url),
   rodada:rodadas(id, numero, data),
-  gols(id, time_id, quantidade, contra, jogador:jogadores(id, nome))
+  gols(id, time_id, quantidade, contra, jogador:jogadores(id, nome)),
+  escalacoes:escalacoes_jogo(time_id)
 `;
 
 // ---------- Leitura ----------
@@ -315,3 +316,29 @@ export const inscreverPushOrganizador = (inscricao) =>
 export const cancelarPushOrganizador = (endpoint) =>
   demo ? Promise.resolve() :
   executar(cliente().rpc('cancelar_push_organizador', { p_endpoint: endpoint }));
+
+// ---------- Escalação publicada no jogo ----------
+export const buscarEscalacoesJogo = (jogoId) =>
+  demo ? dadosDemo.buscarEscalacoesJogo(jogoId) :
+  executar(cliente().from('escalacoes_jogo').select('*').eq('jogo_id', jogoId));
+
+export const clubePublicarEscalacao = (codigo, jogoId) =>
+  demo ? dadosDemo.clubePublicarEscalacao(codigo, jogoId) :
+  rpcClube('clube_publicar_escalacao', { p_codigo: codigo, p_jogo_id: jogoId });
+
+export const clubeRetirarEscalacao = (codigo, jogoId) =>
+  demo ? dadosDemo.clubeRetirarEscalacao(codigo, jogoId) :
+  rpcClube('clube_retirar_escalacao', { p_codigo: codigo, p_jogo_id: jogoId });
+
+// ---------- Craque do jogo ----------
+export const craqueResultado = (jogoId) =>
+  demo ? dadosDemo.craqueResultado(jogoId) :
+  executar(cliente().rpc('craque_resultado', { p_jogo_id: jogoId }));
+
+export const votarCraque = (jogoId, jogadorId, aparelho) =>
+  demo ? dadosDemo.votarCraque(jogoId, jogadorId, aparelho) :
+  executar(cliente().rpc('votar_craque', { p_jogo_id: jogoId, p_jogador_id: jogadorId, p_aparelho: aparelho }));
+
+export const rankingCraques = () =>
+  demo ? dadosDemo.rankingCraques() :
+  executar(cliente().rpc('ranking_craques'));

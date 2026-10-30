@@ -600,3 +600,45 @@ a.time__nome { color: var(--cor-texto); }
 .avisos-adm { margin-bottom: var(--esp-3); }
 .avisos-adm .botao svg { width: 18px; height: 18px; }
 .botao--ligado { color: var(--cor-texto-inverso); background: var(--cor-primaria-forte); border-color: var(--cor-primaria-forte); }
+
+/* Botões extras do card do jogo (escalações e craque) */
+.jogo__acoes { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin-top: var(--esp-3); padding-top: var(--esp-3); border-top: 1px solid var(--cor-borda); }
+.jogo__acao { flex: 1 1 auto; min-height: 40px; padding: 0 var(--esp-3); border: 1px solid var(--cor-borda-neon); border-radius: 999px; background: var(--cor-fundo); color: var(--cor-primaria); cursor: pointer; font-family: var(--fonte-destaque); text-transform: uppercase; font-size: .85rem; }
+.jogo__acao:hover, .jogo__acao:focus-visible { background: var(--cor-fundo-3); }
+
+/* Craque do jogo */
+.craque__time { display: flex; align-items: center; gap: var(--esp-2); margin: var(--esp-3) 0 var(--esp-2); }
+.craque__time .escudo { width: 28px; height: 28px; }
+.craque__barra { display: block; width: 100%; height: 6px; overflow: hidden; border-radius: 999px; background: var(--cor-fundo); }
+.craque__barra i { display: block; height: 100%; background: var(--cor-primaria); }
+.craque__selo { position: absolute; top: var(--esp-2); right: var(--esp-2); padding: 1px 8px; border-radius: 999px; background: var(--cor-ouro); color: var(--cor-texto-inverso); font-family: var(--fonte-destaque); font-size: .7rem; }
+div.carta { cursor: default; }
+div.carta:hover, div.carta:active { transform: none; }
+.tecnico--leitura { cursor: default; }
+
+/* Publicar escalação (área do clube) */
+.publicacao { display: grid; gap: var(--esp-2); padding: var(--esp-3); margin-top: var(--esp-3); border: 1px dashed var(--cor-borda-neon); border-radius: var(--raio-grande); color: var(--cor-texto-2); }
+.publicacao--ok { border-style: solid; color: var(--cor-texto); }
+.publicacao__acoes { display: flex; align-items: center; gap: var(--esp-3); }
+
+/* Estatísticas da Tabela */
+.rankings__grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--esp-3); }
+.ranking h4 { margin: 0 0 var(--esp-2); font-family: var(--fonte-destaque); font-weight: 400; color: var(--cor-primaria); text-transform: uppercase; }
+.ranking__lista { display: grid; gap: var(--esp-2); margin: 0; padding: 0; list-style: none; counter-reset: pos; }
+.ranking__lista li { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-2); counter-increment: pos; }
+.ranking__lista li::before { content: counter(pos) "º"; min-width: 26px; font-family: var(--fonte-destaque); color: var(--cor-texto-2); }
+.ranking__time { flex: 1; display: flex; align-items: center; gap: var(--esp-2); min-width: 0; font-weight: 700; text-transform: uppercase; }
+.ranking__time > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ranking__time .avatar { width: 32px; height: 32px; }
+.ranking__valor { display: grid; justify-items: end; font-family: var(--fonte-destaque); font-size: 1.3rem; color: var(--cor-primaria); line-height: 1.1; }
+.ranking__valor small { font-family: var(--fonte-corpo); font-size: .7rem; color: var(--cor-texto-2); }
+
+/* Escolha do formato ao compartilhar (post 4:5 ou story 9:16) */
+.formato__opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: var(--esp-3); }
+.formato__opcao { display: grid; justify-items: center; gap: var(--esp-1); padding: var(--esp-4) var(--esp-2); border: 1px solid var(--cor-borda-neon); border-radius: var(--raio-grande); background: var(--cor-fundo-2); color: var(--cor-texto); cursor: pointer; }
+.formato__opcao:hover, .formato__opcao:focus-visible { background: var(--cor-fundo-3); border-color: var(--cor-primaria); }
+.formato__opcao strong { font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.2rem; text-transform: uppercase; }
+.formato__opcao small { color: var(--cor-texto-2); }
+.formato__forma { display: block; width: 48px; border: 3px solid var(--cor-primaria); border-radius: 6px; }
+.formato__forma--post { aspect-ratio: 4 / 5; }
+.formato__forma--story { aspect-ratio: 9 / 16; width: 38px; }

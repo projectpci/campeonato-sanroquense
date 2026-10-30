@@ -1,5 +1,6 @@
 // Página de um time: posição, campanha, forma recente, jogos e artilheiros.
-import { buscarClassificacao, buscarArtilharia, listarJogos, listarJogosEncerrados } from '../api.js';
+import { buscarClassificacao, buscarArtilharia, listarJogos, listarJogosEncerrados, listarJogadores, listarTimes } from '../api.js';
+import { POSICOES, htmlCarta, avatarJogador } from '../escalacao.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
 import { assinarMudancas } from '../realtime.js';
 import { cartaoJogo } from '../cartaoJogo.js';
@@ -12,10 +13,10 @@ const timeId = Number(new URLSearchParams(location.search).get('id'));
 const sinal = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 
 const buscar = async () => {
-  const [linhas, encerrados, jogos, artilharia] = await Promise.all([
-    buscarClassificacao(), listarJogosEncerrados(), listarJogos(), buscarArtilharia(timeId),
+  const [linhas, encerrados, jogos, artilharia, jogadores, times] = await Promise.all([
+    buscarClassificacao(), listarJogosEncerrados(), listarJogos(), buscarArtilharia(timeId), listarJogadores(timeId), listarTimes(),
   ]);
-  return { linhas, encerrados, jogos, artilharia };
+  return { linhas, encerrados, jogos, artilharia, jogadores, time: times.find((x) => x.id === timeId) };
 };
 
 // V / E / D dos últimos 5 jogos encerrados, do mais recente para o mais antigo
@@ -41,7 +42,19 @@ function htmlArtilheiros(artilharia) {
       <span class="artilheiro__gols">${a.gols}</span></li>`).join('')}</ol></section>`;
 }
 
-function desenhar({ linhas, encerrados, jogos, artilharia }) {
+// Elenco cadastrado pelo clube (técnico e jogadores), só para ver
+const ORDEM = Object.fromEntries(POSICOES.map(([p], i) => [p, i]));
+function htmlElenco(time, jogadores = []) {
+  const ativos = jogadores.filter((j) => j.ativo !== false)
+    .sort((a, b) => (ORDEM[a.posicao] ?? 9) - (ORDEM[b.posicao] ?? 9) || (a.numero ?? 99) - (b.numero ?? 99) || a.nome.localeCompare(b.nome));
+  if (!ativos.length && !time?.tecnico_nome) return '';
+  return `<section class="secao"><h3>Elenco</h3>
+    ${time?.tecnico_nome ? `<div class="tecnico tecnico--leitura">${avatarJogador({ foto_url: time.tecnico_foto_url, numero: 'T' }, 'avatar avatar--medio')}
+      <span><small>Técnico</small><strong>${escapar(time.tecnico_nome)}</strong></span></div>` : ''}
+    <div class="cartas">${ativos.map((j) => htmlCarta(j, '', '', 'div')).join('')}</div></section>`;
+}
+
+function desenhar({ linhas, encerrados, jogos, artilharia, jogadores, time }) {
   const ordenadas = ordenarClassificacao(linhas, encerrados);
   const t = ordenadas.find((l) => l.time_id === timeId);
   if (!t) { mostrarAviso(app, 'Time não encontrado.'); return; }
@@ -67,6 +80,7 @@ function desenhar({ linhas, encerrados, jogos, artilharia }) {
     <div id="avisos-time"></div>
     ${proximos.length ? `<section class="secao"><h3>Próximos jogos</h3>${proximos.map(cartaoJogo).join('')}</section>` : ''}
     ${resultados.length ? `<section class="secao"><h3>Resultados</h3>${resultados.map(cartaoJogo).join('')}</section>` : ''}
+    ${htmlElenco(time, jogadores)}
     ${htmlArtilheiros(artilharia)}`;
   botaoAvisos(document.getElementById('avisos-time'), { timeId, nome: t.nome });
 }

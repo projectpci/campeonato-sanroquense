@@ -76,3 +76,7 @@
 .arte-partida__gols { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; font-size: 30px; font-weight: 700; }
 .arte-partida__gols div { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
 .arte-partida__chamada { margin: 0; text-align: center; font-family: var(--fonte-titulo); font-size: 46px; color: var(--cor-texto); }
+
+/* Story 9:16 (1080×1920): mesma arte, mais alta, com margem para os botões do status/Instagram */
+.arte.arte--story { height: 1920px; padding-top: 150px; padding-bottom: 150px; gap: 36px; }
+.arte--story .arte__titulo { font-size: 84px; }

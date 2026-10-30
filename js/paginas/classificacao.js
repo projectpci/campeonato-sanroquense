@@ -1,4 +1,5 @@
-import { buscarCampeonato, buscarClassificacao, listarJogosEncerrados } from '../api.js';
+import { buscarCampeonato, buscarClassificacao, listarJogosEncerrados, rankingCraques } from '../api.js';
+import { htmlRankings } from '../rankings.js';
 import { ordenarClassificacao } from '../classificacao.js';
 import { assinarMudancas } from '../realtime.js';
 import { carregarComCache } from '../cache.js';
@@ -42,11 +43,13 @@ const app = document.getElementById('app');
 let dados = null;
 
 const buscar = async () => {
-  const [campeonato, linhas, jogos] = await Promise.all([buscarCampeonato(), buscarClassificacao(), listarJogosEncerrados()]);
-  return { campeonato, linhas, jogos };
+  const [campeonato, linhas, jogos, craques] = await Promise.all([
+    buscarCampeonato(), buscarClassificacao(), listarJogosEncerrados(), rankingCraques().catch(() => []),
+  ]);
+  return { campeonato, linhas, jogos, craques };
 };
 
-function desenhar({ campeonato, linhas, jogos }) {
+function desenhar({ campeonato, linhas, jogos, craques = [] }) {
     const ordenadas = ordenarClassificacao(linhas, jogos);
     dados = { campeonato, ordenadas };
     const ultima = jogos.map((j) => j.atualizado_em).filter(Boolean).sort().pop();
@@ -56,7 +59,8 @@ function desenhar({ campeonato, linhas, jogos }) {
     app.innerHTML = `
       ${htmlTabela(ordenadas)}
       <p class="texto-2 texto-pequeno">${atualizado}</p>
-      <p class="texto-2 texto-pequeno">J = Jogos · V = Vitórias · E = Empates · D = Derrotas · GP = Gols pró · GC = Gols contra · SG = Saldo de gols · PTS = Pontos</p>`;
+      <p class="texto-2 texto-pequeno">J = Jogos · V = Vitórias · E = Empates · D = Derrotas · GP = Gols pró · GC = Gols contra · SG = Saldo de gols · PTS = Pontos</p>
+      ${htmlRankings(ordenadas, jogos, craques)}`;
 }
 
 async function carregar() {

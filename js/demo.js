@@ -286,7 +286,36 @@ function clubeSalvarEscalacao(codigo, escalacao) {
   return { ok: true };
 }
 
+// ---------- Escalação publicada e craque do jogo (demo) ----------
+const escalacoesJogo = [];
+function clubePublicarEscalacao(codigo, jogoId) {
+  const timeId = timeDoCodigo(codigo);
+  const salva = escalacoes.get(timeId);
+  if (!salva || !Object.keys(salva.titulares ?? {}).length) throw new Error('Salve uma escalação antes de publicar.');
+  const i = escalacoesJogo.findIndex((e) => e.jogo_id === jogoId && e.time_id === timeId);
+  const nova = { jogo_id: jogoId, time_id: timeId, formacao: salva.formacao, titulares: salva.titulares, reservas: salva.reservas ?? [], publicada_em: new Date().toISOString() };
+  if (i >= 0) escalacoesJogo[i] = nova; else escalacoesJogo.push(nova);
+  const jogo = jogos.find((j) => j.id === jogoId);
+  if (jogo) jogo.escalacoes = escalacoesJogo.filter((e) => e.jogo_id === jogoId).map((e) => ({ time_id: e.time_id }));
+  return { ok: true };
+}
+function clubeRetirarEscalacao(codigo, jogoId) {
+  const timeId = timeDoCodigo(codigo);
+  const i = escalacoesJogo.findIndex((e) => e.jogo_id === jogoId && e.time_id === timeId);
+  if (i >= 0) escalacoesJogo.splice(i, 1);
+  return { ok: true };
+}
+const votos = new Map(); // `${jogo}:${aparelho}` → jogador
+function craqueResultado(jogoId) {
+  const contagem = {};
+  for (const [chave, jogador] of votos) if (chave.startsWith(`${jogoId}:`)) contagem[jogador] = (contagem[jogador] ?? 0) + 1;
+  return { aberta: true, votos: Object.entries(contagem).map(([id, n]) => ({ jogador_id: Number(id), votos: n })).sort((a, b) => b.votos - a.votos) };
+}
+function votarCraque(jogoId, jogadorId, aparelho) { votos.set(`${jogoId}:${aparelho}`, jogadorId); return craqueResultado(jogoId); }
+
 export const dadosDemo = {
+  buscarEscalacoesJogo: (jogoId) => escalacoesJogo.filter((e) => e.jogo_id === jogoId),
+  clubePublicarEscalacao, clubeRetirarEscalacao, craqueResultado, votarCraque, rankingCraques: () => [],
   salvarTime, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo,
   publicarPost, comentarPost, apagarPost, apagarPostDoTime, apagarComentario, gerarCodigo, validarCodigo,
   aprovarPost, clubeMeusPosts, clubeSalvarJogador, clubeApagarJogador, clubeSalvarTecnico, clubeBuscarEscalacao, clubeSalvarEscalacao,

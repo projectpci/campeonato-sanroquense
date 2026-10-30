@@ -18,6 +18,10 @@ export const FORMACOES = {
 };
 export const FORMACAO_PADRAO = '4-4-2';
 
+// Linhas do elenco (filtro e cor das cartas): [id, rótulo, posições]
+export const LINHAS = [['todos', 'Todos', null], ['gol', 'Goleiros', ['GOL']], ['def', 'Defesa', ['ZAG', 'LAT']], ['mei', 'Meio', ['VOL', 'MEI']], ['ata', 'Ataque', ['ATA']]];
+export const linhaDe = (posicao) => LINHAS.find(([, , grupos]) => grupos?.includes(posicao))?.[0] ?? 'sem';
+
 export const POSICOES = [['GOL', 'Goleiro'], ['ZAG', 'Zagueiro'], ['LAT', 'Lateral'], ['VOL', 'Volante'], ['MEI', 'Meia'], ['ATA', 'Atacante']];
 
 const primeiroNome = (nome) => {
@@ -49,4 +53,16 @@ export function htmlCampo({ formacao, titulares = {}, jogadores = [], interativo
       <span class="gramado__pequena gramado__pequena--topo"></span><span class="gramado__pequena gramado__pequena--base"></span>
       ${vagas}
     </div>`;
+}
+
+// Carta do jogador (estilo figurinha): foto, número, posição e nome. `tag`: 'button' (clicável) ou 'div'
+export function htmlCarta(j, atributos = '', extra = '', tag = 'button') {
+  return `
+    <${tag} class="carta carta--${linhaDe(j.posicao)}" ${atributos}>
+      <span class="carta__foto">${j.foto_url ? `<img src="${escapar(j.foto_url)}" alt="" loading="lazy">` : `<span>${escapar((j.nome || '?').slice(0, 1))}</span>`}</span>
+      ${j.numero != null ? `<span class="carta__numero">${j.numero}</span>` : ''}
+      <span class="carta__posicao">${escapar(j.posicao ?? '—')}</span>
+      <span class="carta__nome">${escapar(j.nome)}</span>
+      ${extra}
+    </${tag}>`;
 }

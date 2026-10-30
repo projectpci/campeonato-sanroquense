@@ -1,6 +1,7 @@
 // Renderiza o card de um jogo (usado em Confrontos e Início).
 import { escapar, escudo, formatarData, horaDoJogo, icone } from './ui.js';
 import { registrarJogo } from './compartilharJogo.js';
+import './jogoExtras.js'; // botões "Escalações" e "Craque do jogo"
 
 function listaGols(jogo, timeId) {
   return (jogo.gols ?? [])
@@ -23,6 +24,12 @@ export function cartaoJogo(jogo, extras = {}) {
   const rotuloStatus = { agendado: 'Agendado', ao_vivo: 'Ao vivo', encerrado: 'Encerrado', adiado: 'Adiado', wo: 'W.O.' }[jogo.status];
   const data = jogo.data_hora ? formatarData(jogo.data_hora) : '';
   registrarJogo(jogo);
+  const temEscalacao = (jogo.escalacoes ?? []).length > 0;
+  const botoes = temEscalacao || encerrado ? `
+    <div class="jogo__acoes">
+      ${temEscalacao ? `<button class="jogo__acao" data-ver-escalacao="${jogo.id}">📋 Escalações</button>` : ''}
+      ${encerrado ? `<button class="jogo__acao" data-craque="${jogo.id}">⭐ Craque do jogo</button>` : ''}
+    </div>` : '';
   const compartilhar = `<button class="jogo__compartilhar" data-compartilhar-jogo="${jogo.id}" aria-label="Compartilhar este jogo no WhatsApp" title="Compartilhar">${icone('whatsapp')}</button>`;
 
   return `
@@ -44,6 +51,7 @@ export function cartaoJogo(jogo, extras = {}) {
         <ul>${listaGols(jogo, jogo.mandante_id)}</ul>
         <ul>${listaGols(jogo, jogo.visitante_id)}</ul>
       </div>` : ''}
+      ${botoes}
       ${extras.rodape ?? ''}
     </article>`;
 }

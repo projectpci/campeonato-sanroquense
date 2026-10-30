@@ -6,6 +6,7 @@ import { toast } from './ui.js';
 
 const jogos = new Map(); // id → último estado desenhado do jogo
 export const registrarJogo = (jogo) => jogos.set(jogo.id, jogo);
+export const jogoRegistrado = (id) => jogos.get(Number(id));
 
 document.addEventListener('click', async (e) => {
   const botao = e.target.closest('[data-compartilhar-jogo]');

@@ -3,14 +3,14 @@
 import {
   listarTimes, listarJogos, buscarClassificacao, listarJogosEncerrados, buscarArtilharia, buscarCampeonato, listarJogadores,
   validarCodigo, enviarFotoElenco, clubeSalvarJogador, clubeApagarJogador, clubeSalvarTecnico, clubeBuscarEscalacao, clubeSalvarEscalacao,
-  clubeMeusPosts, publicarPost, urlFoto,
+  clubeMeusPosts, publicarPost, urlFoto, clubePublicarEscalacao, clubeRetirarEscalacao,
 } from '../api.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
 import { assinarMudancas } from '../realtime.js';
 import { prepararFoto } from '../imagem.js';
 import { compartilharImagem } from '../compartilhar.js';
 import { arteEscalacao, inserirArte } from '../artes.js';
-import { FORMACOES, FORMACAO_PADRAO, POSICOES, htmlCampo, avatarJogador } from '../escalacao.js';
+import { FORMACOES, FORMACAO_PADRAO, POSICOES, LINHAS, linhaDe, htmlCampo, htmlCarta, avatarJogador } from '../escalacao.js';
 import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData, horaDoJogo, tempoRelativo } from '../ui.js';
 
 const app = document.getElementById('app');
@@ -35,8 +35,6 @@ const ABAS = [
 
 // Posição da vaga → grupo do elenco (para sugerir e preencher automático)
 const GRUPO_DA_VAGA = { GOL: 'GOL', ZAG: 'ZAG', LD: 'LAT', LE: 'LAT', ALD: 'LAT', ALE: 'LAT', VOL: 'VOL', MC: 'MEI', MEI: 'MEI', MD: 'MEI', ME: 'MEI', PD: 'ATA', PE: 'ATA', ATA: 'ATA' };
-const LINHAS = [['todos', 'Todos', null], ['gol', 'Goleiros', ['GOL']], ['def', 'Defesa', ['ZAG', 'LAT']], ['mei', 'Meio', ['VOL', 'MEI']], ['ata', 'Ataque', ['ATA']]];
-const linhaDe = (posicao) => LINHAS.find(([, , grupos]) => grupos?.includes(posicao))?.[0] ?? 'sem';
 const nomePosicao = (p) => POSICOES.find(([sigla]) => sigla === p)?.[1] ?? 'Sem posição';
 const ORDEM_POSICAO = Object.fromEntries(POSICOES.map(([p], i) => [p, i]));
 
@@ -353,6 +351,7 @@ const SECOES = {
           <button class="banco__item${esc.reservas.includes(j.id) ? ' banco__item--ativo' : ''}" data-reserva="${j.id}" aria-pressed="${esc.reservas.includes(j.id)}">
             ${avatarJogador(j, 'avatar')}<span>${escapar(j.nome.split(' ')[0])}</span></button>`).join('') || '<span class="texto-2 texto-pequeno">Todos os jogadores estão no campo.</span>'}</div>
       </section>
+      ${htmlPublicacao()}
       <div class="barra-acoes">
         <button class="botao botao--secundario" data-salvar-escalacao>${estado.alterada ? 'Salvar alterações' : 'Salvo ✔'}</button>
         <button class="botao" data-compartilhar-escalacao>${icone('whatsapp')} Compartilhar</button>
@@ -371,6 +370,8 @@ const SECOES = {
       if (confirm('Tirar todos os jogadores do campo e do banco?')) { esc.titulares = {}; esc.reservas = []; mudou(); }
     });
     alvo.querySelector('[data-salvar-escalacao]').addEventListener('click', () => salvarEscalacao(alvo));
+    alvo.querySelector('[data-publicar-escalacao]')?.addEventListener('click', () => publicarEscalacao(alvo, true));
+    alvo.querySelector('[data-retirar-escalacao]')?.addEventListener('click', () => publicarEscalacao(alvo, false));
     alvo.querySelector('[data-compartilhar-escalacao]').addEventListener('click', (e) => compartilharEscalacao(e.currentTarget, jogadores));
   },
 
@@ -394,16 +395,6 @@ const SECOES = {
   },
 };
 
-function htmlCarta(j, atributos = '', extra = '') {
-  return `
-    <button class="carta carta--${linhaDe(j.posicao)}" ${atributos}>
-      <span class="carta__foto">${j.foto_url ? `<img src="${escapar(j.foto_url)}" alt="" loading="lazy">` : `<span>${escapar((j.nome || '?').slice(0, 1))}</span>`}</span>
-      ${j.numero != null ? `<span class="carta__numero">${j.numero}</span>` : ''}
-      <span class="carta__posicao">${escapar(j.posicao ?? '—')}</span>
-      <span class="carta__nome">${escapar(j.nome)}</span>
-      ${extra}
-    </button>`;
-}
 
 // ---------- Escalação ----------
 const ondeEsta = (id) => Object.entries(estado.escalacao.titulares).find(([, j]) => Number(j) === id)?.[0];
@@ -478,6 +469,38 @@ function escolherJogador(vaga, jogadores, mudou) {
     mudou();
   });
   pintar();
+}
+
+// Publicar a escalação no card do próximo jogo (a torcida vê em "Escalações")
+const publicadaNoProximo = () => (proximoJogo()?.escalacoes ?? []).some((e) => e.time_id === estado.time.id);
+function htmlPublicacao() {
+  const jogo = proximoJogo();
+  if (!jogo) return '';
+  const adv = escapar(adversarioDe(jogo).nome);
+  return publicadaNoProximo()
+    ? `<div class="publicacao publicacao--ok"><span>📢 Escalação publicada no jogo contra <b>${adv}</b>${estado.alterada ? ' (salve e publique de novo para atualizar)' : ''}.</span>
+        <span class="publicacao__acoes"><button class="botao botao--secundario" data-publicar-escalacao>Atualizar</button>
+        <button class="link-botao" data-retirar-escalacao>Retirar</button></span></div>`
+    : `<div class="publicacao"><span>A torcida ainda não vê esta escalação.</span>
+        <button class="botao" data-publicar-escalacao>📢 Publicar no jogo contra ${adv}</button></div>`;
+}
+
+async function publicarEscalacao(alvo, publicar) {
+  const jogo = proximoJogo();
+  try {
+    if (publicar) {
+      if (Object.keys(estado.escalacao.titulares).length < 11 && !confirm('A escalação ainda não tem 11 jogadores. Publicar assim mesmo?')) return;
+      if (estado.alterada) await clubeSalvarEscalacao(estado.codigo, estado.escalacao); // publica o que está na tela
+      estado.alterada = false;
+      await clubePublicarEscalacao(estado.codigo, jogo.id);
+      toast('Escalação publicada para a torcida ✔');
+    } else {
+      if (!confirm('Retirar a escalação do jogo? A torcida deixa de ver.')) return;
+      await clubeRetirarEscalacao(estado.codigo, jogo.id);
+      toast('Escalação retirada');
+    }
+    await carregar();
+  } catch (erro) { tratarErro(erro); }
 }
 
 async function salvarEscalacao(alvo) {
