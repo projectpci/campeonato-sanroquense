@@ -166,3 +166,6 @@ Para remover uma foto, o time pede ao organizador.
 ## Modo organizador no mural
 Aprovar, recusar e apagar só aparecem em `mural.html?moderar=1` (link "Mural" do painel e o aviso de foto para aprovar)
 e com o login de organizador. Pelo menu do torcedor o mural é igual para todos, mesmo com o login guardado no aparelho.
+
+## Feed (v26, migração `mural_post_de_texto`)
+Publicação pode ser só texto, só foto ou os dois (`posts.foto_path` opcional + checagem "texto ou foto"). `js/feed.js` (`criarFeed`) é usado no Mural do torcedor e no painel (seção Mural, com fila de aprovação e apagar). Compositor no topo (texto com contador de 500, foto com prévia, marcar jogo), filtros Tudo/Fotos/Textos, selo "Oficial" na Organização, texto curto em destaque, foto ampliável em tela cheia, comentários recolhidos (últimos 2 + "ver todos"), nome do comentarista lembrado e compartilhar publicação (link `mural.html#post-ID`). O time entra com o código direto no feed.

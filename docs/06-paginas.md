@@ -108,3 +108,6 @@ Dados de `js/paginas/entrada.js`; se o banco não responder, a tela funciona só
 
 ## Painel do organizador (v25)
 Menu próprio (embaixo no celular, em cima no computador): **Jogos** (rodadas e cards com a engrenagem de lançar/editar), **Elenco**, **Mural** (modo moderação, com contador de fotos pendentes), **Ajustes** (avisos no celular, exportar CSV, times e códigos, sair) e **Ver site**. Navega por `#jogos`, `#elenco`, `#ajustes`; o menu só aparece depois do login. O botão flutuante de compartilhar das páginas públicas é só o ícone do WhatsApp.
+
+### Painel (v26)
+Tudo dentro do painel: o menu é Jogos · Elenco · Mural · Ajustes (sem "Ver site"); a marca do topo volta para Jogos; só "Sair" leva para fora. Times e códigos viraram cartões: código oculto com Ver/Ocultar, **Copiar** (nome do time + código + link da Área do clube), engrenagem para editar e Gerar novo.

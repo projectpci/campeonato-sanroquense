@@ -8,6 +8,7 @@ import { cartaoJogo } from '../cartaoJogo.js';
 import { htmlElenco, htmlSeletorTimes, ligarElenco } from '../elencoTime.js';
 import { rodadaAtual } from '../rodadas.js';
 import { assinarMudancas } from '../realtime.js';
+import { criarFeed } from '../feed.js';
 import { botaoAvisosOrganizador } from '../avisos.js';
 
 const app = document.getElementById('app');
@@ -15,15 +16,15 @@ const app = document.getElementById('app');
 const MENU_ADM = [
   { id: 'jogos', rotulo: 'Jogos', href: '#jogos', icone: 'confrontos' },
   { id: 'elenco', rotulo: 'Elenco', href: '#elenco', icone: 'elenco' },
-  { id: 'mural', rotulo: 'Mural', href: 'mural.html?moderar=1', icone: 'mural' },
+  { id: 'mural', rotulo: 'Mural', href: '#mural', icone: 'mural' },
   { id: 'ajustes', rotulo: 'Ajustes', href: '#ajustes', icone: 'engrenagem' },
-  { id: 'site', rotulo: 'Ver site', href: 'inicio.html', icone: 'inicio' },
 ];
-const abaDoEndereco = () => (['jogos', 'elenco', 'ajustes'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'jogos');
+const abaDoEndereco = () => (['jogos', 'elenco', 'mural', 'ajustes'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'jogos');
 const estado = { aba: abaDoEndereco(), rodadaId: null };
 const DOMINIO_USUARIO = 'sanroquense.app';
 
-montarLayout(estado.aba, { paginas: MENU_ADM, inicio: 'index.html' });
+// A marca do topo também fica no painel: só "Sair" leva para fora
+montarLayout(estado.aba, { paginas: MENU_ADM, inicio: '#jogos' });
 window.addEventListener('hashchange', () => { estado.aba = abaDoEndereco(); marcarNav(estado.aba); window.scrollTo(0, 0); if (estado.logado) carregar(); });
 document.querySelector('.faixa')?.remove();
 
@@ -102,17 +103,21 @@ async function iniciar() {
 // Tempo real: o que outro organizador lançar (ou um time publicar no mural) aparece sozinho.
 // Não redesenha com uma janela aberta, para não perder o que está sendo digitado.
 let tempoRealLigado = false;
+let feedAdm = null; // feed do mural quando a seção Mural está aberta
 function ligarTempoReal() {
   if (tempoRealLigado) return;
   tempoRealLigado = true;
-  assinarMudancas(() => { if (!document.querySelector('dialog[open]')) carregar(); });
+  assinarMudancas(() => {
+    if (document.querySelector('dialog[open]')) return;
+    if (estado.aba === 'mural' && feedAdm) feedAdm.carregar(); else carregar();
+  });
 }
 
 async function carregar() {
   try {
     const [times, rodadas, jogos, jogadores, codigos, pendentes] = await Promise.all([listarTimes(), listarRodadas(), listarJogos(), listarJogadores(),
       estado.aba === 'ajustes' ? listarCodigos() : [], contarPostsPendentes().catch(() => 0)]);
-    const titulos = { jogos: 'Jogos e resultados', elenco: 'Elenco dos clubes', ajustes: 'Ajustes' };
+    const titulos = { jogos: 'Jogos e resultados', elenco: 'Elenco dos clubes', mural: 'Mural · moderação', ajustes: 'Ajustes' };
     app.innerHTML = `<h2 class="admin__titulo">${titulos[estado.aba]}</h2><div id="aba"></div>`;
     // contador de fotos aguardando aprovação no item "Mural" do menu
     document.querySelectorAll('[data-nav="mural"]').forEach((item) => {
@@ -120,7 +125,9 @@ async function carregar() {
       if (pendentes) item.insertAdjacentHTML('beforeend', `<span class="contador contador--nav" title="Fotos aguardando aprovação">${pendentes}</span>`);
     });
     const aba = document.getElementById('aba');
-    if (estado.aba === 'ajustes') abaAjustes(aba, { times, codigos, jogos, rodadas });
+    feedAdm = null;
+    if (estado.aba === 'mural') { feedAdm = criarFeed(aba, { organizador: true }); await feedAdm.carregar(); }
+    else if (estado.aba === 'ajustes') abaAjustes(aba, { times, codigos, jogos, rodadas });
     else if (estado.aba === 'elenco') abaElenco(aba, times, jogadores);
     else abaConfrontos(aba, { times, rodadas, jogos, jogadores });
   } catch (erro) {
@@ -155,40 +162,64 @@ function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
   abaTimes(document.getElementById('ajuste-times'), times, codigos);
 }
 
-// ---------- Times (dentro de Ajustes) ----------
+// ---------- Times (dentro de Ajustes): cartões com código oculto, Copiar, Editar e Gerar novo ----------
+const LINK_CLUBE = new URL('clube.html', location.href).href;
+const textoDoCodigo = (time, codigo) => `⚽ ${time.nome} — Campeonato SRP\nCódigo de acesso: ${codigo}\nÁrea do clube: ${LINK_CLUBE}`;
+
 function abaTimes(aba, times, codigos = []) {
   const codigoDe = (timeId) => codigos.find((c) => c.time_id === timeId)?.codigo;
   aba.innerHTML = `
-    <button class="botao" id="novo-time">+ Novo time</button>
-    <p class="texto-2 texto-pequeno secao">O <strong>código de publicação</strong> permite ao time postar no mural. Envie só para o responsável do time.</p>
-    <ul class="lista">${times.map((t) => `
-      <li class="artilheiro admin__time${t.ativo ? '' : ' admin__time--inativo'}">
-        ${escudo(t, 48)}
-        <div><div class="artilheiro__nome">${escapar(t.nome)}</div>
-          <div class="texto-2 texto-pequeno">${escapar(t.sigla ?? '')} ${t.ativo ? '' : '· inativo'}</div>
-          <div class="admin__codigo">Código: <code>${escapar(codigoDe(t.id) ?? 'sem código')}</code>
-            ${codigoDe(t.id) ? `<button class="link-botao" data-copiar="${t.id}">copiar</button> · ` : ''}
-            <button class="link-botao" data-gerar-codigo="${t.id}">${codigoDe(t.id) ? 'gerar novo' : 'gerar'}</button></div></div>
-        <button class="botao botao--secundario" data-editar="${t.id}">Editar</button>
-      </li>`).join('')}</ul>`;
+    <p class="texto-2 texto-pequeno">O código dá acesso à Área do clube (elenco, escalação e mural). Envie só para o responsável de cada time.</p>
+    <div class="times-adm">${times.map((t) => {
+      const codigo = codigoDe(t.id);
+      return `
+        <article class="time-adm${t.ativo ? '' : ' time-adm--inativo'}">
+          <div class="time-adm__topo">
+            ${escudo(t, 48)}
+            <div class="time-adm__nome"><strong>${escapar(t.nome)}</strong>
+              <span>${escapar(t.sigla ?? '')}${t.ativo ? '' : ' · inativo'}</span></div>
+            <button class="time-adm__editar" data-editar="${t.id}" aria-label="Editar ${escapar(t.nome)}" title="Editar">${icone('engrenagem')}</button>
+          </div>
+          <div class="time-adm__codigo">
+            <code data-codigo="${t.id}" data-oculto="1">${codigo ? '••••••' : 'sem código'}</code>
+            ${codigo ? `<button class="time-adm__ver" data-ver-codigo="${t.id}" aria-label="Mostrar código">Ver</button>` : ''}
+          </div>
+          <div class="time-adm__acoes">
+            ${codigo ? `<button class="botao" data-copiar="${t.id}">Copiar</button>` : ''}
+            <button class="botao botao--secundario" data-gerar-codigo="${t.id}">${codigo ? 'Gerar novo' : 'Gerar código'}</button>
+          </div>
+        </article>`;
+    }).join('')}
+      <button class="time-adm time-adm--novo" id="novo-time">+ Novo time</button>
+    </div>`;
+  aba.querySelectorAll('[data-ver-codigo]').forEach((b) => b.addEventListener('click', () => {
+    const campo = aba.querySelector(`[data-codigo="${b.dataset.verCodigo}"]`);
+    const mostrar = campo.dataset.oculto === '1';
+    campo.textContent = mostrar ? codigoDe(Number(b.dataset.verCodigo)) : '••••••';
+    campo.dataset.oculto = mostrar ? '0' : '1';
+    b.textContent = mostrar ? 'Ocultar' : 'Ver';
+  }));
   aba.querySelectorAll('[data-copiar]').forEach((b) => b.addEventListener('click', async () => {
-    const time = times.find((t) => t.id === Number(b.dataset.copiar));
+    const time = times.find((x) => x.id === Number(b.dataset.copiar));
+    const texto = textoDoCodigo(time, codigoDe(time.id));
     try {
-      await navigator.clipboard.writeText(`Código do ${time.nome} para publicar no mural: ${codigoDe(time.id)}`);
-      toast('Código copiado ✔');
+      await navigator.clipboard.writeText(texto);
+      b.textContent = 'Copiado ✓';
+      b.classList.add('botao--ligado');
+      setTimeout(() => { b.textContent = 'Copiar'; b.classList.remove('botao--ligado'); }, 1800);
     } catch {
-      toast('Não foi possível copiar. Selecione o código na tela.', true);
+      prompt('Copie o texto abaixo:', texto); // navegador sem acesso à área de transferência
     }
   }));
   aba.querySelectorAll('[data-gerar-codigo]').forEach((b) => b.addEventListener('click', () => {
-    const time = times.find((t) => t.id === Number(b.dataset.gerarCodigo));
+    const time = times.find((x) => x.id === Number(b.dataset.gerarCodigo));
     if (!codigoDe(time.id) || confirm(`Gerar um novo código para ${time.nome}? O código atual deixa de funcionar.`)) {
       executar(() => gerarCodigo(time.id), 'Novo código gerado ✔');
     }
   }));
   document.getElementById('novo-time').addEventListener('click', () => dialogoTime({ ativo: true }));
   aba.querySelectorAll('[data-editar]').forEach((b) =>
-    b.addEventListener('click', () => dialogoTime(times.find((t) => t.id === Number(b.dataset.editar)))));
+    b.addEventListener('click', () => dialogoTime(times.find((x) => x.id === Number(b.dataset.editar)))));
 }
 
 // Redimensiona o escudo para 256px (quadrado) antes de subir

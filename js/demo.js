@@ -203,7 +203,7 @@ async function publicarPost({ codigo, descricao, foto, jogoId }) {
   if (codigo && !time) throw new Error('Código do time inválido.');
   const novo = {
     id: proximoId(posts), campeonato_id: 1, time_id: time?.time_id ?? null, autor: time?.nome ?? 'Organização',
-    descricao: descricao?.trim() || null, foto_path: await lerComoDataUrl(foto), jogo_id: jogoId ?? null, criado_em: new Date().toISOString(),
+    descricao: descricao?.trim() || null, foto_path: foto ? await lerComoDataUrl(foto) : null, jogo_id: jogoId ?? null, criado_em: new Date().toISOString(),
     aprovado: !time, // time aguarda o organizador aprovar
   };
   posts.push(novo);

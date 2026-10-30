@@ -193,7 +193,7 @@ async function enviarFotoMural(foto) {
 // Com `codigo`: publica como o time. Sem código: organizador autenticado ("Organização")
 export async function publicarPost({ codigo, descricao, foto, jogoId }) {
   if (demo) return dadosDemo.publicarPost({ codigo, descricao, foto, jogoId });
-  const caminho = await enviarFotoMural(foto);
+  const caminho = foto ? await enviarFotoMural(foto) : null; // publicação pode ser só texto
   if (codigo) {
     const resposta = await executar(cliente().rpc('publicar_post', {
       p_codigo: codigo, p_descricao: descricao ?? '', p_foto_path: caminho, p_jogo_id: jogoId ?? null,
@@ -214,7 +214,7 @@ export const comentarPost = (postId, nome, texto) =>
 export async function apagarPost(post) {
   if (demo) return dadosDemo.apagarPost(post.id);
   await executar(cliente().from('posts').delete().eq('id', post.id));
-  await cliente().storage.from('mural').remove([post.foto_path]); // melhor esforço
+  if (post.foto_path) await cliente().storage.from('mural').remove([post.foto_path]); // melhor esforço
 }
 
 // Moderação: publicação de time só aparece para todos depois de aprovada

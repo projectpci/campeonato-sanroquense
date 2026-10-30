@@ -396,7 +396,7 @@ const SECOES = {
 
   async mural(alvo) {
     alvo.innerHTML = `
-      <button class="botao botao--grande" data-publicar>${ICONES.camera} Publicar foto do clube</button>
+      <button class="botao botao--grande" data-publicar>${ICONES.camera} Nova publicação (texto ou foto)</button>
       <p class="texto-2 texto-pequeno">As fotos aparecem aqui na hora. No mural geral, entram depois que o organizador aprovar.</p>
       <div class="galeria" id="galeria-clube">${'<span class="galeria__item esqueleto__bloco"></span>'.repeat(4)}</div>
       <p class="texto-2 texto-pequeno"><a href="mural.html">Ver o mural geral →</a></p>`;
@@ -406,7 +406,7 @@ const SECOES = {
       if (estado.aba !== 'mural') return;
       document.getElementById('galeria-clube').innerHTML = estado.posts.map((p) => `
         <figure class="galeria__item">
-          <img src="${escapar(urlFoto(p.foto_path))}" loading="lazy" alt="${escapar(p.descricao ?? 'Foto do clube')}">
+          ${p.foto_path ? `<img src="${escapar(urlFoto(p.foto_path))}" loading="lazy" alt="${escapar(p.descricao ?? 'Foto do clube')}">` : `<p class="galeria__texto">${escapar(p.descricao ?? '')}</p>`}
           <span class="galeria__selo ${p.aprovado ? 'galeria__selo--ok' : ''}">${p.aprovado ? 'No mural' : 'Em análise'}</span>
           <figcaption>${escapar(tempoRelativo(p.criado_em))}${p.comentarios ? ` · ${p.comentarios} 💬` : ''}</figcaption>
         </figure>`).join('') || '<p class="vazio">Nenhuma foto publicada ainda.</p>';
@@ -647,10 +647,10 @@ function dialogoPublicar() {
   const jogos = jogosDoTime().map((j) => `<option value="${j.id}">R${j.rodada?.numero ?? '?'} · ${escapar(j.mandante.nome)} × ${escapar(j.visitante.nome)}</option>`).join('');
   const d = abrirDialogo(`
     <form class="form">
-      <h2>Publicar foto</h2>
+      <h2>Nova publicação</h2>
       <label class="foto-escolha foto-escolha--larga">
-        <input type="file" name="foto" accept="image/*" required class="sr-only">
-        <span class="foto-escolha__quadro">${ICONES.camera}<span class="texto-pequeno">Toque para escolher a foto</span></span>
+        <input type="file" name="foto" accept="image/*" class="sr-only">
+        <span class="foto-escolha__quadro">${ICONES.camera}<span class="texto-pequeno">Foto (opcional)</span></span>
       </label>
       <label class="campo">Descrição<textarea name="descricao" maxlength="500" placeholder="Conte como foi o jogo..."></textarea></label>
       <label class="campo">Jogo (opcional)<select name="jogo"><option value="">Nenhum</option>${jogos}</select></label>
@@ -670,11 +670,14 @@ function dialogoPublicar() {
     const enviar = e.target.querySelector('[type=submit]');
     enviar.disabled = true;
     try {
-      toast('Enviando foto...');
-      const foto = await prepararFoto(dados.get('foto'));
+      toast('Publicando...');
+      const arquivo = dados.get('foto');
+      const temFoto = arquivo && arquivo.size > 0;
+      if (!temFoto && !String(dados.get('descricao') ?? '').trim()) throw new Error('Escreva algo ou escolha uma foto.');
+      const foto = temFoto ? await prepararFoto(arquivo) : null;
       await publicarPost({ codigo: estado.codigo, descricao: dados.get('descricao'), foto, jogoId: dados.get('jogo') ? Number(dados.get('jogo')) : null });
       d.close();
-      toast('Foto enviada! Já aparece aqui; no mural geral, após aprovação.');
+      toast('Publicação enviada! Já aparece aqui; no mural geral, após aprovação.');
       if (estado.aba === 'mural') desenharAba();
     } catch (erro) {
       tratarErro(erro);
