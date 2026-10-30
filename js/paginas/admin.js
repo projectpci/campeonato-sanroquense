@@ -3,7 +3,7 @@ import {
   buscarSessao, entrar, sair, listarTimes, listarRodadas, listarJogos, listarJogadores,
   salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo, contarPostsPendentes,
 } from '../api.js';
-import { montarLayout, marcarNav, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
+import { montarLayout, marcarNav, definirModo, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
 import { htmlElenco, htmlSeletorTimes, ligarElenco } from '../elencoTime.js';
 import { rodadaAtual } from '../rodadas.js';
@@ -53,7 +53,8 @@ async function executar(acao, mensagemOk) {
 // Sair: encerra a sessão do organizador e volta para a tela inicial
 async function sairDoPainel(e) {
   e?.preventDefault();
-  try { await sair(); } finally { location.href = 'index.html'; }
+  definirModo('');
+  try { await sair(); } finally { location.href = 'index.html?sair'; }
 }
 document.getElementById('btn-sair-header').addEventListener('click', sairDoPainel);
 
@@ -89,6 +90,7 @@ function telaLogin() {
 function entrouNoPainel() {
   estado.logado = true;
   document.body.classList.remove('painel--login');
+  definirModo('adm'); // o app passa a abrir direto no painel até "Sair"
 }
 
 async function iniciar() {

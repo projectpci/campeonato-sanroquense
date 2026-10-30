@@ -973,3 +973,32 @@ body.entrada-corpo { overflow-x: hidden; }
 .chance__forte { background: var(--cor-chance-forte); }
 .chance__clara { background: var(--cor-chance-clara); }
 @media (prefers-reduced-motion: reduce) { .chance__barra i { transition: none; } }
+
+/* ================= v28: perfis fixos, menu do clube, curtidas e comentário identificado ================= */
+/* Área do clube: título das seções (fora de "Meu clube") */
+.clube-titulo { display: flex; align-items: center; gap: var(--esp-3); margin: 0 0 var(--esp-3); font-family: var(--fonte-titulo); font-size: 1.6rem; line-height: 1.1; }
+.clube-titulo .escudo { width: 40px; height: 40px; flex: none; }
+.clube-titulo span { display: grid; min-width: 0; }
+.clube-titulo small { font-family: var(--fonte-destaque); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--cor-primaria); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clube-hero__time { padding-right: 0; }
+.partida:hover { border-color: var(--cor-borda); }
+.podio__item > small { font-size: .75rem; }
+.lista .artilheiro.linha--destaque { outline: 2px solid var(--cor-primaria); outline-offset: -2px; background: var(--cor-fundo-3); }
+.nav__item .ponto { top: 6px; right: auto; left: 50%; margin-left: 8px; }
+@media (min-width: 768px) { .nav__item .ponto { position: static; margin-left: 0; } }
+/* 5 itens no menu do clube: rótulos curtos cabem em 360px */
+@media (max-width: 380px) { .nav--inferior .nav__item span { font-size: .72rem; } }
+
+/* Mural: curtir */
+.post__curtir--ativo, .post__curtir--ativo:hover { color: var(--cor-negativo); }
+.post__curtir--ativo svg { fill: currentColor; }
+.post__curtir svg { transition: transform .2s ease; }
+.post__curtir:active svg { transform: scale(1.25); }
+@media (prefers-reduced-motion: reduce) { .post__curtir svg { transition: none; } }
+.feed__quem { margin: 0 0 var(--esp-2); }
+
+/* Comentário de clube (escudo) e da organização (coroa) */
+.comentario__autor { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; }
+.comentario__autor .escudo { width: 18px; height: 18px; }
+.comentario__autor svg { width: 14px; height: 14px; }
+.comentario__autor--org { color: var(--cor-ouro); }

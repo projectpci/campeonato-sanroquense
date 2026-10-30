@@ -97,3 +97,5 @@
 - [x] Painel com menu próprio (Jogos, Elenco, Mural, Ajustes, Ver site); Exportar CSV e Times em Ajustes; compartilhar só com ícone
 - [x] Painel 100%% interno (Mural dentro do painel); cartões de times com Copiar; mural estilo feed com post só de texto
 - [x] Chance de vitória (modelo Elo com saldo de gols e mando) abaixo dos próximos jogos
+- [x] Perfil fixo (torcedor, clube, organizador) até tocar em Sair; área do clube com menu próprio (Meu clube, Elenco, Escalação, Campeonato, Mural)
+- [x] Mural: torcedor só curte e comenta; clube e organização comentam identificados (sem digitar nome); nomes reservados bloqueados

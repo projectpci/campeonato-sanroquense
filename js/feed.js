@@ -1,23 +1,27 @@
-// Feed do mural (estilo rede social): compositor de texto e/ou foto, filtros, publicações com comentários
-// recolhidos, ampliar foto e compartilhar. Usado no Mural (torcedor/time) e no painel do organizador (moderação).
+// Feed do mural (estilo rede social): curtidas, comentários recolhidos, ampliar foto e compartilhar.
+// Cada perfil vê o seu: torcedor só curte e comenta (com o nome dele); o clube (área do clube) publica e
+// comenta como o time; o organizador (painel) publica e comenta como Organização e modera.
 import {
-  listarPosts, listarJogos, urlFoto, validarCodigo, publicarPost, comentarPost, apagarPost, apagarComentario, aprovarPost,
+  listarPosts, listarJogos, urlFoto, publicarPost, comentarPost, clubeComentar, comentarComoOrganizacao, curtirPost,
+  apagarPost, apagarComentario, aprovarPost, clubeMeusPosts,
 } from './api.js';
 import { prepararFoto } from './imagem.js';
-import { escapar, escudo, icone, toast, tempoRelativo } from './ui.js';
+import { escapar, escudo, icone, toast, tempoRelativo, aparelho } from './ui.js';
 
-const CHAVE_CODIGO = 'mural_codigo';
 const CHAVE_NOME = 'mural_nome';
+const CHAVE_CURTIDAS = 'mural_curtidas';
 const LIMITE = 500;
 const guardado = (chave) => { try { return localStorage.getItem(chave) ?? ''; } catch { return ''; } };
 const guardar = (chave, valor) => { try { localStorage.setItem(chave, valor); } catch { /* sem armazenamento */ } };
 const esquecer = (chave) => { try { localStorage.removeItem(chave); } catch { /* sem armazenamento */ } };
+const minhasCurtidas = () => { try { return new Set(JSON.parse(localStorage.getItem(CHAVE_CURTIDAS) ?? '[]')); } catch { return new Set(); } };
 
 const traco = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const ICONES = {
   foto: traco('<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/>'),
   bola: traco('<circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 4.5h-5L8 10z"/>'),
   comentario: traco('<path d="M4 5h16v11H9l-5 4z"/>'),
+  coracao: traco('<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>'),
   compartilhar: traco('<path d="M12 15V4M8 8l4-4 4 4M5 13v6h14v-6"/>'),
   fechar: traco('<path d="M6 6l12 12M18 6L6 18"/>'),
   lixeira: traco('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
@@ -28,36 +32,19 @@ function rotuloJogo(j) {
   return `R${j.rodada?.numero ?? '?'} · ${j.mandante.nome}${placar}${j.visitante.nome}`;
 }
 
-// `organizador`: publica como Organização, vê a fila de aprovação e pode apagar
-export function criarFeed(container, { organizador = false } = {}) {
-  const estado = {
-    posts: [], jogos: [], time: null, filtro: 'tudo', abertos: new Set(), foto: null, carregou: false,
-  };
+// `organizador`: painel do organizador · `clube`: { codigo, time } da área do clube · sem nenhum: torcedor
+export function criarFeed(container, { organizador = false, clube = null } = {}) {
+  const perfil = organizador ? 'organizador' : clube ? 'clube' : 'torcedor';
+  const estado = { posts: [], meusPendentes: [], jogos: [], filtro: 'tudo', abertos: new Set(), foto: null, curtidas: minhasCurtidas() };
 
-  async function identificar() {
-    estado.time = null;
-    const codigo = guardado(CHAVE_CODIGO);
-    if (codigo && !organizador) {
-      estado.time = await validarCodigo(codigo).catch(() => null);
-      if (!estado.time) esquecer(CHAVE_CODIGO); // código trocado pelo organizador
-    }
-  }
-
-  // ---------- Compositor ----------
+  // ---------- Compositor (só clube e organizador publicam) ----------
   function htmlCompositor() {
-    if (!organizador && !estado.time) {
-      return `
-        <section class="card compositor compositor--entrar">
-          <p><strong>Seu time quer postar?</strong> Digite o código do clube (o mesmo da Área do clube).</p>
-          <form class="compositor__codigo" data-form-codigo>
-            <input name="codigo" required maxlength="12" placeholder="Código do time" autocapitalize="characters" autocomplete="off" aria-label="Código do time">
-            <button class="botao" type="submit">Entrar</button>
-          </form>
-          <p class="texto-2 texto-pequeno">Torcedor: comente nas publicações abaixo. 💬</p>
-        </section>`;
+    if (perfil === 'torcedor') {
+      const nome = guardado(CHAVE_NOME);
+      return nome ? `<p class="texto-2 texto-pequeno feed__quem">Você comenta como <strong>${escapar(nome)}</strong> · <button type="button" class="link-botao" data-trocar-nome>trocar nome</button></p>` : '';
     }
-    const avatar = organizador ? `<span class="avatar-feed avatar-feed--org">${icone('coroa')}</span>` : `<span class="avatar-feed">${escudo(estado.time, 48)}</span>`;
-    const nome = organizador ? 'Organização' : estado.time.nome;
+    const avatar = organizador ? `<span class="avatar-feed avatar-feed--org">${icone('coroa')}</span>` : `<span class="avatar-feed">${escudo(clube.time, 48)}</span>`;
+    const nome = organizador ? 'Organização' : clube.time.nome;
     const jogos = [...estado.jogos].sort((a, b) => (b.rodada?.numero ?? 0) - (a.rodada?.numero ?? 0)).slice(0, 25)
       .map((j) => `<option value="${j.id}">${escapar(rotuloJogo(j))}</option>`).join('');
     return `
@@ -65,7 +52,7 @@ export function criarFeed(container, { organizador = false } = {}) {
         <div class="compositor__linha">
           ${avatar}
           <div class="compositor__campo">
-            <span class="compositor__quem">${escapar(nome)}${organizador ? '' : ' · <button type="button" class="link-botao" data-trocar-codigo>trocar</button>'}</span>
+            <span class="compositor__quem">${escapar(nome)}</span>
             <textarea data-texto rows="2" maxlength="${LIMITE}" placeholder="O que está rolando no campeonato?" aria-label="Escreva uma publicação"></textarea>
             <div class="compositor__previa oculto" data-previa><img alt="Prévia da foto"><button type="button" class="compositor__tirar" data-tirar-foto aria-label="Tirar foto">${ICONES.fechar}</button></div>
           </div>
@@ -115,7 +102,7 @@ export function criarFeed(container, { organizador = false } = {}) {
         toast(estado.foto ? 'Enviando foto...' : 'Publicando...');
         const foto = estado.foto ? await prepararFoto(estado.foto) : null;
         const jogo = caixa.querySelector('[data-jogo]').value;
-        await publicarPost({ codigo: organizador ? undefined : guardado(CHAVE_CODIGO), descricao: texto.value, foto, jogoId: jogo ? Number(jogo) : null });
+        await publicarPost({ codigo: clube?.codigo, descricao: texto.value, foto, jogoId: jogo ? Number(jogo) : null });
         texto.value = '';
         estado.foto = null;
         toast(organizador ? 'Publicado ✔' : 'Enviado! Aparece no mural depois da aprovação do organizador.');
@@ -129,21 +116,28 @@ export function criarFeed(container, { organizador = false } = {}) {
   }
 
   // ---------- Publicações ----------
+  function htmlAutorComentario(c) {
+    if (c.oficial) return `<strong class="comentario__autor comentario__autor--org">${icone('coroa')}Organização</strong>`;
+    if (c.time_id) return `<strong class="comentario__autor comentario__autor--time">${escudo({ escudo_url: c.time?.escudo_url, nome: c.nome }, 32)}${escapar(c.nome)}</strong>`;
+    return `<strong class="comentario__autor">${escapar(c.nome)}</strong>`;
+  }
+
   function htmlComentarios(p) {
     const todos = [...(p.comentarios ?? [])].sort((a, b) => a.criado_em.localeCompare(b.criado_em));
     const aberto = estado.abertos.has(p.id);
     const lista = aberto ? todos : todos.slice(-2);
     const nome = guardado(CHAVE_NOME);
+    const quem = organizador ? 'Organização' : clube ? clube.time.nome : nome;
+    const pedirNome = perfil === 'torcedor' && !nome;
     return `
       <section class="post__comentarios" aria-label="Comentários">
         ${todos.length > 2 && !aberto ? `<button class="link-botao post__ver-todos" data-ver-todos="${p.id}">Ver os ${todos.length} comentários</button>` : ''}
         ${lista.map((c) => `
-          <p class="comentario"><span><strong>${escapar(c.nome)}</strong> ${escapar(c.texto)}<small>${tempoRelativo(c.criado_em)}</small></span>
+          <p class="comentario"><span>${htmlAutorComentario(c)} ${escapar(c.texto)}<small>${tempoRelativo(c.criado_em)}</small></span>
             ${organizador ? `<button class="comentario__apagar" data-apagar-comentario="${c.id}" aria-label="Apagar comentário">${ICONES.lixeira}</button>` : ''}</p>`).join('')}
         <form class="post__comentar" data-post="${p.id}">
-          ${nome ? `<input type="hidden" name="nome" value="${escapar(nome)}">`
-            : '<input name="nome" maxlength="30" placeholder="Seu nome" required autocomplete="nickname" aria-label="Seu nome">'}
-          <input name="texto" maxlength="300" placeholder="${nome ? `Comente como ${escapar(nome)}` : 'Escreva um comentário'}" required autocomplete="off" aria-label="Comentário">
+          ${pedirNome ? '<input name="nome" maxlength="30" placeholder="Seu nome" required autocomplete="nickname" aria-label="Seu nome">' : ''}
+          <input name="texto" maxlength="300" placeholder="${quem ? `Comente como ${escapar(quem)}` : 'Escreva um comentário'}" required autocomplete="off" aria-label="Comentário">
           <button class="post__enviar" type="submit" aria-label="Enviar comentário">➤</button>
         </form>
       </section>`;
@@ -152,6 +146,8 @@ export function criarFeed(container, { organizador = false } = {}) {
   function htmlPost(p, pendente = false) {
     const avatar = p.time ? `<span class="avatar-feed">${escudo(p.time, 48)}</span>` : `<span class="avatar-feed avatar-feed--org">${icone('coroa')}</span>`;
     const qtd = (p.comentarios ?? []).length;
+    const curti = estado.curtidas.has(p.id);
+    const moderar = pendente && organizador;
     return `
       <article class="card post${pendente ? ' post--pendente' : ''}${p.foto_path ? '' : ' post--texto'}" id="post-${p.id}" data-post="${p.id}">
         <header class="post__topo">
@@ -164,12 +160,13 @@ export function criarFeed(container, { organizador = false } = {}) {
         ${p.foto_path ? `<button class="post__midia" data-ampliar="${escapar(urlFoto(p.foto_path))}" aria-label="Ampliar foto">
           <img class="post__foto" src="${escapar(urlFoto(p.foto_path))}" loading="lazy" alt="Foto publicada por ${escapar(p.autor)}"></button>` : ''}
         ${p.jogo ? `<span class="post__jogo">${ICONES.bola} ${escapar(rotuloJogo(p.jogo))}</span>` : ''}
-        ${pendente ? `
+        ${moderar ? `
           <div class="post__moderar">
             <button class="botao botao--perigo" data-apagar-post="${p.id}">Recusar</button>
             <button class="botao" data-aprovar="${p.id}">Aprovar e publicar</button>
-          </div>` : `
+          </div>` : pendente ? '' : `
           <footer class="post__acoes">
+            <button class="post__acao post__curtir${curti ? ' post__curtir--ativo' : ''}" data-curtir="${p.id}" aria-pressed="${curti}" aria-label="${curti ? 'Descurtir' : 'Curtir'}">${ICONES.coracao}<span>${p.curtidas || ''}</span></button>
             <button class="post__acao" data-ver-todos="${p.id}" aria-label="Comentários">${ICONES.comentario}<span>${qtd || ''}</span></button>
             <button class="post__acao" data-compartilhar-post="${p.id}" aria-label="Compartilhar publicação">${ICONES.compartilhar}</button>
           </footer>
@@ -181,14 +178,15 @@ export function criarFeed(container, { organizador = false } = {}) {
     const rascunho = capturar();
     const visiveis = estado.posts.filter((p) => p.aprovado !== false)
       .filter((p) => estado.filtro === 'tudo' || (estado.filtro === 'fotos' ? p.foto_path : !p.foto_path));
-    const pendentes = organizador ? estado.posts.filter((p) => p.aprovado === false) : [];
+    // organizador: fila de aprovação · clube: as publicações dele que ainda esperam o organizador
+    const pendentes = organizador ? estado.posts.filter((p) => p.aprovado === false) : estado.meusPendentes;
     const filtros = [['tudo', 'Tudo'], ['fotos', 'Fotos'], ['textos', 'Textos']];
     container.innerHTML = `
       ${htmlCompositor()}
-      ${pendentes.length ? `<section class="fila-aprovacao"><h3>Aguardando aprovação · ${pendentes.length}</h3>${pendentes.map((p) => htmlPost(p, true)).join('')}</section>` : ''}
+      ${pendentes.length ? `<section class="fila-aprovacao"><h3>${organizador ? 'Aguardando aprovação' : 'Em análise pelo organizador'} · ${pendentes.length}</h3>${pendentes.map((p) => htmlPost(p, true)).join('')}</section>` : ''}
       <div class="segmentos feed__filtros" role="tablist">${filtros.map(([id, rotulo]) =>
         `<button class="segmento${estado.filtro === id ? ' segmento--ativo' : ''}" data-filtro="${id}">${rotulo}</button>`).join('')}</div>
-      <div class="feed">${visiveis.map((p) => htmlPost(p)).join('') || `<p class="vazio">${estado.filtro === 'tudo' ? 'Nenhuma publicação ainda. Puxe o assunto! ⚽' : 'Nada por aqui ainda.'}</p>`}</div>`;
+      <div class="feed">${visiveis.map((p) => htmlPost(p)).join('') || `<p class="vazio">${estado.filtro === 'tudo' ? 'Nenhuma publicação ainda. ⚽' : 'Nada por aqui ainda.'}</p>`}</div>`;
     ligarCompositor();
     restaurar(rascunho);
   }
@@ -224,12 +222,16 @@ export function criarFeed(container, { organizador = false } = {}) {
 
   async function carregar() {
     try {
-      const [posts, jogos] = await Promise.all([listarPosts(), listarJogos()]);
+      const [posts, jogos, meus] = await Promise.all([
+        listarPosts(), perfil === 'torcedor' ? [] : listarJogos(), clube ? clubeMeusPosts(clube.codigo) : [],
+      ]);
       estado.posts = posts;
       estado.jogos = jogos;
-      if (!estado.carregou) { await identificar(); estado.carregou = true; }
+      // os pendentes do clube vêm da função do clube (a leitura pública só mostra os aprovados)
+      estado.meusPendentes = meus.filter((p) => p.aprovado === false).map((p) => ({ ...p, time: clube.time, comentarios: [] }));
       desenhar();
     } catch (erro) {
+      if (erro.codigoInvalido) throw erro; // a área do clube trata (volta para a entrada)
       container.innerHTML = `<p class="aviso">Não foi possível carregar o mural: ${escapar(erro.message)}</p>`;
     }
   }
@@ -253,6 +255,44 @@ export function criarFeed(container, { organizador = false } = {}) {
     } catch (erro) { if (erro.name !== 'AbortError') toast('Não foi possível compartilhar.', true); }
   }
 
+  // Curtida aparece na hora; se o banco recusar, volta como estava
+  async function curtir(botao, id) {
+    const post = estado.posts.find((p) => p.id === id);
+    const curtir = !estado.curtidas.has(id);
+    const anterior = post.curtidas ?? 0;
+    const pintar = (ativo, total) => {
+      if (ativo) estado.curtidas.add(id); else estado.curtidas.delete(id);
+      post.curtidas = total;
+      guardar(CHAVE_CURTIDAS, JSON.stringify([...estado.curtidas].slice(-500)));
+      botao.classList.toggle('post__curtir--ativo', ativo);
+      botao.setAttribute('aria-pressed', String(ativo));
+      botao.setAttribute('aria-label', ativo ? 'Descurtir' : 'Curtir');
+      botao.querySelector('span').textContent = total || '';
+    };
+    pintar(curtir, Math.max(0, anterior + (curtir ? 1 : -1)));
+    try {
+      pintar(curtir, await curtirPost(id, aparelho(), curtir));
+    } catch (erro) {
+      pintar(!curtir, anterior);
+      throw erro;
+    }
+  }
+
+  async function comentar(form) {
+    const postId = Number(form.dataset.post);
+    const texto = form.elements.texto.value.trim();
+    if (organizador) await comentarComoOrganizacao(postId, texto);
+    else if (clube) await clubeComentar(clube.codigo, postId, texto);
+    else {
+      const nome = (form.elements.nome?.value ?? guardado(CHAVE_NOME)).trim();
+      await comentarPost(postId, nome, texto);
+      guardar(CHAVE_NOME, nome);
+    }
+    form.elements.texto.value = '';
+    estado.abertos.add(postId);
+    await carregar();
+  }
+
   // ---------- Eventos (um só ouvinte para tudo) ----------
   container.addEventListener('click', async (e) => {
     const alvo = e.target.closest('button');
@@ -260,13 +300,14 @@ export function criarFeed(container, { organizador = false } = {}) {
     try {
       if (alvo.dataset.filtro) { estado.filtro = alvo.dataset.filtro; desenhar(); }
       else if (alvo.dataset.ampliar) ampliar(alvo.dataset.ampliar);
+      else if (alvo.dataset.curtir) await curtir(alvo, Number(alvo.dataset.curtir));
       else if (alvo.dataset.verTodos) {
         const id = Number(alvo.dataset.verTodos);
         if (estado.abertos.has(id) && alvo.classList.contains('post__acao')) estado.abertos.delete(id); else estado.abertos.add(id);
         desenhar();
         if (estado.abertos.has(id)) container.querySelector(`.post__comentar[data-post="${id}"] [name="texto"]`)?.focus();
       } else if (alvo.dataset.compartilharPost) compartilhar(estado.posts.find((p) => p.id === Number(alvo.dataset.compartilharPost)));
-      else if (alvo.hasAttribute('data-trocar-codigo')) { esquecer(CHAVE_CODIGO); estado.time = null; desenhar(); }
+      else if (alvo.hasAttribute('data-trocar-nome')) { esquecer(CHAVE_NOME); desenhar(); }
       else if (alvo.dataset.aprovar && organizador) { await aprovarPost(Number(alvo.dataset.aprovar)); toast('Publicação aprovada ✔'); await carregar(); }
       else if (alvo.dataset.apagarPost && organizador) {
         if (!confirm('Apagar esta publicação e os comentários dela?')) return;
@@ -282,30 +323,12 @@ export function criarFeed(container, { organizador = false } = {}) {
   });
 
   container.addEventListener('submit', async (e) => {
-    const formCodigo = e.target.closest('[data-form-codigo]');
-    const formComentario = e.target.closest('.post__comentar');
-    if (!formCodigo && !formComentario) return;
+    const form = e.target.closest('.post__comentar');
+    if (!form) return;
     e.preventDefault();
-    try {
-      if (formCodigo) {
-        const codigo = formCodigo.elements.codigo.value.trim().toUpperCase();
-        const time = await validarCodigo(codigo);
-        if (!time) throw new Error('Código do time inválido. Peça ao organizador.');
-        guardar(CHAVE_CODIGO, codigo);
-        estado.time = time;
-        toast(`Postando como ${time.nome} ✔`);
-        desenhar();
-        container.querySelector('[data-texto]')?.focus();
-        return;
-      }
-      const nome = formComentario.elements.nome.value.trim();
-      const texto = formComentario.elements.texto.value.trim();
-      await comentarPost(Number(formComentario.dataset.post), nome, texto);
-      guardar(CHAVE_NOME, nome);
-      formComentario.elements.texto.value = '';
-      estado.abertos.add(Number(formComentario.dataset.post));
-      await carregar();
-    } catch (erro) { toast(erro.message, true); }
+    const enviar = form.querySelector('[type=submit]');
+    enviar.disabled = true;
+    try { await comentar(form); } catch (erro) { toast(erro.message, true); enviar.disabled = false; }
   });
 
   return { carregar };

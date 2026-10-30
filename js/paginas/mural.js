@@ -1,4 +1,4 @@
-// Mural (feed): times publicam texto e/ou foto com o código do clube; torcedores comentam.
+// Mural (feed) do torcedor: só curte e comenta. Times publicam na Área do clube e o organizador no painel.
 // A moderação (aprovar, recusar, apagar) fica no painel do organizador (aba Mural).
 import { assinarMudancas } from '../realtime.js';
 import { criarFeed } from '../feed.js';

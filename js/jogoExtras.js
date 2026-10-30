@@ -2,16 +2,7 @@
 import { buscarEscalacoesJogo, listarJogadores, craqueResultado, votarCraque } from './api.js';
 import { jogoRegistrado } from './compartilharJogo.js';
 import { htmlCampo, htmlCarta } from './escalacao.js';
-import { escapar, escudo, toast } from './ui.js';
-
-// Identificador anônimo deste aparelho (um voto por jogo por aparelho; dá para trocar o voto)
-function aparelho() {
-  try {
-    let id = localStorage.getItem('aparelho_id');
-    if (!id) { id = crypto.randomUUID(); localStorage.setItem('aparelho_id', id); }
-    return id;
-  } catch { return crypto.randomUUID(); }
-}
+import { escapar, escudo, toast, aparelho } from './ui.js';
 const meusVotos = () => { try { return JSON.parse(localStorage.getItem('craque_votos') ?? '{}'); } catch { return {}; } };
 const guardarVoto = (jogoId, jogadorId) => {
   try { localStorage.setItem('craque_votos', JSON.stringify({ ...meusVotos(), [jogoId]: jogadorId })); } catch { /* sem armazenamento */ }

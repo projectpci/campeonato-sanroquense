@@ -214,6 +214,22 @@ function comentarPost(postId, nome, texto) {
   comentarios.push({ id: proximoId(comentarios), post_id: postId, nome: nome.trim().slice(0, 30), texto: texto.trim().slice(0, 300), criado_em: new Date().toISOString() });
 }
 
+function clubeComentar(codigo, postId, texto) {
+  const time = validarCodigo(codigo);
+  if (!time) throw Object.assign(new Error('Código do time inválido.'), { codigoInvalido: true });
+  comentarios.push({ id: proximoId(comentarios), post_id: postId, nome: time.nome, time_id: time.time_id, texto: texto.trim().slice(0, 300), criado_em: new Date().toISOString() });
+}
+function comentarComoOrganizacao(postId, texto) {
+  comentarios.push({ id: proximoId(comentarios), post_id: postId, nome: 'Organização', oficial: true, texto: texto.trim().slice(0, 300), criado_em: new Date().toISOString() });
+}
+const curtidas = new Set(); // `${post}:${aparelho}`
+function curtirPost(postId, aparelho, curtir) {
+  if (curtir) curtidas.add(`${postId}:${aparelho}`); else curtidas.delete(`${postId}:${aparelho}`);
+  const post = posts.find((p) => p.id === postId);
+  post.curtidas = [...curtidas].filter((c) => c.startsWith(`${postId}:`)).length;
+  return post.curtidas;
+}
+
 function apagarPost(id) {
   const i = posts.findIndex((p) => p.id === id);
   if (i >= 0) posts.splice(i, 1);
@@ -312,7 +328,7 @@ export const dadosDemo = {
   buscarEscalacoesJogo: (jogoId) => escalacoesJogo.filter((e) => e.jogo_id === jogoId),
   clubePublicarEscalacao, clubeRetirarEscalacao, craqueResultado, votarCraque, rankingCraques: () => [],
   salvarTime, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo,
-  publicarPost, comentarPost, apagarPost, apagarComentario, gerarCodigo, validarCodigo,
+  publicarPost, comentarPost, clubeComentar, comentarComoOrganizacao, curtirPost, apagarPost, apagarComentario, gerarCodigo, validarCodigo,
   aprovarPost, clubeMeusPosts, clubeSalvarJogador, clubeApagarJogador, clubeSalvarTecnico, clubeBuscarEscalacao, clubeSalvarEscalacao,
   listarPosts: () => [...posts].sort((a, b) => b.criado_em.localeCompare(a.criado_em)).map(montarPost),
   listarCodigos: () => [...codigos].map(([time_id, codigo]) => ({ time_id, codigo })),

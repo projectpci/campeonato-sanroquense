@@ -163,7 +163,7 @@ const SELECT_POST = `
   time:times(id, nome, escudo_url),
   jogo:jogos(id, gols_mandante, gols_visitante, status,
     mandante:times!jogos_mandante_id_fkey(nome), visitante:times!jogos_visitante_id_fkey(nome), rodada:rodadas(numero)),
-  comentarios(id, nome, texto, criado_em)`;
+  comentarios(id, nome, texto, criado_em, time_id, oficial, time:times(escudo_url))`;
 
 export const listarPosts = () =>
   demo ? dadosDemo.listarPosts() :
@@ -208,6 +208,19 @@ export async function publicarPost({ codigo, descricao, foto, jogoId }) {
 export const comentarPost = (postId, nome, texto) =>
   demo ? dadosDemo.comentarPost(postId, nome, texto) :
   executar(cliente().rpc('comentar_post', { p_post_id: postId, p_nome: nome, p_texto: texto }));
+
+// Clube comenta com o nome do time (validado pelo código); organizador comenta como "Organização"
+export const clubeComentar = (codigo, postId, texto) =>
+  demo ? dadosDemo.clubeComentar(codigo, postId, texto) :
+  rpcClube('clube_comentar', { p_codigo: codigo, p_post_id: postId, p_texto: texto });
+export const comentarComoOrganizacao = (postId, texto) =>
+  demo ? dadosDemo.comentarComoOrganizacao(postId, texto) :
+  gravar('comentarios', { post_id: postId, nome: 'Organização', texto: String(texto).trim(), oficial: true });
+
+// Curtir / descurtir (um por aparelho); devolve o novo total
+export const curtirPost = (postId, aparelho, curtir) =>
+  demo ? dadosDemo.curtirPost(postId, aparelho, curtir) :
+  executar(cliente().rpc('curtir_post', { p_post_id: postId, p_dispositivo: aparelho, p_curtir: curtir }));
 
 
 // Moderação do organizador

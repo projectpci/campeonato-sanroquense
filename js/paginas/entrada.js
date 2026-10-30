@@ -3,7 +3,7 @@
 import '../pwa.js';
 import { listarTimes, listarJogos } from '../api.js';
 import { semConfiguracao } from '../supabase.js';
-import { escapar, escudo, formatarData, horaDoJogo } from '../ui.js';
+import { escapar, escudo, formatarData, horaDoJogo, modoAtivo, definirModo, DESTINO_DO_MODO } from '../ui.js';
 
 const CHAVE_PERFIL = 'perfil';
 
@@ -60,6 +60,16 @@ async function enfeitar() {
     }
   } catch { /* sem conexão: a tela segue só com as opções */ }
 }
+
+// Quem já está num perfil volta direto para ele; "Sair" (index.html?sair) encerra e mostra a escolha
+const params = new URLSearchParams(location.search);
+if (params.has('sair')) {
+  definirModo('');
+  history.replaceState(null, '', location.pathname);
+} else if (DESTINO_DO_MODO[modoAtivo()]) {
+  location.replace(DESTINO_DO_MODO[modoAtivo()]);
+}
+document.querySelectorAll('[data-modo]').forEach((a) => a.addEventListener('click', () => definirModo(a.dataset.modo)));
 
 lembrarPerfil();
 enfeitar();
