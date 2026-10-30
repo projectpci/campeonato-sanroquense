@@ -61,18 +61,35 @@ function tratarErro(erro) {
   toast(erro.message, true);
 }
 
-// ---------- Entrada (time + código) ----------
+// ---------- Entrada em 2 passos: 1) escolhe o time · 2) o time fica em destaque e pede o código ----------
 async function telaEntrada(mensagem = '') {
   let times;
   try { times = (await listarTimes()).filter((t) => t.ativo !== false); } catch (erro) { mostrarAviso(app, `Não foi possível carregar os times: ${erro.message}`); return; }
-  const salvo = guardado(CHAVE_TIME);
+  const salvo = times.find((t) => String(t.id) === guardado(CHAVE_TIME));
+  if (salvo) pedirCodigo(salvo, times, mensagem); else escolherTime(times, mensagem);
+}
+
+function escolherTime(times, mensagem = '') {
   app.innerHTML = `
-    <form class="card form clube-entrada" id="form-clube">
+    <section class="card form clube-entrada">
       <h2>Área do clube</h2>
-      <p class="texto-2">Escolha o seu time e digite o código de acesso enviado pelo organizador.</p>
+      <p class="texto-2">Escolha o seu time para entrar.</p>
+      ${mensagem ? `<p class="aviso">${escapar(mensagem)}</p>` : ''}
       <div class="escolha-times">${times.map((t) => `
-        <label class="escolha-time"><input type="radio" name="time" value="${t.id}" ${String(t.id) === salvo ? 'checked' : ''} required>
-          ${escudo(t, 48)}<span>${escapar(t.nome)}</span></label>`).join('')}</div>
+        <button class="escolha-time" type="button" data-escolher-time="${t.id}">${escudo(t, 48)}<span>${escapar(t.nome)}</span></button>`).join('')}</div>
+    </section>`;
+  app.querySelectorAll('[data-escolher-time]').forEach((b) => b.addEventListener('click', () =>
+    pedirCodigo(times.find((t) => t.id === Number(b.dataset.escolherTime)), times)));
+}
+
+function pedirCodigo(time, times, mensagem = '') {
+  app.innerHTML = `
+    <form class="card form clube-entrada clube-entrada--codigo" id="form-clube">
+      <div class="clube-entrada__time">
+        ${escudo(time, 96)}
+        <h2>${escapar(time.nome)}</h2>
+        <p class="texto-2">Digite o código de acesso enviado pelo organizador.</p>
+      </div>
       <label class="campo">Código de acesso
         <span class="senha">
           <input class="senha__campo" name="codigo" type="password" required maxlength="12" placeholder="••••••"
@@ -81,10 +98,12 @@ async function telaEntrada(mensagem = '') {
         </span></label>
       ${mensagem ? `<p class="aviso">${escapar(mensagem)}</p>` : ''}
       <button class="botao botao--grande" type="submit">Entrar</button>
+      <button class="link-botao centro" type="button" data-trocar-time>← Escolher outro time</button>
     </form>`;
+  const campo = app.querySelector('.senha__campo');
+  campo.focus();
   const ver = app.querySelector('.senha__ver');
   ver.addEventListener('click', () => {
-    const campo = app.querySelector('.senha__campo');
     const mostrar = campo.type === 'password';
     campo.type = mostrar ? 'text' : 'password';
     ver.textContent = mostrar ? 'Ocultar' : 'Mostrar';
@@ -92,24 +111,24 @@ async function telaEntrada(mensagem = '') {
     ver.setAttribute('aria-label', mostrar ? 'Ocultar código' : 'Mostrar código');
     campo.focus();
   });
+  app.querySelector('[data-trocar-time]').addEventListener('click', () => { esquecer(CHAVE_TIME); escolherTime(times); });
   document.getElementById('form-clube').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const dados = new FormData(e.target);
-    const timeId = Number(dados.get('time'));
-    const codigo = String(dados.get('codigo')).trim().toUpperCase();
+    const codigo = campo.value.trim().toUpperCase();
     const enviar = e.target.querySelector('[type=submit]');
     enviar.disabled = true;
     try {
-      const time = await validarCodigo(codigo);
-      if (!time || time.time_id !== timeId) throw new Error('Código não confere com o time escolhido.');
+      const valido = await validarCodigo(codigo);
+      if (!valido || valido.time_id !== time.id) throw new Error(`Código não confere com o ${time.nome}.`);
       guardar(CHAVE_CODIGO, codigo);
-      guardar(CHAVE_TIME, String(timeId));
+      guardar(CHAVE_TIME, String(time.id));
       estado.codigo = codigo;
       mostrarCarregando(app);
       await carregar();
     } catch (erro) {
       toast(erro.message, true);
       enviar.disabled = false;
+      campo.select();
     }
   });
 }

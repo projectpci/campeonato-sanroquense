@@ -89,3 +89,4 @@
 - [x] Horário a definir (jogos.horario_definido): Real Barça SR × Rua Nova remarcado para 01/11; painel tem Data, Hora e 'Horário a definir'
 - [x] Avisos de foto para aprovar (organizador), painel em tempo real, arte de cada jogo para compartilhar
 - [x] Itens 5, 6, 8, 9, 10: escalação publicada no jogo, elenco na página do time, craque do jogo, estatísticas na Tabela e story 9:16 — ver docs/12
+- [x] Só o Adm aprova/apaga posts; aba Elenco no painel; entrada do clube em 2 passos

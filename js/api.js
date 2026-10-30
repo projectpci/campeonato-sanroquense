@@ -208,12 +208,6 @@ export const comentarPost = (postId, nome, texto) =>
   demo ? dadosDemo.comentarPost(postId, nome, texto) :
   executar(cliente().rpc('comentar_post', { p_post_id: postId, p_nome: nome, p_texto: texto }));
 
-export async function apagarPostDoTime(codigo, postId) {
-  if (demo) return dadosDemo.apagarPostDoTime(codigo, postId);
-  const resposta = await executar(cliente().rpc('apagar_post_time', { p_codigo: codigo, p_post_id: postId }));
-  if (resposta?.erro === 'codigo') throw new Error('Código do time inválido. Peça o código ao organizador.');
-  return resposta;
-}
 
 // Moderação do organizador
 export async function apagarPost(post) {

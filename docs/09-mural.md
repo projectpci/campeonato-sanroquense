@@ -158,3 +158,7 @@ create policy "mural remover" on storage.objects for delete to authenticated usi
 - RLS: o público (e o realtime) só vê `aprovado = true`; o organizador vê tudo. Comentários só em publicação aprovada.
 - No mural, o organizador vê a fila **Aguardando aprovação** com "Aprovar e publicar" / "Recusar". O painel mostra um contador no botão Mural.
 - O clube vê as próprias fotos na hora (aba Mural da área do clube, função `clube_meus_posts`), com o selo "Em análise" ou "No mural".
+
+## Só o organizador aprova e apaga (migração `so_organizador_apaga_post`)
+O time não apaga mais a própria publicação (botão removido e `apagar_post_time` sem permissão de execução).
+Para remover uma foto, o time pede ao organizador.

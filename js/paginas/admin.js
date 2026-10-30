@@ -5,6 +5,7 @@ import {
 } from '../api.js';
 import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
+import { POSICOES, htmlCarta, avatarJogador } from '../escalacao.js';
 import { rodadaAtual } from '../rodadas.js';
 import { assinarMudancas } from '../realtime.js';
 import { botaoAvisosOrganizador } from '../avisos.js';
@@ -93,7 +94,7 @@ async function carregar() {
   try {
     const [times, rodadas, jogos, jogadores, codigos, pendentes] = await Promise.all([listarTimes(), listarRodadas(), listarJogos(), listarJogadores(),
       estado.aba === 'times' ? listarCodigos() : [], contarPostsPendentes().catch(() => 0)]);
-    const abas = [['confrontos', 'Confrontos e resultados'], ['times', 'Times']];
+    const abas = [['confrontos', 'Confrontos e resultados'], ['times', 'Times'], ['elenco', 'Elenco']];
     app.innerHTML = `
       <div class="admin__topo">
         <h2>Organizador</h2>
@@ -111,6 +112,7 @@ async function carregar() {
     document.getElementById('btn-csv').addEventListener('click', () => exportarCsv(jogos, rodadas));
     const aba = document.getElementById('aba');
     if (estado.aba === 'times') abaTimes(aba, times, codigos);
+    else if (estado.aba === 'elenco') abaElenco(aba, times, jogadores);
     else abaConfrontos(aba, { times, rodadas, jogos, jogadores });
   } catch (erro) {
     mostrarAviso(app, `Erro ao carregar: ${erro.message}`);
@@ -203,6 +205,29 @@ function dialogoTime(time) {
       d.close();
     }, 'Time salvo ✔');
   });
+}
+
+// ---------- Aba Elenco (ver o elenco cadastrado por cada clube) ----------
+const ORDEM_POSICAO = Object.fromEntries(POSICOES.map(([p], i) => [p, i]));
+function abaElenco(aba, times, jogadores) {
+  const ativos = times.filter((t) => t.ativo !== false);
+  if (!ativos.some((t) => t.id === estado.elencoTimeId)) estado.elencoTimeId = ativos[0]?.id ?? null;
+  const time = ativos.find((t) => t.id === estado.elencoTimeId);
+  const doTime = (id) => jogadores.filter((j) => j.time_id === id && j.ativo !== false);
+  const elenco = time ? doTime(time.id).sort((a, b) => (ORDEM_POSICAO[a.posicao] ?? 9) - (ORDEM_POSICAO[b.posicao] ?? 9)
+    || (a.numero ?? 99) - (b.numero ?? 99) || a.nome.localeCompare(b.nome)) : [];
+  aba.innerHTML = `
+    <div class="chips" aria-label="Escolher time">${ativos.map((t) => `
+      <button class="chip chip--time${t.id === estado.elencoTimeId ? ' chip--ativo' : ''}" data-elenco-time="${t.id}">
+        ${escudo(t, 32)} ${escapar(t.nome)} <small>${doTime(t.id).length}</small></button>`).join('')}</div>
+    ${time ? `
+      <div class="admin__topo"><h3>${escapar(time.nome)} · ${elenco.length} jogador${elenco.length === 1 ? '' : 'es'}</h3></div>
+      <div class="tecnico tecnico--leitura">${avatarJogador({ foto_url: time.tecnico_foto_url, numero: 'T' }, 'avatar avatar--medio')}
+        <span><small>Técnico</small><strong>${escapar(time.tecnico_nome || 'Não cadastrado')}</strong></span></div>
+      ${elenco.length ? `<div class="cartas">${elenco.map((j) => htmlCarta(j, '', '', 'div')).join('')}</div>`
+        : '<p class="vazio">O clube ainda não cadastrou jogadores. O cadastro é feito pela Área do clube, com o código do time.</p>'}` : ''}`;
+  aba.querySelectorAll('[data-elenco-time]').forEach((b) => b.addEventListener('click', () => { estado.elencoTimeId = Number(b.dataset.elencoTime); abaElenco(aba, times, jogadores); }));
+  aba.querySelector('.chip--ativo')?.scrollIntoView({ inline: 'center', block: 'nearest' });
 }
 
 // ---------- Aba Confrontos e resultados ----------

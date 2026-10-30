@@ -220,11 +220,6 @@ function apagarPost(id) {
   for (let k = comentarios.length - 1; k >= 0; k--) if (comentarios[k].post_id === id) comentarios.splice(k, 1);
 }
 
-function apagarPostDoTime(codigo, id) {
-  const time = validarCodigo(codigo);
-  if (!time) throw new Error('Código do time inválido.');
-  if (posts.find((p) => p.id === id)?.time_id === time.time_id) apagarPost(id);
-}
 
 function apagarComentario(id) {
   const i = comentarios.findIndex((c) => c.id === id);
@@ -317,7 +312,7 @@ export const dadosDemo = {
   buscarEscalacoesJogo: (jogoId) => escalacoesJogo.filter((e) => e.jogo_id === jogoId),
   clubePublicarEscalacao, clubeRetirarEscalacao, craqueResultado, votarCraque, rankingCraques: () => [],
   salvarTime, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo,
-  publicarPost, comentarPost, apagarPost, apagarPostDoTime, apagarComentario, gerarCodigo, validarCodigo,
+  publicarPost, comentarPost, apagarPost, apagarComentario, gerarCodigo, validarCodigo,
   aprovarPost, clubeMeusPosts, clubeSalvarJogador, clubeApagarJogador, clubeSalvarTecnico, clubeBuscarEscalacao, clubeSalvarEscalacao,
   listarPosts: () => [...posts].sort((a, b) => b.criado_em.localeCompare(a.criado_em)).map(montarPost),
   listarCodigos: () => [...codigos].map(([time_id, codigo]) => ({ time_id, codigo })),

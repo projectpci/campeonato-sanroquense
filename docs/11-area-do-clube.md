@@ -40,3 +40,8 @@ Jogos com controle Calendário/Resultados; artilharia em pódio; elenco em carta
 com filtro; escolha de jogador numa folha que sobe de baixo, com busca e filtro "da posição"/"todos" (tocar em quem já está no
 campo troca os dois de lugar); botão "Auto" escala pelas posições; banco em avatares; barra fixa Salvar/Compartilhar;
 posição do jogador escolhida por botões; foto com prévia em círculo. Aviso ao sair com escalação não salva.
+
+## Entrada em 2 passos e aba Elenco do painel
+- Entrada: 1) grade de escudos; 2) o time escolhido fica em destaque, com o campo do código e "← Escolher outro time".
+  Se o aparelho já entrou antes, abre direto no passo 2 daquele time.
+- Painel do organizador: aba **Elenco** com os times em chips (com a quantidade de jogadores) e o elenco do time escolhido (só leitura).

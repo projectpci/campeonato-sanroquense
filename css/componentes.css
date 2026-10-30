@@ -642,3 +642,15 @@ div.carta:hover, div.carta:active { transform: none; }
 .formato__forma { display: block; width: 48px; border: 3px solid var(--cor-primaria); border-radius: 6px; }
 .formato__forma--post { aspect-ratio: 4 / 5; }
 .formato__forma--story { aspect-ratio: 9 / 16; width: 38px; }
+.chip--time { display: inline-flex; align-items: center; gap: var(--esp-2); white-space: nowrap; }
+.chip--time .escudo { width: 24px; height: 24px; }
+
+/* Entrada do clube: botão do time e passo do código com o time em destaque */
+button.escolha-time { width: 100%; text-align: left; background: var(--cor-fundo-2); color: var(--cor-texto); font: inherit; font-weight: 700; text-transform: uppercase; font-size: .9rem; }
+button.escolha-time:hover, button.escolha-time:focus-visible { border-color: var(--cor-primaria); background: var(--cor-fundo-3); }
+.clube-entrada--codigo { max-width: 420px; }
+.clube-entrada__time { display: grid; justify-items: center; gap: var(--esp-2); text-align: center; }
+.clube-entrada__time .escudo { width: 120px; height: 120px; filter: drop-shadow(0 6px 16px var(--cor-sombra)); }
+.clube-entrada__time h2 { margin: 0; font-family: var(--fonte-titulo); font-size: 2rem; color: var(--cor-primaria); text-shadow: var(--cor-brilho); }
+.clube-entrada--codigo .senha { max-width: none; }
+.clube-entrada--codigo .link-botao { justify-self: center; padding: var(--esp-2); }

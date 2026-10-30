@@ -1,7 +1,7 @@
 // Mural: fotos com descrição e comentários. Times publicam com o código do time; o organizador modera.
 import {
   listarPosts, listarJogos, urlFoto, validarCodigo, publicarPost, comentarPost,
-  apagarPostDoTime, apagarPost, apagarComentario, buscarSessao, aprovarPost,
+  apagarPost, apagarComentario, buscarSessao, aprovarPost,
 } from '../api.js';
 import { prepararFoto } from '../imagem.js';
 import { assinarMudancas } from '../realtime.js';
@@ -28,7 +28,8 @@ async function carregarIdentidade() {
   }
 }
 
-const podeApagar = (post) => estado.organizador || (estado.time && post.time_id === estado.time.time_id);
+// Aprovar e apagar publicação: só o organizador (o time pede ao organizador para remover)
+const podeApagar = () => estado.organizador;
 
 // ---------- Renderização ----------
 function rotuloJogo(j) {
@@ -49,7 +50,7 @@ function htmlPost(p) {
     <article class="card post" data-post="${p.id}">
       <header class="post__topo">${avatar}
         <div><strong>${escapar(p.autor)}</strong><span class="texto-2 texto-pequeno">${tempoRelativo(p.criado_em)}</span></div>
-        ${podeApagar(p) ? `<button class="botao botao--perigo" data-apagar-post="${p.id}">Apagar</button>` : ''}
+        ${podeApagar() ? `<button class="botao botao--perigo" data-apagar-post="${p.id}">Apagar</button>` : ''}
       </header>
       <a href="${escapar(urlFoto(p.foto_path))}" target="_blank" rel="noopener">
         <img class="post__foto" src="${escapar(urlFoto(p.foto_path))}" loading="lazy" alt="Foto publicada por ${escapar(p.autor)}">
@@ -211,9 +212,8 @@ app.addEventListener('click', async (e) => {
     else if (botao.hasAttribute('data-trocar-codigo')) { esquecer(CHAVE_CODIGO); estado.time = null; renderizar(); abrirDialogoPublicar(); }
     else if (botao.dataset.apagarPost) {
       const post = estado.posts.find((p) => p.id === Number(botao.dataset.apagarPost));
-      if (!confirm('Apagar esta publicação e os comentários dela?')) return;
-      if (estado.organizador) await apagarPost(post);
-      else await apagarPostDoTime(guardado(CHAVE_CODIGO), post.id);
+      if (!estado.organizador || !confirm('Apagar esta publicação e os comentários dela?')) return;
+      await apagarPost(post);
       toast('Publicação apagada');
       await carregar();
     } else if (botao.dataset.apagarComentario) {
