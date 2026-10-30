@@ -104,3 +104,4 @@
 - [x] Selo de quem está logado no topo (Torcedor, clube com escudo, ADM) com menu Sair; faixa de jogos da tela inicial girando a cada 5 s
 - [x] Online agora (Presence): no painel, torcedores, clubes logados e organização; no Início, pessoas acompanhando agora
 - [x] Online: contador compacto no Início (● N pessoas); Ao vivo dentro do menu do selo ADM (com total no selo)
+- [x] Pico do dia (ADM), ao vivo no jogo (acompanhando agora), torcida por time (time do coração + torcida online nos cards) e avisos só do meu time

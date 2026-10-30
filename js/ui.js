@@ -1,6 +1,7 @@
 // Helpers de interface: layout (header + nav), escudo, toast, loading, formatação.
 import { demo, semConfiguracao } from './supabase.js';
 import './pwa.js';
+import { meuTime, escolherMeuTime } from './meuTime.js';
 
 const ICONES = {
   coroa: '<path d="M3 18h18l1-11-5 4-5-7-5 7-5-4z" fill="currentColor"/>',
@@ -86,7 +87,8 @@ const CHAVE_CLUBE_SELO = 'clube_selo';
 export function mostrarPerfil({ tipo, rotulo, quem, time = null, voltar = null, contar = true }) {
   const selo = document.getElementById('btn-perfil');
   if (!selo) return;
-  const simbolo = tipo === 'clube' && time ? escudo(time, 32) : icone({ torcedor: 'torcedor', clube: 'escudo', adm: 'coroa' }[tipo]);
+  // clube: escudo do clube · torcedor com time do coração: escudo do time dele
+  const simbolo = time ? escudo(time, 32) : icone({ torcedor: 'torcedor', clube: 'escudo', adm: 'coroa' }[tipo]);
   selo.className = `perfil__selo perfil__selo--${tipo}`;
   selo.innerHTML = `${simbolo}<span>${escapar(rotulo)}</span>`;
   selo.setAttribute('aria-label', `${quem}. Abrir menu do perfil`);
@@ -111,8 +113,26 @@ function perfilNasPaginasPublicas() {
   } else if (modo === 'adm') {
     mostrarPerfil({ tipo: 'adm', rotulo: 'ADM', quem: 'Organizador (ADM)', voltar: { href: 'admin.html', texto: 'Voltar para o painel' } });
   } else {
-    mostrarPerfil({ tipo: 'torcedor', rotulo: 'Torcedor', quem: 'Torcedor' });
+    perfilDoTorcedor();
+    document.addEventListener('meu-time-mudou', perfilDoTorcedor);
   }
+}
+
+// Torcedor: o selo leva o escudo do time do coração; o menu mostra "Meu time" (trocar) e os avisos desse time
+function perfilDoTorcedor() {
+  const time = meuTime();
+  mostrarPerfil({ tipo: 'torcedor', rotulo: 'Torcedor', quem: time ? `Torcedor do ${time.nome}` : 'Torcedor', time });
+  const extra = document.getElementById('perfil-extra');
+  extra.innerHTML = time ? `
+    <div class="meu-time">${escudo(time, 32)}<span><small>Meu time</small><strong>${escapar(time.nome)}</strong></span>
+      <button class="link-botao" type="button" data-trocar-meu-time>Trocar</button></div>
+    <div id="avisos-meu-time"></div>`
+    : '<button class="botao botao--secundario" type="button" data-trocar-meu-time>⚽ Escolher meu time</button>';
+  extra.querySelector('[data-trocar-meu-time]').addEventListener('click', async () => {
+    const { listarTimes } = await import('./api.js');
+    escolherMeuTime((await listarTimes()).filter((t) => t.ativo !== false));
+  });
+  if (time) import('./avisos.js').then((m) => m.botaoAvisos(document.getElementById('avisos-meu-time'), { timeId: time.id, nome: time.nome })).catch(() => {});
 }
 export const perfilDoClube = (time) => mostrarPerfil({ tipo: 'clube', rotulo: rotuloDoClube(time), quem: `Clube ${time.nome}`, time });
 

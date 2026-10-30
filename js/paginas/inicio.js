@@ -1,4 +1,5 @@
-import { buscarCampeonato, buscarClassificacao, buscarArtilharia, listarJogos, listarRodadas } from '../api.js';
+import { buscarCampeonato, buscarClassificacao, buscarArtilharia, listarJogos, listarRodadas, listarTimes } from '../api.js';
+import { meuTime, definirMeuTime, dispensouConvite, dispensarConvite, htmlEscolhaTimes } from '../meuTime.js';
 import { ordenarClassificacao } from '../classificacao.js';
 import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
 import { aoMudarOnline } from '../presenca.js';
@@ -7,7 +8,7 @@ import { prepararChances } from '../probabilidade.js';
 import { carregarComCache } from '../cache.js';
 import { rodadaDoProximoJogo } from '../rodadas.js';
 import { CANAL_WHATSAPP } from '../supabase.js';
-import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone } from '../ui.js';
+import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, formatarData, horaDoJogo } from '../ui.js';
 
 const app = document.getElementById('app');
 const CLASSES_PODIO = ['ouro', 'prata', 'bronze'];
@@ -82,13 +83,16 @@ function htmlDestaque(jogos) {
 }
 
 async function buscar() {
-  const [campeonato, rodadas, jogos, linhas, artilharia] = await Promise.all([
-    buscarCampeonato(), listarRodadas(), listarJogos(), buscarClassificacao(), buscarArtilharia(),
+  const [campeonato, rodadas, jogos, linhas, artilharia, times] = await Promise.all([
+    buscarCampeonato(), listarRodadas(), listarJogos(), buscarClassificacao(), buscarArtilharia(), listarTimes(),
   ]);
-  return { campeonato, rodadas, jogos, encerrados: jogos.filter((j) => j.status === 'encerrado'), linhas, artilharia };
+  return { campeonato, rodadas, jogos, encerrados: jogos.filter((j) => j.status === 'encerrado'), linhas, artilharia, times };
 }
 
-function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }) {
+let ultimosDados = null;
+function desenhar(dados) {
+  ultimosDados = dados;
+  const { campeonato, rodadas, jogos, encerrados, linhas, artilharia, times = [] } = dados;
   prepararChances(jogos); // chance de vitória nos próximos jogos
     const porRodada = (r) => jogos.filter((j) => j.rodada_id === r?.id);
     const destaque = htmlDestaque(jogos);
@@ -99,6 +103,7 @@ function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }
 
     app.innerHTML = `
       ${htmlHero(campeonato)}
+      ${htmlMeuTime(jogos, ordenarClassificacao(linhas, encerrados), times)}
       ${destaque.html}
       ${htmlSecaoJogos('Próxima rodada', proxima, porRodada(proxima).filter((j) => j.status === 'agendado' && !destaque.ids.includes(j.id)))}
       ${htmlSecaoJogos('Últimos resultados', ultimaEncerrada, porRodada(ultimaEncerrada).filter((j) => j.status === 'encerrado'))}
@@ -108,7 +113,56 @@ function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }
       <p class="rodape-frase">Juntos pelo futebol de nossa comunidade!</p>
       <p class="centro texto-pequeno"><a class="texto-2" href="instalar.html">Instalar o app</a> · <a class="texto-2" href="index.html?sair">Trocar perfil</a></p>`;
   pintarOnline();
+  ligarMeuTime(times);
 }
+
+// ---------- Meu time (time do coração do torcedor) ----------
+// Sem time: convite para escolher (some com "Agora não") · com time: posição, forma e o próximo jogo dele
+function htmlMeuTime(jogos, linhas, times) {
+  const time = meuTime();
+  if (!time) {
+    if (dispensouConvite() || !times.length) return '';
+    return `
+      <section class="card convite-time">
+        <div class="convite-time__topo"><strong>Qual é o seu time do coração?</strong>
+          <button class="link-botao" type="button" data-dispensar-time>Agora não</button></div>
+        <p class="texto-2 texto-pequeno">Os jogos dele aparecem primeiro e você entra na torcida online.</p>
+        <div class="convite-time__lista">${htmlEscolhaTimes(times.filter((t) => t.ativo !== false))}</div>
+      </section>`;
+  }
+  const doTime = jogos.filter((j) => j.mandante_id === time.id || j.visitante_id === time.id);
+  const linha = linhas.find((l) => l.time_id === time.id);
+  const forma = doTime.filter((j) => j.status === 'encerrado').slice(-5).map((j) => {
+    const meus = j.mandante_id === time.id ? j.gols_mandante : j.gols_visitante;
+    const deles = j.mandante_id === time.id ? j.gols_visitante : j.gols_mandante;
+    return meus > deles ? 'v' : meus < deles ? 'd' : 'e';
+  });
+  const proximo = doTime.filter((j) => j.status === 'ao_vivo' || (j.status === 'agendado' && j.data_hora && new Date(j.data_hora) >= new Date(new Date().toDateString())))
+    .sort((a, b) => (a.status === 'ao_vivo' ? -1 : b.status === 'ao_vivo' ? 1 : new Date(a.data_hora) - new Date(b.data_hora)))[0];
+  const adv = proximo && (proximo.mandante_id === time.id ? proximo.visitante : proximo.mandante);
+  const quando = !proximo ? '' : proximo.status === 'ao_vivo'
+    ? `<b class="meu-time-card__vivo"><span class="ponto-vivo"></span>Ao vivo ${proximo.gols_mandante ?? 0} × ${proximo.gols_visitante ?? 0}</b>`
+    : `${formatarData(proximo.data_hora)} · ${escapar(horaDoJogo(proximo))}`;
+  return `
+    <a class="card meu-time-card" href="time.html?id=${time.id}">
+      ${escudo(time, 48)}
+      <span class="meu-time-card__info">
+        <small>Meu time</small><strong>${escapar(time.nome)}</strong>
+        <span class="texto-2 texto-pequeno">${linha ? `${linha.posicao}º · ${linha.pts} pts` : 'Sem jogos ainda'}</span>
+        ${forma.length ? `<span class="forma">${forma.map((r) => `<span class="forma__item forma__item--${r}">${r.toUpperCase()}</span>`).join('')}</span>` : ''}
+      </span>
+      ${proximo ? `<span class="meu-time-card__proximo"><small>${proximo.status === 'ao_vivo' ? 'Agora' : 'Próximo'}</small>${escudo(adv, 32)}<span>${escapar(adv.nome)}</span><span class="texto-pequeno">${quando}</span></span>` : ''}
+    </a>`;
+}
+
+function ligarMeuTime(times) {
+  app.querySelectorAll('.convite-time [data-meu-time]').forEach((b) => b.addEventListener('click', () => {
+    definirMeuTime(times.find((t) => t.id === Number(b.dataset.meuTime)));
+  }));
+  app.querySelector('[data-dispensar-time]')?.addEventListener('click', () => { dispensarConvite(); app.querySelector('.convite-time')?.remove(); });
+}
+// trocou o time (aqui ou pelo selo do topo): redesenha com os dados que já estão na tela
+document.addEventListener('meu-time-mudou', () => { if (ultimosDados) desenhar(ultimosDados); });
 
 // Bolinha piscando + "23 pessoas" no canto do topo (quem está com o app aberto agora, contando você)
 let online = null;

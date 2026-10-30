@@ -2,6 +2,7 @@
 import { escapar, escudo, formatarData, horaDoJogo, icone } from './ui.js';
 import { registrarJogo } from './compartilharJogo.js';
 import { chanceDoCard } from './probabilidade.js';
+import { ligarTorcidaOnline } from './torcidaOnline.js';
 import './jogoExtras.js'; // botões "Escalações" e "Craque do jogo"
 
 function listaGols(jogo, timeId) {
@@ -43,6 +44,17 @@ function htmlChance(jogo) {
     </div>`;
 }
 
+// Espaço da torcida online (preenchido por js/torcidaOnline.js): jogos ao vivo e próximos jogos
+function htmlTorcida(jogo, aoVivo) {
+  if (!aoVivo && !chanceDoCard(jogo)) return '';
+  ligarTorcidaOnline();
+  return `
+    <div class="jogo__torcida oculto" data-torcida data-m="${jogo.mandante_id}" data-v="${jogo.visitante_id}" data-vivo="${aoVivo ? 1 : 0}">
+      ${aoVivo ? '<span class="jogo__acompanhando"><span class="ponto-online" aria-hidden="true"></span><b data-total>0</b> acompanhando agora</span>' : ''}
+      <span class="jogo__torcida-placar oculto"><small>Torcida online</small>${escudo(jogo.mandante, 32)}<b data-tm>0</b><i>×</i><b data-tv>0</b>${escudo(jogo.visitante, 32)}</span>
+    </div>`;
+}
+
 // `extras` (só no painel do organizador): { acao } vai ao lado do selo de status, { rodape } vai no fim do card.
 export function cartaoJogo(jogo, extras = {}) {
   const encerrado = jogo.status === 'encerrado';
@@ -76,6 +88,7 @@ export function cartaoJogo(jogo, extras = {}) {
         <div class="jogo__time">${escudo(jogo.visitante, 48)}<span>${escapar(jogo.visitante.nome)}</span></div>
       </div>
       ${htmlChance(jogo)}
+      ${htmlTorcida(jogo, aoVivo)}
       ${encerrado ? `
       <div class="jogo__gols">
         <ul>${listaGols(jogo, jogo.mandante_id)}</ul>

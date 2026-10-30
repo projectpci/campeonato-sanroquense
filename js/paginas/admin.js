@@ -1,7 +1,7 @@
 // Área do organizador: login, confrontos/resultados e times.
 import {
   buscarSessao, entrar, sair, listarTimes, listarRodadas, listarJogos, listarJogadores, buscarClassificacao, buscarArtilharia,
-  salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo, contarPostsPendentes,
+  salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo, contarPostsPendentes, listarPicosOnline,
 } from '../api.js';
 import { montarLayout, marcarNav, definirModo, mostrarPerfil, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
@@ -179,8 +179,23 @@ function htmlAoVivo(r) {
       <div><strong>${r.clubes.length}</strong><small>${r.clubes.length === 1 ? 'Clube' : 'Clubes'}</small></div>
       <div><strong>${r.adm}</strong><small>Org.</small></div>
     </div>
-    ${clubes ? `<ul class="online__clubes" aria-label="Clubes no app agora">${clubes}</ul>` : '<p class="texto-2 texto-pequeno">Nenhum clube logado agora.</p>'}`;
+    ${clubes ? `<ul class="online__clubes" aria-label="Clubes no app agora">${clubes}</ul>` : '<p class="texto-2 texto-pequeno">Nenhum clube logado agora.</p>'}
+    ${htmlPicos(r.total)}`;
 }
+
+// Pico de hoje e recorde (tabela pico_online; o número de agora entra se for maior)
+let picos = [];
+const horaCurta = (iso) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+function htmlPicos(agora) {
+  const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
+  const deHoje = picos.find((p) => p.dia === hoje);
+  const picoHoje = Math.max(agora, deHoje?.pico ?? 0);
+  const recorde = picos.reduce((m, p) => (p.pico > (m?.pico ?? 0) ? p : m), null);
+  const linhaHoje = `Pico hoje: <strong>${picoHoje}</strong>${deHoje && deHoje.pico >= agora ? ` às ${horaCurta(deHoje.hora)}` : ' (agora)'}`;
+  const linhaRecorde = recorde && recorde.pico > picoHoje ? ` · Recorde: <strong>${recorde.pico}</strong> em ${recorde.dia.slice(8, 10)}/${recorde.dia.slice(5, 7)}` : '';
+  return `<p class="online__picos texto-pequeno">📈 ${linhaHoje}${linhaRecorde}</p>`;
+}
+const buscarPicos = () => listarPicosOnline(60).then((lista) => { picos = lista ?? []; }).catch(() => {});
 let aoVivoLigado = false;
 function ligarAoVivo() {
   if (aoVivoLigado) return;
@@ -188,7 +203,12 @@ function ligarAoVivo() {
   const extra = document.getElementById('perfil-extra');
   const selo = document.getElementById('btn-perfil');
   extra.innerHTML = '<p class="texto-2 texto-pequeno">Contando quem está no app…</p>';
+  let ultimo = null;
+  // abre o menu: atualiza o pico guardado no banco
+  selo.addEventListener('click', () => buscarPicos().then(() => { if (ultimo) extra.innerHTML = htmlAoVivo(ultimo); }));
+  buscarPicos();
   aoMudarOnline((r) => {
+    ultimo = r;
     extra.innerHTML = htmlAoVivo(r);
     let contador = selo.querySelector('.perfil__ao-vivo');
     if (!contador) { contador = document.createElement('i'); contador.className = 'perfil__ao-vivo'; selo.append(contador); }

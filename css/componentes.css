@@ -1098,3 +1098,48 @@ body.entrada-corpo { overflow-x: hidden; }
 .perfil__extra .online__clube .escudo { width: 20px; height: 20px; }
 .hero .online-agora { position: static; display: flex; justify-content: flex-end; align-items: center; margin: 0; }
 .hero .online-agora.oculto { display: none; }
+
+/* ================= v35: time do coração, torcida online nos jogos e pico do dia ================= */
+/* Menu do selo (torcedor): meu time */
+.meu-time { display: flex; align-items: center; gap: var(--esp-2); }
+.meu-time .escudo { width: 32px; height: 32px; }
+.meu-time > span { display: grid; flex: 1; min-width: 0; }
+.meu-time small { font-size: .7rem; text-transform: uppercase; color: var(--cor-texto-2); }
+.meu-time strong { font-family: var(--fonte-destaque); font-weight: 400; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.perfil__extra .avisos { display: grid; gap: var(--esp-2); }
+.perfil__extra .avisos .botao { width: 100%; }
+button.escolha-time--ativo { border-color: var(--cor-primaria); background: var(--cor-fundo-3); box-shadow: var(--cor-brilho); }
+
+/* Início: convite para escolher o time */
+.convite-time { display: grid; gap: var(--esp-2); margin-bottom: var(--esp-3); border-color: var(--cor-borda-neon); }
+.convite-time__topo { display: flex; align-items: baseline; justify-content: space-between; gap: var(--esp-2); }
+.convite-time__topo strong { font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.1rem; text-transform: uppercase; }
+.convite-time__lista { display: flex; gap: var(--esp-2); overflow-x: auto; padding-bottom: var(--esp-1); scroll-snap-type: x mandatory; }
+.convite-time__lista .escolha-time { flex: none; width: auto; flex-direction: column; gap: 4px; padding: var(--esp-2) var(--esp-3); scroll-snap-align: start; text-align: center; font-size: .75rem; }
+.convite-time__lista .escolha-time span { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Início: cartão "Meu time" */
+.meu-time-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--esp-3); margin-bottom: var(--esp-3); color: var(--cor-texto); border-color: var(--cor-borda-neon); }
+.meu-time-card:hover { text-decoration: none; box-shadow: var(--cor-brilho); }
+.meu-time-card > .escudo { width: 56px; height: 56px; }
+.meu-time-card__info { display: grid; gap: 2px; min-width: 0; }
+.meu-time-card__info small, .meu-time-card__proximo small { font-family: var(--fonte-destaque); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--cor-primaria); }
+.meu-time-card__info strong { font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.2rem; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meu-time-card .forma__item { width: 20px; height: 20px; font-size: .65rem; }
+.meu-time-card__proximo { display: grid; justify-items: center; gap: 2px; max-width: 96px; text-align: center; font-size: .8rem; }
+.meu-time-card__proximo > span:not(.texto-pequeno) { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; text-transform: uppercase; }
+.meu-time-card__vivo { display: inline-flex; align-items: center; gap: 4px; color: var(--cor-negativo); }
+
+/* Card do jogo: acompanhando agora + torcida online */
+.jogo__torcida { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--esp-2) var(--esp-4); margin-top: var(--esp-2); font-size: .85rem; color: var(--cor-texto-2); }
+.jogo__acompanhando { display: inline-flex; align-items: center; gap: 6px; }
+.jogo__acompanhando b { color: var(--cor-texto); }
+.jogo__torcida-placar { display: inline-flex; align-items: center; gap: 6px; }
+.jogo__torcida-placar .escudo { width: 20px; height: 20px; }
+.jogo__torcida-placar b { color: var(--cor-texto); font-family: var(--fonte-destaque); font-weight: 400; font-size: 1rem; }
+.jogo__torcida-placar i { font-style: normal; }
+.jogo__torcida.oculto, .jogo__torcida-placar.oculto { display: none; }
+
+/* ADM: pico do dia */
+.online__picos { margin: 0; color: var(--cor-texto-2); }
+.online__picos strong { color: var(--cor-texto); }

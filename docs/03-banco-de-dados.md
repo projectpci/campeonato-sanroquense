@@ -249,3 +249,11 @@ insert into times (campeonato_id, nome) values
 - **Se houver mais de um organizador**, todos usam contas no Supabase Auth; qualquer autenticado escreve. Para restringir por e-mail, trocar a policy de escrita por `using (auth.jwt()->>'email' in ('a@x.com','b@y.com'))`.
 - **Correção de placar:** basta chamar `salvar_resultado` de novo — os gols antigos do jogo são substituídos.
 - **Excluir jogo encerrado:** apaga os gols em cascata e a classificação se recalcula.
+
+## pico_online (público no app por dia)
+```sql
+create table pico_online (dia date primary key, pico integer not null check (pico between 0 and 300), hora timestamptz not null default now());
+alter table pico_online enable row level security;
+create policy "leitura organizador" on pico_online for select to authenticated using (true);
+-- registrar_pico_online(p_total int): security definer, só aumenta o pico do dia (horário da Bahia); execute para anon e authenticated
+```

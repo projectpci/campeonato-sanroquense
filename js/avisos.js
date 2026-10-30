@@ -1,6 +1,7 @@
 // Avisos no celular (Web Push): gols, início e fim de jogo. Sem login; a inscrição fica só neste aparelho.
 import { inscreverPush, cancelarPush, inscreverPushOrganizador, cancelarPushOrganizador } from './api.js';
-import { escapar, icone, toast } from './ui.js';
+import { escapar, escudo, icone, toast } from './ui.js';
+import { meuTime } from './meuTime.js';
 
 // Chave pública do servidor de avisos (a privada fica só no Supabase)
 const CHAVE_PUBLICA = 'BB6nmNsK3G3T-UHNyK440ySnLvkMVE4ZPnRwHbDh0MCaF-GKRWsWXKp1Cf3JqPGWiRZY16jYkclZKEkjlFNXMao';
@@ -133,7 +134,34 @@ export function botaoAvisosOrganizador(container) {
   desenhar();
 }
 
-// Sino no canto do cabeçalho (todas as páginas públicas): liga/desliga os avisos de todos os jogos
+// "Avisar de quê?": só os jogos do time do coração ou todos. Resolve 'meu', 'todos' ou null (fechou)
+function escolherAlcance(time) {
+  return new Promise((resolver) => {
+    document.querySelector('dialog.dialogo')?.remove();
+    const d = Object.assign(document.createElement('dialog'), {
+      className: 'dialogo',
+      innerHTML: `
+        <div class="form">
+          <h2>Avisos no celular</h2>
+          <p class="texto-2 texto-pequeno">Gols, início e fim de jogo, na hora.</p>
+          <button class="botao" type="button" data-alcance="meu">${escudo(time, 32)} Só os jogos do ${escapar(time.nome)}</button>
+          <button class="botao botao--secundario" type="button" data-alcance="todos">Todos os jogos</button>
+          <button class="link-botao centro" type="button" data-fechar>Agora não</button>
+        </div>`,
+    });
+    let escolha = null;
+    d.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-alcance]');
+      if (b) escolha = b.dataset.alcance;
+      if (b || e.target === d || e.target.closest('[data-fechar]')) d.close();
+    });
+    d.addEventListener('close', () => { d.remove(); resolver(escolha); });
+    document.body.append(d);
+    d.showModal();
+  });
+}
+
+// Sino no canto do cabeçalho (todas as páginas públicas): liga/desliga os avisos (todos os jogos ou só os do meu time)
 export function sinoNoCabecalho() {
   const sair = document.querySelector('.header .perfil');
   if (!sair || document.getElementById('btn-sino')) return;
@@ -159,10 +187,14 @@ export function sinoNoCabecalho() {
     const estado = lerEstado();
     const ativo = estado.todos || estado.times.length > 0;
     if (ativo && !confirm('Desligar os avisos de gols neste aparelho?')) return;
+    // com time do coração: escolhe entre só os jogos dele ou todos
+    const time = meuTime();
+    const escolha = ativo ? 'nenhum' : time ? await escolherAlcance(time) : 'todos';
+    if (!escolha) return;
     botao.disabled = true;
     try {
-      await salvar(ativo ? { todos: false, times: [] } : { todos: true, times: [] });
-      toast(ativo ? 'Avisos desligados' : 'Avisos ligados ✔');
+      await salvar(escolha === 'nenhum' ? { todos: false, times: [] } : escolha === 'meu' ? { todos: false, times: [time.id] } : { todos: true, times: [] });
+      toast(escolha === 'nenhum' ? 'Avisos desligados' : escolha === 'meu' ? `Avisos dos jogos do ${time.nome} ligados ✔` : 'Avisos ligados ✔');
     } catch (erro) {
       toast(`Não foi possível ativar os avisos: ${erro.message}`, true);
     }

@@ -350,3 +350,11 @@ export const votarCraque = (jogoId, jogadorId, aparelho) =>
 export const rankingCraques = () =>
   demo ? dadosDemo.rankingCraques() :
   executar(cliente().rpc('ranking_craques'));
+
+// ---------- Público no app (pico de pessoas online por dia) ----------
+// Qualquer aparelho informa quando vê um número maior; a função do banco só aumenta (máx. 300)
+export const registrarPicoOnline = (total) =>
+  demo ? null : executar(cliente().rpc('registrar_pico_online', { p_total: total }));
+// Só o organizador lê
+export const listarPicosOnline = (dias = 14) =>
+  demo ? [] : executar(cliente().from('pico_online').select('dia, pico, hora').order('dia', { ascending: false }).limit(dias));

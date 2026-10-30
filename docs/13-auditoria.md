@@ -45,3 +45,7 @@
 - Não grava nada no banco e não guarda histórico. App em segundo plano sai da contagem (`untrack`) e volta ao abrir.
 - Painel do Adm: selo "ADM ● N" no topo; o menu do selo tem "Ao vivo" (torcedores, clubes logados com escudo, organização) e o Sair. Início da torcida: "● N pessoas" discreto acima do título.
 - Usa a mesma conexão do tempo real: no plano gratuito, até 200 conexões simultâneas.
+- Time do coração (`js/meuTime.js`, só no aparelho): convite no Início, cartão "Meu time" (posição, forma, próximo jogo), escudo no selo, troca pelo menu do selo.
+- Torcida online nos cards (`js/torcidaOnline.js`): jogos ao vivo mostram "● N acompanhando agora"; ao vivo e próximos mostram "Torcida online M × V" (torcedores com o app aberto e aquele time do coração).
+- Pico do dia: tabela `pico_online` (dia, pico, hora) gravada por `registrar_pico_online(total)` (só aumenta, máx. 300, qualquer aparelho que vê número maior informa no máx. a cada 30 s). Só o organizador lê: "Pico hoje" e "Recorde" no Ao vivo do selo ADM.
+- Avisos do meu time: o sino pergunta "Só os jogos do [time]" ou "Todos os jogos"; o menu do selo tem Seguir time. A função avisar-push já filtra por `inscricoes_push.times`.
