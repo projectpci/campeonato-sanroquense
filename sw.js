@@ -1,10 +1,10 @@
 // Service worker: abre rápido e mostra a última tabela conhecida quando o celular está sem sinal.
 // Suba VERSAO a cada deploy para limpar o cache antigo.
-const VERSAO = 'v20';
+const VERSAO = 'v21';
 const CACHE = `sanroquense-${VERSAO}`;
 
 const NUCLEO = [
-  './', 'index.html', 'inicio.html', 'confrontos.html', 'classificacao.html', 'artilharia.html', 'admin.html', 'time.html', 'instalar.html', 'clube.html',
+  './', 'index.html', 'inicio.html', 'confrontos.html', 'classificacao.html', 'artilharia.html', 'admin.html', 'time.html', 'instalar.html', 'clube.html', 'elenco.html',
   'css/tokens.css', 'css/base.css', 'css/componentes.css', 'css/compartilhar.css',
   'mural.html', 'assets/escudo-padrao.svg', 'manifest.webmanifest', 'assets/compartilhar.jpg',
 ];

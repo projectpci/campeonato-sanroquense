@@ -5,7 +5,7 @@ import {
 } from '../api.js';
 import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
-import { POSICOES, htmlCarta, avatarJogador } from '../escalacao.js';
+import { htmlElenco, htmlEscolhaTime, elencoAtivo } from '../elencoTime.js';
 import { rodadaAtual } from '../rodadas.js';
 import { assinarMudancas } from '../realtime.js';
 import { botaoAvisosOrganizador } from '../avisos.js';
@@ -99,7 +99,7 @@ async function carregar() {
       <div class="admin__topo">
         <h2>Organizador</h2>
         <div class="form__acoes">
-          <a class="botao botao--secundario" href="mural.html">Mural${pendentes ? ` <span class="contador" title="Fotos aguardando aprovação">${pendentes}</span>` : ''}</a>
+          <a class="botao botao--secundario" href="mural.html?moderar=1">Mural${pendentes ? ` <span class="contador" title="Fotos aguardando aprovação">${pendentes}</span>` : ''}</a>
           <button class="botao botao--secundario" id="btn-csv">Exportar CSV</button>
         </div>
       </div>
@@ -208,24 +208,15 @@ function dialogoTime(time) {
 }
 
 // ---------- Aba Elenco (ver o elenco cadastrado por cada clube) ----------
-const ORDEM_POSICAO = Object.fromEntries(POSICOES.map(([p], i) => [p, i]));
 function abaElenco(aba, times, jogadores) {
   const ativos = times.filter((t) => t.ativo !== false);
   if (!ativos.some((t) => t.id === estado.elencoTimeId)) estado.elencoTimeId = ativos[0]?.id ?? null;
   const time = ativos.find((t) => t.id === estado.elencoTimeId);
-  const doTime = (id) => jogadores.filter((j) => j.time_id === id && j.ativo !== false);
-  const elenco = time ? doTime(time.id).sort((a, b) => (ORDEM_POSICAO[a.posicao] ?? 9) - (ORDEM_POSICAO[b.posicao] ?? 9)
-    || (a.numero ?? 99) - (b.numero ?? 99) || a.nome.localeCompare(b.nome)) : [];
+  const qtd = time ? elencoAtivo(jogadores, time.id).length : 0;
   aba.innerHTML = `
-    <div class="chips" aria-label="Escolher time">${ativos.map((t) => `
-      <button class="chip chip--time${t.id === estado.elencoTimeId ? ' chip--ativo' : ''}" data-elenco-time="${t.id}">
-        ${escudo(t, 32)} ${escapar(t.nome)} <small>${doTime(t.id).length}</small></button>`).join('')}</div>
-    ${time ? `
-      <div class="admin__topo"><h3>${escapar(time.nome)} · ${elenco.length} jogador${elenco.length === 1 ? '' : 'es'}</h3></div>
-      <div class="tecnico tecnico--leitura">${avatarJogador({ foto_url: time.tecnico_foto_url, numero: 'T' }, 'avatar avatar--medio')}
-        <span><small>Técnico</small><strong>${escapar(time.tecnico_nome || 'Não cadastrado')}</strong></span></div>
-      ${elenco.length ? `<div class="cartas">${elenco.map((j) => htmlCarta(j, '', '', 'div')).join('')}</div>`
-        : '<p class="vazio">O clube ainda não cadastrou jogadores. O cadastro é feito pela Área do clube, com o código do time.</p>'}` : ''}`;
+    ${htmlEscolhaTime(ativos, jogadores, estado.elencoTimeId)}
+    ${time ? `<div class="admin__topo"><h3>${escapar(time.nome)} · ${qtd} jogador${qtd === 1 ? '' : 'es'}</h3></div>
+      ${htmlElenco(time, jogadores, 'O clube ainda não cadastrou jogadores. O cadastro é feito pela Área do clube, com o código do time.')}` : ''}`;
   aba.querySelectorAll('[data-elenco-time]').forEach((b) => b.addEventListener('click', () => { estado.elencoTimeId = Number(b.dataset.elencoTime); abaElenco(aba, times, jogadores); }));
   aba.querySelector('.chip--ativo')?.scrollIntoView({ inline: 'center', block: 'nearest' });
 }

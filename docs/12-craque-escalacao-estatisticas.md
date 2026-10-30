@@ -21,3 +21,7 @@ Fair play entra com a súmula de cartões.
 
 ## Story 9:16
 Todo "Compartilhar" pergunta **Post** (1080×1350) ou **Story** (1080×1920, classe `arte--story`, com margem para a interface do status).
+
+## Página Elenco (torcedor)
+`elenco.html` (6º item do menu): chips com os escudos e o elenco do time escolhido (técnico e cartas). Componente
+compartilhado `js/elencoTime.js` (`htmlElenco`, `htmlEscolhaTime`, `elencoAtivo`), usado também no painel e na página do time.

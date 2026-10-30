@@ -18,8 +18,12 @@ const guardar = (chave, valor) => { try { localStorage.setItem(chave, valor); } 
 const esquecer = (chave) => { try { localStorage.removeItem(chave); } catch { /* sem armazenamento */ } };
 
 // ---------- Identidade ----------
+// Moderação só no "modo organizador" (mural.html?moderar=1, link do painel). Pelo menu do torcedor o mural
+// fica igual para todos, mesmo que o aparelho tenha o login do organizador guardado.
+const MODO_MODERAR = new URLSearchParams(location.search).has('moderar');
+
 async function carregarIdentidade() {
-  estado.organizador = Boolean(await buscarSessao().catch(() => null));
+  estado.organizador = MODO_MODERAR && Boolean(await buscarSessao().catch(() => null));
   const codigo = guardado(CHAVE_CODIGO);
   estado.time = null;
   if (codigo && !estado.organizador) {
@@ -71,12 +75,14 @@ function htmlPost(p) {
 }
 
 function htmlBarra() {
+  const moderando = estado.organizador
+    ? '<p class="aviso moderacao">Modo organizador: você pode aprovar, recusar e apagar. <a href="mural.html">Ver como torcedor</a></p>' : '';
   const quem = estado.organizador
     ? 'Publicando como <strong>Organização</strong>'
     : estado.time
       ? `Publicando como <strong>${escapar(estado.time.nome)}</strong> · <button class="link-botao" data-trocar-codigo>trocar código</button>`
       : 'Para publicar, use o código do seu time.';
-  return `<div class="mural__barra"><span class="mural__quem">${quem}</span>
+  return `${moderando}<div class="mural__barra"><span class="mural__quem">${quem}</span>
     <button class="botao" data-publicar>+ Publicar foto</button></div>`;
 }
 

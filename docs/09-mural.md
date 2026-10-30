@@ -162,3 +162,7 @@ create policy "mural remover" on storage.objects for delete to authenticated usi
 ## Só o organizador aprova e apaga (migração `so_organizador_apaga_post`)
 O time não apaga mais a própria publicação (botão removido e `apagar_post_time` sem permissão de execução).
 Para remover uma foto, o time pede ao organizador.
+
+## Modo organizador no mural
+Aprovar, recusar e apagar só aparecem em `mural.html?moderar=1` (link "Mural" do painel e o aviso de foto para aprovar)
+e com o login de organizador. Pelo menu do torcedor o mural é igual para todos, mesmo com o login guardado no aparelho.

@@ -23,14 +23,14 @@
 .nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
   height: var(--altura-nav);
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   background: var(--cor-cabecalho-tabela);
   border-top: 1px solid var(--cor-borda);
 }
 .nav__item {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 2px; min-height: 44px;
-  font-family: var(--fonte-destaque); font-size: .8rem; text-transform: uppercase;
+  font-family: var(--fonte-destaque); font-size: .68rem; text-transform: uppercase;
   color: var(--cor-texto-2);
 }
 .nav__item:hover { text-decoration: none; color: var(--cor-texto); }
