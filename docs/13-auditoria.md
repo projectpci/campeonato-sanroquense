@@ -50,3 +50,8 @@
 - Pico do dia: tabela `pico_online` (dia, pico, hora) gravada por `registrar_pico_online(total)` (só aumenta, máx. 300, qualquer aparelho que vê número maior informa no máx. a cada 30 s). Só o organizador lê: "Pico hoje" e "Recorde" no Ao vivo do selo ADM.
 - Avisos do meu time: o sino pergunta "Só os jogos do [time]" ou "Todos os jogos"; o menu do selo tem Seguir time. A função avisar-push já filtra por `inscricoes_push.times`.
 - Torcida declarada: tabela `torcedores_declarados` (aparelho, time_id), escrita só por `declarar_time(aparelho, time)`; contagem por `torcida_declarada()` (sem expor aparelhos). Pergunta do time na 1ª entrada do torcedor (uma vez por aparelho); troca em Configurações (selo → Configurações: time, avisos, nome nos comentários). Clube vê os declarados no cartão do time; ADM vê o ranking em Ajustes → Torcidas.
+
+## Abertura do app (v37)
+- O app sempre abre na tela inicial (`index.html`, `start_url` do manifest); o perfil em uso fica com "Continuar" e entra direto (sem pedir código/senha de novo). App instalado que volta do segundo plano depois de 3 min também volta para a tela inicial (`js/pwa.js`).
+- `js/resgate.js` (script comum em todas as páginas): se a página não iniciar em 10 s ou um módulo falhar (arquivos novos e antigos misturados logo após um deploy), limpa o cache do código e recarrega uma vez; se falhar de novo, mostra "Tentar de novo". Cada página marca `window.__appIniciou` (`montarLayout` e tela inicial).
+- Service worker: a instalação busca o núcleo com `cache: 'reload'` (nunca guarda a cópia velha do navegador).

@@ -1180,3 +1180,10 @@ button.escolha-time--ativo { border-color: var(--cor-primaria); background: var(
 .torcidas__on--zero { color: var(--cor-texto-2); opacity: .6; }
 .config__nome input { width: 0; }
 .config__nome .botao { flex: none; padding-left: var(--esp-3); padding-right: var(--esp-3); }
+.entrada__adm { position: relative; }
+.entrada__adm--ultimo { box-shadow: 0 0 12px rgba(255, 201, 60, .45); }
+.entrada__adm .entrada__selo { position: static; transform: none; margin-right: 4px; background: var(--cor-ouro); }
+
+/* Resgate da abertura (js/resgate.js) */
+.resgate { position: fixed; left: var(--esp-4); right: var(--esp-4); bottom: var(--esp-6); z-index: 100; display: grid; gap: var(--esp-2); justify-items: center; padding: var(--esp-4); border: 1px solid var(--cor-borda-neon); border-radius: var(--raio-grande); background: var(--cor-fundo-2); color: var(--cor-texto); text-align: center; }
+.resgate p { margin: 0; }

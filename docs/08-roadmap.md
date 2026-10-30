@@ -106,3 +106,4 @@
 - [x] Online: contador compacto no Início (● N pessoas); Ao vivo dentro do menu do selo ADM (com total no selo)
 - [x] Pico do dia (ADM), ao vivo no jogo (acompanhando agora), torcida por time (time do coração + torcida online nos cards) e avisos só do meu time
 - [x] Time do coração perguntado na 1ª entrada (por aparelho), Configurações do torcedor, torcedores declarados na área do clube e ranking de torcidas no ADM
+- [x] Bug da abertura travada (só "Início"): resgate automático do cache, instalação do SW sem cópia velha e app sempre abrindo na tela inicial

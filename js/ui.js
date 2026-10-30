@@ -60,6 +60,7 @@ export function montarLayout(ativa, { paginas = PAGINAS, inicio = ativa ? 'inici
   // No desktop a nav inferior some e usa a do header
   const inferior = document.body.lastElementChild;
   inferior.classList.add('nav--inferior');
+  window.__appIniciou = true; // js/resgate.js: a página abriu (não precisa limpar o cache)
   ligarMenuPerfil();
   if (paginas === PAGINAS) {
     if (ativa && !modoAtivo()) definirModo('torcedor');

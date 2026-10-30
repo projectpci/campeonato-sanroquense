@@ -1,6 +1,6 @@
 // Service worker: abre rápido e mostra a última tabela conhecida quando o celular está sem sinal.
 // Suba VERSAO a cada deploy para limpar o cache antigo.
-const VERSAO = 'v36';
+const VERSAO = 'v37';
 const CACHE = `sanroquense-${VERSAO}`;
 // Fotos do mural e do elenco (Storage): cache à parte, com limite, para não encher o celular
 const CACHE_IMAGENS = 'sanroquense-imagens';
@@ -14,7 +14,8 @@ const NUCLEO = [
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(
-    caches.open(CACHE).then((cache) => Promise.all(NUCLEO.map((url) => cache.add(url).catch(() => {}))))
+    // cache: 'reload' busca no servidor (não na cópia do navegador): a versão nova nunca nasce com arquivo velho
+    caches.open(CACHE).then((cache) => Promise.all(NUCLEO.map((url) => cache.add(new Request(url, { cache: 'reload' })).catch(() => {}))))
       .then(() => self.skipWaiting()),
   );
 });

@@ -31,3 +31,16 @@ if ('serviceWorker' in navigator && !emDesenvolvimento) {
   if (document.readyState === 'complete') registrar();
   else window.addEventListener('load', registrar);
 }
+
+// App instalado: "abrir o app" sempre leva à tela inicial, mesmo que ele estivesse aberto em segundo plano.
+// Voltar em menos de 3 min (ex.: compartilhou no WhatsApp e voltou) continua onde estava.
+// Não sai da página com uma janela aberta (alguém digitando um resultado ou editando o elenco).
+const VOLTA_INICIO_MS = 3 * 60 * 1000;
+const instalado = () => window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+const naTelaInicial = () => /\/(index\.html)?$/.test(location.pathname);
+let escondidoEm = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { escondidoEm = Date.now(); return; }
+  if (!escondidoEm || !instalado() || naTelaInicial() || document.querySelector('dialog[open]')) return;
+  if (Date.now() - escondidoEm >= VOLTA_INICIO_MS) location.replace('index.html');
+});

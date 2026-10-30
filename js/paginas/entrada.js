@@ -1,22 +1,23 @@
-// Tela inicial: lembra o último perfil, mostra o jogo ao vivo / próximo jogo e os escudos dos times em movimento.
+// Tela inicial: o app sempre abre aqui. O perfil em uso (torcedor, clube ou ADM) fica destacado com "Continuar"
+// e entra direto, sem pedir código/senha de novo. Mostra o jogo ao vivo / próximos jogos e os escudos em movimento.
 // Tudo aqui é "enfeite": se o banco não responder, a tela continua funcionando só com os dois botões.
 import '../pwa.js';
 import { listarTimes, listarJogos } from '../api.js';
 import { semConfiguracao } from '../supabase.js';
-import { escapar, escudo, formatarData, horaDoJogo, modoAtivo, definirModo, DESTINO_DO_MODO } from '../ui.js';
+import { escapar, escudo, formatarData, horaDoJogo, modoAtivo, definirModo } from '../ui.js';
 
-const CHAVE_PERFIL = 'perfil';
+window.__appIniciou = true; // js/resgate.js: a tela inicial abriu
 
-// Último perfil usado: o botão ganha destaque "Continuar"
+// Perfil em uso (ou o último usado): o botão ganha o destaque "Continuar"
 function lembrarPerfil() {
-  let ultimo = '';
-  try { ultimo = localStorage.getItem(CHAVE_PERFIL) ?? ''; } catch { /* sem armazenamento */ }
-  document.querySelectorAll('[data-perfil]').forEach((a) => {
-    if (a.dataset.perfil === ultimo) {
-      a.classList.add('entrada__opcao--ultimo');
+  let ultimo = modoAtivo();
+  if (!ultimo) { try { ultimo = localStorage.getItem('perfil') ?? ''; } catch { /* sem armazenamento */ } }
+  document.querySelectorAll('[data-modo]').forEach((a) => {
+    if (a.dataset.modo === ultimo) {
+      a.classList.add(a.classList.contains('entrada__adm') ? 'entrada__adm--ultimo' : 'entrada__opcao--ultimo');
       a.insertAdjacentHTML('afterbegin', '<span class="entrada__selo">Continuar</span>');
     }
-    a.addEventListener('click', () => { try { localStorage.setItem(CHAVE_PERFIL, a.dataset.perfil); } catch { /* sem armazenamento */ } });
+    a.addEventListener('click', () => { definirModo(a.dataset.modo); try { localStorage.setItem('perfil', a.dataset.modo); } catch { /* sem armazenamento */ } });
   });
 }
 
@@ -97,15 +98,12 @@ async function enfeitar() {
   } catch { /* sem conexão: a tela segue só com as opções */ }
 }
 
-// Quem já está num perfil volta direto para ele; "Sair" (index.html?sair) encerra e mostra a escolha
-const params = new URLSearchParams(location.search);
-if (params.has('sair')) {
+// "Sair" (index.html?sair) encerra o perfil: nenhum botão fica com "Continuar"
+if (new URLSearchParams(location.search).has('sair')) {
   definirModo('');
+  try { localStorage.removeItem('perfil'); } catch { /* sem armazenamento */ }
   history.replaceState(null, '', location.pathname);
-} else if (DESTINO_DO_MODO[modoAtivo()]) {
-  location.replace(DESTINO_DO_MODO[modoAtivo()]);
 }
-document.querySelectorAll('[data-modo]').forEach((a) => a.addEventListener('click', () => definirModo(a.dataset.modo)));
 
 lembrarPerfil();
 enfeitar();
