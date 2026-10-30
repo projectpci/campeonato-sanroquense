@@ -1441,3 +1441,7 @@ body > main.conteudo:has(.cadastro__barra) { padding-bottom: var(--esp-5); }
 .importar__rodape .botao { white-space: nowrap; padding: 0 var(--esp-3); }
 .importar__rodape .botao:last-child { flex: 1; }
 .elenco__ferramentas { display: flex; justify-content: flex-end; margin-bottom: var(--esp-3); }
+.cadastro__clube { display: flex; align-items: center; gap: var(--esp-4); margin-bottom: var(--esp-3); padding: var(--esp-4); border-radius: 22px; border: 1px solid var(--cor-borda-neon); background: radial-gradient(90% 150% at 0% 0%, color-mix(in srgb, var(--cor-primaria) 22%, var(--cor-fundo-2)) 0%, var(--cor-fundo-2) 68%); }
+.cadastro__clube .escudo { width: 72px; height: 72px; flex: none; filter: drop-shadow(0 4px 12px var(--cor-sombra)); }
+.cadastro__clube small { color: var(--cor-texto-2); text-transform: uppercase; letter-spacing: .06em; }
+.cadastro__clube h2 { margin: 0; font-family: var(--fonte-titulo); font-size: 1.7rem; line-height: 1.1; text-shadow: var(--cor-brilho); }

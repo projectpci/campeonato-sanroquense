@@ -4,7 +4,7 @@
 import '../pwa.js';
 import { listarTimes } from '../api.js';
 import { semConfiguracao, WHATSAPP_ELENCO } from '../supabase.js';
-import { escapar, icone, toast } from '../ui.js';
+import { escapar, escudo, icone, toast } from '../ui.js';
 import { linhaDe } from '../escalacao.js';
 import { SECOES, montarMensagem, nomeIgual } from '../importarElenco.js';
 
@@ -16,8 +16,9 @@ const MINIMO_RECOMENDADO = 11;
 const lerRascunho = () => { try { return JSON.parse(localStorage.getItem(CHAVE)) ?? {}; } catch { return {}; } };
 const guardarRascunho = () => { try { localStorage.setItem(CHAVE, JSON.stringify({ timeId: estado.timeId, tecnico: estado.tecnico, linhas: estado.linhas })); } catch { /* sem armazenamento */ } };
 
-const rascunho = lerRascunho();
 const doEndereco = Number(new URLSearchParams(location.search).get('time')) || null;
+// rascunho de outro time (link individual diferente do último usado neste aparelho) não é reaproveitado
+const rascunho = (() => { const r = lerRascunho(); return doEndereco && r.timeId !== doEndereco ? {} : r; })();
 const estado = {
   times: [],
   timeId: doEndereco ?? rascunho.timeId ?? null,
@@ -64,11 +65,13 @@ function htmlLinha(pos, l, i, marcas) {
 
 function desenhar() {
   const marcas = conferir();
+  const meu = estado.travado ? timeEscolhido() : null;
   app.innerHTML = `
+    ${meu ? `<section class="cadastro__clube">${escudo(meu, 96)}<div><small>Cadastro do elenco</small><h2>${escapar(meu.nome)}</h2></div></section>` : ''}
     <section class="cadastro__passos card">
-      <p><b>1</b> Escolha o time e informe o técnico</p>
-      <p><b>2</b> Coloque os jogadores em cada posição</p>
-      <p><b>3</b> Toque em <strong>Enviar</strong> e mande no WhatsApp</p>
+      <p><b>1</b><span>Escolha o time e informe o técnico</span></p>
+      <p><b>2</b><span>Coloque os jogadores em cada posição</span></p>
+      <p><b>3</b><span>Toque em <strong>Enviar</strong> e mande no WhatsApp</span></p>
     </section>
 
     <section class="card form cadastro__time">

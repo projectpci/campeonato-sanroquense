@@ -6,12 +6,14 @@ import { escapar, escudo, toast } from './ui.js';
 import { criarFolha } from './sumula.js';
 import { SECOES, lerMensagens, avaliarJogadores, nomeIgual, modeloEmBranco } from './importarElenco.js';
 
-const linkDoFormulario = (timeId) => {
+const slug = (s) => String(s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const linkDoFormulario = (time) => {
   const url = new URL('cadastro-elenco.html', location.href);
-  if (timeId) url.searchParams.set('time', timeId);
+  if (time) { url.searchParams.set('time', time.id); url.searchParams.set('clube', slug(time.nome)); } // o nome só deixa o link reconhecível
   return url.href;
 };
-const convite = (link, nomeTime) => `Olá${nomeTime ? `, ${nomeTime}` : ''}! Para agilizar o cadastro do elenco no app do Campeonato SRP, preencha o formulário pelo celular (leva poucos minutos) e toque em "Enviar pelo WhatsApp":\n${link}`;
+// Mensagem pronta com o nome do time (negrito do WhatsApp), para o responsável saber de qual elenco se trata
+const convite = (link, time) => `Olá${time ? `, responsável pelo *${time.nome}*` : ''}! Para agilizar o cadastro do elenco${time ? ` do *${time.nome}*` : ''} no app do Campeonato SRP, preencha o formulário pelo celular (leva poucos minutos). No fim, toque em *Enviar* e mande a lista de volta no WhatsApp:\n${link}`;
 const linkZap = (texto) => `https://wa.me/?text=${encodeURIComponent(texto)}`;
 const copiar = async (texto, ok = 'Copiado ✔') => { try { await navigator.clipboard.writeText(texto); toast(ok); } catch { toast('Não foi possível copiar.', true); } };
 
@@ -36,7 +38,7 @@ export function abrirElencoWhatsApp({ times, jogadores, executar }) {
         <ul class="importar__times">${ativos.map((t) => `
           <li>${escudo(t, 32)}<span>${escapar(t.nome)}</span>
             <button class="botao botao--secundario botao--pequeno" type="button" data-copiar-link="${t.id}">Copiar</button>
-            <a class="botao botao--pequeno" target="_blank" rel="noopener" href="${escapar(linkZap(convite(linkDoFormulario(t.id), t.nome)))}">WhatsApp</a>
+            <a class="botao botao--pequeno" target="_blank" rel="noopener" href="${escapar(linkZap(convite(linkDoFormulario(t), t)))}">WhatsApp</a>
           </li>`).join('')}</ul>
         <h3>Prefere que o clube digite no WhatsApp?</h3>
         <p class="texto-2 texto-pequeno">Copie o modelo e envie. O sistema também lê mensagens digitadas à mão (número - nome, por posição).</p>
@@ -170,7 +172,11 @@ export function abrirElencoWhatsApp({ times, jogadores, executar }) {
     const aba = e.target.closest('[data-painel]');
     if (aba) { painel(aba.dataset.painel); return; }
     const link = e.target.closest('[data-copiar-link]');
-    if (link) { copiar(linkDoFormulario(link.dataset.copiarLink || null), 'Link copiado ✔'); return; }
+    if (link) {
+      const time = ativos.find((t) => t.id === Number(link.dataset.copiarLink));
+      copiar(convite(linkDoFormulario(time), time), time ? `Mensagem do ${time.nome} copiada ✔` : 'Mensagem copiada ✔');
+      return;
+    }
     if (e.target.closest('[data-copiar-modelo]')) { copiar(modeloEmBranco(), 'Modelo copiado ✔'); return; }
     if (e.target.closest('[data-ler]')) { mostrarPrevia(lerMensagens(texto.value, times)); return; }
     if (e.target.closest('[data-voltar]')) { conferir.classList.add('oculto'); colar.classList.remove('oculto'); return; }
