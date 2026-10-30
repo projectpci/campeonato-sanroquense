@@ -48,6 +48,7 @@ export function montarLayout(ativa, { paginas = PAGINAS, inicio = ativa ? 'inici
         <button class="perfil__selo" id="btn-perfil" type="button" aria-haspopup="true" aria-expanded="false"></button>
         <div class="perfil__menu" id="menu-perfil" hidden>
           <p class="perfil__quem"></p>
+          <div class="perfil__extra" id="perfil-extra"></div>
           <a class="perfil__voltar oculto" href="#"></a>
           <a class="header__sair" id="btn-sair-header" href="index.html?sair">Sair do perfil</a>
         </div>

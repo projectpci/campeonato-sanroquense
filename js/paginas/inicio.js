@@ -15,6 +15,7 @@ const CLASSES_PODIO = ['ouro', 'prata', 'bronze'];
 function htmlHero(c) {
   return `
     <section class="hero">
+      <p class="online-agora oculto" id="online-agora" title="Pessoas com o app aberto agora"></p>
       <h1>${escapar(c.nome)}</h1>
       <div class="hero__info">
         <div class="card card--neon"><small>Local</small>${escapar(c.local ?? '—')}</div>
@@ -98,7 +99,6 @@ function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }
 
     app.innerHTML = `
       ${htmlHero(campeonato)}
-      <p class="online-agora oculto" id="online-agora" aria-live="polite"></p>
       ${destaque.html}
       ${htmlSecaoJogos('Próxima rodada', proxima, porRodada(proxima).filter((j) => j.status === 'agendado' && !destaque.ids.includes(j.id)))}
       ${htmlSecaoJogos('Últimos resultados', ultimaEncerrada, porRodada(ultimaEncerrada).filter((j) => j.status === 'encerrado'))}
@@ -110,14 +110,14 @@ function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }
   pintarOnline();
 }
 
-// "23 pessoas acompanhando agora" (aparece assim que o canal responde, contando você)
+// Bolinha piscando + "23 pessoas" no canto do topo (quem está com o app aberto agora, contando você)
 let online = null;
 function pintarOnline() {
   const alvo = document.getElementById('online-agora');
   if (!alvo || !online) return;
   const total = Math.max(1, online.total); // o próprio aparelho pode entrar no canal um instante depois
   alvo.classList.remove('oculto');
-  alvo.innerHTML = `<span class="ponto-online" aria-hidden="true"></span><strong>${total}</strong> ${total === 1 ? 'pessoa acompanhando agora' : 'pessoas acompanhando agora'}`;
+  alvo.innerHTML = `<span class="ponto-online" aria-hidden="true"></span>${total} ${total === 1 ? 'pessoa' : 'pessoas'}<span class="sr-only"> com o app aberto agora</span>`;
 }
 
 async function carregar() {

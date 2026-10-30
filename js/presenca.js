@@ -54,7 +54,8 @@ export function anunciar({ perfil, time = null }) {
   entrar();
 }
 
-// Recebe o resumo sempre que alguém entra ou sai; devolve a função para parar de ouvir
+// Recebe o resumo sempre que alguém entra ou sai; devolve a função para parar de ouvir.
+// Atenção: o servidor só manda a lista para quem também se anunciou (anunciar) — as telas que mostram a contagem já anunciam.
 export function aoMudarOnline(funcao) {
   ouvintes.add(funcao);
   conectar();

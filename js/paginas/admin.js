@@ -98,6 +98,7 @@ function entrouNoPainel() {
   document.body.classList.remove('painel--login');
   definirModo('adm'); // o app passa a abrir direto no painel até "Sair"
   mostrarPerfil({ tipo: 'adm', rotulo: 'ADM', quem: 'Organizador (ADM)' });
+  ligarAoVivo();
 }
 
 async function iniciar() {
@@ -166,32 +167,38 @@ async function abaArtilharia(aba, jogos) {
 }
 
 // ---------- Ajustes: avisos, exportar dados, times e códigos, sair ----------
-// ---------- Online agora (Presence): atualiza sozinho enquanto Ajustes está aberto ----------
-let pararOnline = null;
-function htmlOnline(r) {
+// ---------- Ao vivo (Presence): quem está no app agora, dentro do menu do selo ADM ----------
+// O selo mostra a bolinha piscando com o total; o menu abre o detalhe (torcedores, clubes e organização).
+function htmlAoVivo(r) {
   const clubes = r.clubes.map((c) => `
-    <li class="online__clube">${escudo({ nome: c.nome, escudo_url: c.escudo_url }, 32)}<span>${escapar(c.nome)}</span>${c.aparelhos > 1 ? `<small>${c.aparelhos} aparelhos</small>` : ''}</li>`).join('');
+    <li class="online__clube">${escudo({ nome: c.nome, escudo_url: c.escudo_url }, 32)}<span>${escapar(c.nome)}</span>${c.aparelhos > 1 ? `<small>×${c.aparelhos}</small>` : ''}</li>`).join('');
   return `
-    <p class="online__total"><strong>${r.total}</strong> ${r.total === 1 ? 'pessoa no app agora' : 'pessoas no app agora'}</p>
+    <p class="online__titulo"><span class="ponto-online" aria-hidden="true"></span>Ao vivo · <strong>${r.total}</strong> no app</p>
     <div class="online__numeros">
       <div><strong>${r.torcedores}</strong><small>${r.torcedores === 1 ? 'Torcedor' : 'Torcedores'}</small></div>
       <div><strong>${r.clubes.length}</strong><small>${r.clubes.length === 1 ? 'Clube' : 'Clubes'}</small></div>
-      <div><strong>${r.adm}</strong><small>Organização</small></div>
+      <div><strong>${r.adm}</strong><small>Org.</small></div>
     </div>
-    ${clubes ? `<ul class="online__clubes" aria-label="Clubes online">${clubes}</ul>` : '<p class="texto-2 texto-pequeno">Nenhum clube logado agora.</p>'}
-    <p class="texto-2 texto-pequeno">Conta só quem está com o app aberto na tela, incluindo você. Quem minimiza o app sai da conta e volta ao abrir.</p>`;
+    ${clubes ? `<ul class="online__clubes" aria-label="Clubes no app agora">${clubes}</ul>` : '<p class="texto-2 texto-pequeno">Nenhum clube logado agora.</p>'}`;
 }
-function ligarOnline(alvo) {
-  pararOnline?.();
-  pararOnline = aoMudarOnline((r) => { if (alvo.isConnected) alvo.innerHTML = htmlOnline(r); else pararOnline?.(); });
+let aoVivoLigado = false;
+function ligarAoVivo() {
+  if (aoVivoLigado) return;
+  aoVivoLigado = true;
+  const extra = document.getElementById('perfil-extra');
+  const selo = document.getElementById('btn-perfil');
+  extra.innerHTML = '<p class="texto-2 texto-pequeno">Contando quem está no app…</p>';
+  aoMudarOnline((r) => {
+    extra.innerHTML = htmlAoVivo(r);
+    let contador = selo.querySelector('.perfil__ao-vivo');
+    if (!contador) { contador = document.createElement('i'); contador.className = 'perfil__ao-vivo'; selo.append(contador); }
+    contador.innerHTML = `<span class="ponto-online" aria-hidden="true"></span>${r.total}`;
+    contador.title = `${r.total} no app agora`;
+  });
 }
 
 function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
   aba.innerHTML = `
-    <section class="ajuste online">
-      <h3><span class="ponto-online" aria-hidden="true"></span>Online agora</h3>
-      <div id="online-adm"><p class="texto-2 texto-pequeno">Contando quem está no app…</p></div>
-    </section>
     <section class="ajuste">
       <h3>Avisos no celular</h3>
       <p class="texto-2 texto-pequeno">Receba um aviso quando um time enviar foto para aprovar.</p>
@@ -210,7 +217,6 @@ function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
       <h3>Conta</h3>
       <button class="botao botao--perigo" id="btn-sair-painel">Sair do painel</button>
     </section>`;
-  ligarOnline(document.getElementById('online-adm'));
   botaoAvisosOrganizador(document.getElementById('avisos-adm'));
   document.getElementById('btn-csv').addEventListener('click', () => exportarCsv(jogos, rodadas));
   document.getElementById('btn-sair-painel').addEventListener('click', sairDoPainel);

@@ -43,5 +43,5 @@
 ## Quem está online (Presence)
 - `js/presenca.js`: canal Realtime `online` com Presence; cada aparelho (chave = `aparelho_id`) anuncia o perfil pelo selo do topo (`mostrarPerfil`).
 - Não grava nada no banco e não guarda histórico. App em segundo plano sai da contagem (`untrack`) e volta ao abrir.
-- Painel do Adm (Ajustes → Online agora): total, torcedores, clubes logados (com escudo) e organização. Início da torcida: "N pessoas acompanhando agora" (sempre visível, contando você).
+- Painel do Adm: selo "ADM ● N" no topo; o menu do selo tem "Ao vivo" (torcedores, clubes logados com escudo, organização) e o Sair. Início da torcida: "● N pessoas" discreto acima do título.
 - Usa a mesma conexão do tempo real: no plano gratuito, até 200 conexões simultâneas.

@@ -103,3 +103,4 @@
 - [x] Painel: Tabela e Artilharia de volta no menu do Adm (dentro do painel, sem sair dele); js/tabelas.js compartilhado
 - [x] Selo de quem está logado no topo (Torcedor, clube com escudo, ADM) com menu Sair; faixa de jogos da tela inicial girando a cada 5 s
 - [x] Online agora (Presence): no painel, torcedores, clubes logados e organização; no Início, pessoas acompanhando agora
+- [x] Online: contador compacto no Início (● N pessoas); Ao vivo dentro do menu do selo ADM (com total no selo)
