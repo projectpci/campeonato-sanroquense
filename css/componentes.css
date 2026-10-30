@@ -845,3 +845,24 @@ body.entrada-corpo { overflow-x: hidden; }
 .entrada__opcao .entrada__icone, .entrada__opcao .entrada__seta { color: var(--cor-primaria); }
 .entrada__opcao--ultimo .entrada__seta { display: none; }
 .entrada { overflow-x: clip; }
+
+/* ================= v25: compartilhar só ícone, menu e ajustes do painel ================= */
+/* Botão flutuante de compartilhar: círculo com o ícone do WhatsApp */
+.botao-compartilhar { width: 56px; height: 56px; min-height: 0; padding: 0; border-radius: 50%; }
+.botao-compartilhar svg { width: 26px; height: 26px; }
+
+/* Menu: tantas colunas quanto itens (público 6, painel 5) */
+.nav { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; }
+.nav__item { position: relative; }
+.contador--nav { position: absolute; top: 4px; left: 50%; margin-left: 6px; min-width: 18px; height: 18px; padding: 0 5px; font-size: .68rem; }
+@media (min-width: 768px) { .contador--nav { position: static; margin-left: 0; } }
+
+/* Painel: sem menu na tela de login; título limpo */
+.painel--login .nav, .painel--login .header__nav { display: none; }
+.admin__titulo { margin: 0 0 var(--esp-3); font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.4rem; text-transform: uppercase; }
+
+/* Ajustes: blocos com título */
+.ajuste { display: grid; gap: var(--esp-2); padding: var(--esp-4); margin-bottom: var(--esp-3); border-radius: var(--raio-grande); background: var(--cor-fundo-2); border: 1px solid var(--cor-borda); }
+.ajuste h3 { margin: 0; font-size: 1rem; text-transform: uppercase; color: var(--cor-primaria); }
+.ajuste p { margin: 0; }
+.ajuste > .botao { justify-self: start; }

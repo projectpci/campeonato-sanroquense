@@ -3,7 +3,7 @@ import {
   buscarSessao, entrar, sair, listarTimes, listarRodadas, listarJogos, listarJogadores,
   salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo, contarPostsPendentes,
 } from '../api.js';
-import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
+import { montarLayout, marcarNav, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
 import { htmlElenco, htmlSeletorTimes, ligarElenco } from '../elencoTime.js';
 import { rodadaAtual } from '../rodadas.js';
@@ -11,10 +11,20 @@ import { assinarMudancas } from '../realtime.js';
 import { botaoAvisosOrganizador } from '../avisos.js';
 
 const app = document.getElementById('app');
-const estado = { aba: 'confrontos', rodadaId: null };
+// Menu do painel (embaixo no celular, em cima no computador): navega por #jogos / #elenco / #ajustes
+const MENU_ADM = [
+  { id: 'jogos', rotulo: 'Jogos', href: '#jogos', icone: 'confrontos' },
+  { id: 'elenco', rotulo: 'Elenco', href: '#elenco', icone: 'elenco' },
+  { id: 'mural', rotulo: 'Mural', href: 'mural.html?moderar=1', icone: 'mural' },
+  { id: 'ajustes', rotulo: 'Ajustes', href: '#ajustes', icone: 'engrenagem' },
+  { id: 'site', rotulo: 'Ver site', href: 'inicio.html', icone: 'inicio' },
+];
+const abaDoEndereco = () => (['jogos', 'elenco', 'ajustes'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'jogos');
+const estado = { aba: abaDoEndereco(), rodadaId: null };
 const DOMINIO_USUARIO = 'sanroquense.app';
 
-montarLayout(null);
+montarLayout(estado.aba, { paginas: MENU_ADM, inicio: 'index.html' });
+window.addEventListener('hashchange', () => { estado.aba = abaDoEndereco(); marcarNav(estado.aba); window.scrollTo(0, 0); if (estado.logado) carregar(); });
 document.querySelector('.faixa')?.remove();
 
 // ---------- Utilidades ----------
@@ -48,6 +58,7 @@ document.getElementById('btn-sair-header').addEventListener('click', sairDoPaine
 
 // ---------- Login ----------
 function telaLogin() {
+  document.body.classList.add('painel--login'); // menu do painel só aparece depois de entrar
   app.innerHTML = `
     <form class="card form" id="form-login">
       <h2>Entrar</h2>
@@ -63,6 +74,7 @@ function telaLogin() {
       const usuario = dados.get('email').trim().toLowerCase();
       await entrar(usuario.includes('@') ? usuario : `${usuario}@${DOMINIO_USUARIO}`, dados.get('senha'));
       // Entrou: abre o painel direto (sem reler a sessão, que logo após o login pode ainda não estar disponível)
+      entrouNoPainel();
       mostrarCarregando(app);
       await carregar();
       ligarTempoReal();
@@ -73,9 +85,15 @@ function telaLogin() {
 }
 
 // ---------- Painel ----------
+function entrouNoPainel() {
+  estado.logado = true;
+  document.body.classList.remove('painel--login');
+}
+
 async function iniciar() {
   const sessao = await buscarSessao();
   if (!sessao) return telaLogin();
+  entrouNoPainel();
   mostrarCarregando(app);
   await carregar();
   ligarTempoReal();
@@ -93,25 +111,16 @@ function ligarTempoReal() {
 async function carregar() {
   try {
     const [times, rodadas, jogos, jogadores, codigos, pendentes] = await Promise.all([listarTimes(), listarRodadas(), listarJogos(), listarJogadores(),
-      estado.aba === 'times' ? listarCodigos() : [], contarPostsPendentes().catch(() => 0)]);
-    const abas = [['confrontos', 'Jogos e resultados'], ['times', 'Times'], ['elenco', 'Elenco']];
-    app.innerHTML = `
-      <div class="admin__topo">
-        <h2>Organizador</h2>
-        <div class="form__acoes">
-          <a class="botao botao--secundario" href="mural.html?moderar=1">Mural${pendentes ? ` <span class="contador" title="Fotos aguardando aprovação">${pendentes}</span>` : ''}</a>
-          <button class="botao botao--secundario" id="btn-csv">Exportar CSV</button>
-        </div>
-      </div>
-      <div class="chips chips--quebra abas-adm" role="tablist">${abas.map(([id, rotulo]) =>
-        `<button class="chip${estado.aba === id ? ' chip--ativo' : ''}" data-aba="${id}">${rotulo}</button>`).join('')}</div>
-      <div id="avisos-adm" class="avisos-adm"></div>
-      <div id="aba"></div>`;
-    botaoAvisosOrganizador(document.getElementById('avisos-adm'));
-    app.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { estado.aba = b.dataset.aba; carregar(); }));
-    document.getElementById('btn-csv').addEventListener('click', () => exportarCsv(jogos, rodadas));
+      estado.aba === 'ajustes' ? listarCodigos() : [], contarPostsPendentes().catch(() => 0)]);
+    const titulos = { jogos: 'Jogos e resultados', elenco: 'Elenco dos clubes', ajustes: 'Ajustes' };
+    app.innerHTML = `<h2 class="admin__titulo">${titulos[estado.aba]}</h2><div id="aba"></div>`;
+    // contador de fotos aguardando aprovação no item "Mural" do menu
+    document.querySelectorAll('[data-nav="mural"]').forEach((item) => {
+      item.querySelector('.contador')?.remove();
+      if (pendentes) item.insertAdjacentHTML('beforeend', `<span class="contador contador--nav" title="Fotos aguardando aprovação">${pendentes}</span>`);
+    });
     const aba = document.getElementById('aba');
-    if (estado.aba === 'times') abaTimes(aba, times, codigos);
+    if (estado.aba === 'ajustes') abaAjustes(aba, { times, codigos, jogos, rodadas });
     else if (estado.aba === 'elenco') abaElenco(aba, times, jogadores);
     else abaConfrontos(aba, { times, rodadas, jogos, jogadores });
   } catch (erro) {
@@ -119,7 +128,34 @@ async function carregar() {
   }
 }
 
-// ---------- Aba Times ----------
+// ---------- Ajustes: avisos, exportar dados, times e códigos, sair ----------
+function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
+  aba.innerHTML = `
+    <section class="ajuste">
+      <h3>Avisos no celular</h3>
+      <p class="texto-2 texto-pequeno">Receba um aviso quando um time enviar foto para aprovar.</p>
+      <div id="avisos-adm"></div>
+    </section>
+    <section class="ajuste">
+      <h3>Dados do campeonato</h3>
+      <p class="texto-2 texto-pequeno">Baixa todos os jogos com placar e autores dos gols (abre no Excel).</p>
+      <button class="botao botao--secundario" id="btn-csv">Exportar CSV</button>
+    </section>
+    <section class="ajuste">
+      <h3>Times e códigos de acesso</h3>
+      <div id="ajuste-times"></div>
+    </section>
+    <section class="ajuste">
+      <h3>Conta</h3>
+      <button class="botao botao--perigo" id="btn-sair-painel">Sair do painel</button>
+    </section>`;
+  botaoAvisosOrganizador(document.getElementById('avisos-adm'));
+  document.getElementById('btn-csv').addEventListener('click', () => exportarCsv(jogos, rodadas));
+  document.getElementById('btn-sair-painel').addEventListener('click', sairDoPainel);
+  abaTimes(document.getElementById('ajuste-times'), times, codigos);
+}
+
+// ---------- Times (dentro de Ajustes) ----------
 function abaTimes(aba, times, codigos = []) {
   const codigoDe = (timeId) => codigos.find((c) => c.time_id === timeId)?.codigo;
   aba.innerHTML = `

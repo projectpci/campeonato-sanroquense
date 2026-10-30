@@ -94,3 +94,4 @@
 - [x] Elenco redesenhado: seletor de escudos, resumo por linha, busca, grupos por posição e ficha do jogador
 - [x] Tela inicial redesenhada (marca, jogo de agora, escolha com ícones novos, organizador destacado, escudos em faixa)
 - [x] Auditoria: tempo real por página, pausa em segundo plano, demo sob demanda, cache de imagens com limite, índices — ver docs/13
+- [x] Painel com menu próprio (Jogos, Elenco, Mural, Ajustes, Ver site); Exportar CSV e Times em Ajustes; compartilhar só com ícone

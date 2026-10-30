@@ -76,7 +76,7 @@ function htmlPost(p) {
 
 function htmlBarra() {
   const moderando = estado.organizador
-    ? '<p class="aviso moderacao">Modo organizador: você pode aprovar, recusar e apagar. <a href="mural.html">Ver como torcedor</a></p>' : '';
+    ? '<p class="aviso moderacao">Modo organizador: você pode aprovar, recusar e apagar. <a href="admin.html#jogos">← Voltar ao painel</a> · <a href="mural.html">Ver como torcedor</a></p>' : '';
   const quem = estado.organizador
     ? 'Publicando como <strong>Organização</strong>'
     : estado.time

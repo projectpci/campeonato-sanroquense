@@ -28,27 +28,28 @@ const PAGINAS = [
   { id: 'mural', rotulo: 'Mural', href: 'mural.html', icone: 'mural' },
 ];
 
-function htmlNav(ativa) {
-  return PAGINAS.map((p) => `
+function htmlNav(ativa, paginas = PAGINAS) {
+  return paginas.map((p) => `
     <a class="nav__item${p.id === ativa ? ' nav__item--ativo' : ''}" href="${p.href}"
-       ${p.id === ativa ? 'aria-current="page"' : ''}>${icone(p.icone)}<span>${p.rotulo}</span></a>`).join('');
+       data-nav="${p.id}" ${p.id === ativa ? 'aria-current="page"' : ''}>${icone(p.icone)}<span>${p.rotulo}</span></a>`).join('');
 }
 
 // Monta header + navegação. `ativa` = id da página (ou null no admin, que não aparece na nav pública).
-export function montarLayout(ativa) {
+// `opcoes.paginas`: menu próprio (painel do organizador) · `opcoes.inicio`: destino da marca · `opcoes.sino`: sino de avisos
+export function montarLayout(ativa, { paginas = PAGINAS, inicio = ativa ? 'inicio.html' : 'index.html', sino = Boolean(ativa) && paginas === PAGINAS } = {}) {
   document.body.insertAdjacentHTML('afterbegin', `
     <header class="header">
-      <a class="header__marca" href="${ativa ? 'inicio.html' : 'index.html'}">${icone('coroa')}<span>CAMPEONATO <em>SRP</em></span></a>
-      <nav class="nav header__nav" aria-label="Principal">${htmlNav(ativa)}</nav>
+      <a class="header__marca" href="${inicio}">${icone('coroa')}<span>CAMPEONATO <em>SRP</em></span></a>
+      <nav class="nav header__nav" aria-label="Principal">${htmlNav(ativa, paginas)}</nav>
       <a class="header__sair" id="btn-sair-header" href="index.html">Sair</a>
     </header>`);
   document.body.insertAdjacentHTML('beforeend', `
-    <nav class="nav" aria-label="Principal (celular)">${htmlNav(ativa)}</nav>`);
+    <nav class="nav" aria-label="Principal (celular)">${htmlNav(ativa, paginas)}</nav>`);
   // No desktop a nav inferior some e usa a do header
   const inferior = document.body.lastElementChild;
   inferior.classList.add('nav--inferior');
   // Sino de avisos no cabeçalho das páginas públicas (carregado depois, para não atrasar a tela)
-  if (ativa) import('./avisos.js').then((m) => m.sinoNoCabecalho()).catch(() => {});
+  if (sino) import('./avisos.js').then((m) => m.sinoNoCabecalho()).catch(() => {});
 }
 
 // Escapa texto vindo do banco antes de colocar em innerHTML
@@ -110,7 +111,9 @@ export const horaDoJogo = (jogo) => (jogo.horario_definido === false ? 'A defini
 export function botaoCompartilhar(aoClicar) {
   const botao = document.createElement('button');
   botao.className = 'botao botao-compartilhar';
-  botao.innerHTML = `${icone('whatsapp')}Compartilhar`;
+  botao.innerHTML = icone('whatsapp');
+  botao.setAttribute('aria-label', 'Compartilhar imagem');
+  botao.title = 'Compartilhar';
   botao.addEventListener('click', async () => {
     botao.disabled = true;
     toast('Gerando imagem...');
@@ -133,4 +136,13 @@ export function tempoRelativo(iso) {
   if (min < 1440) return `há ${Math.floor(min / 60)} h`;
   if (min < 2880) return 'ontem';
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
+// Troca o item ativo do menu sem redesenhar (painel do organizador, que navega por #aba)
+export function marcarNav(id) {
+  document.querySelectorAll('[data-nav]').forEach((a) => {
+    const ativo = a.dataset.nav === id;
+    a.classList.toggle('nav__item--ativo', ativo);
+    if (ativo) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
 }

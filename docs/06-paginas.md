@@ -105,3 +105,6 @@ ao vivo, "Hoje tem jogo" ou o próximo jogo, que leva ao Início) → **escolha*
 torcida e Clube com ícone de camisa; o último perfil usado ganha o selo "Continuar") → **Área do organizador** (botão dourado
 com cadeado) → escudos dos 10 times correndo em faixa → instalar o app. Entrada em cascata e respeito a "reduzir movimento".
 Dados de `js/paginas/entrada.js`; se o banco não responder, a tela funciona só com os botões.
+
+## Painel do organizador (v25)
+Menu próprio (embaixo no celular, em cima no computador): **Jogos** (rodadas e cards com a engrenagem de lançar/editar), **Elenco**, **Mural** (modo moderação, com contador de fotos pendentes), **Ajustes** (avisos no celular, exportar CSV, times e códigos, sair) e **Ver site**. Navega por `#jogos`, `#elenco`, `#ajustes`; o menu só aparece depois do login. O botão flutuante de compartilhar das páginas públicas é só o ícone do WhatsApp.
