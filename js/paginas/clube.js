@@ -68,7 +68,7 @@ function tratarErro(erro) {
 // ---------- Entrada em 2 passos: 1) escolhe o time · 2) o time fica em destaque e pede o código ----------
 async function telaEntrada(mensagem = '') {
   document.body.classList.add('painel--login'); // o menu do clube só aparece depois de entrar
-  mostrarPerfil({ tipo: 'clube', rotulo: 'Clube', quem: 'Clube · ainda não entrou' });
+  mostrarPerfil({ tipo: 'clube', rotulo: 'Clube', quem: 'Clube · ainda não entrou', contar: false });
   let times;
   try { times = (await listarTimes()).filter((t) => t.ativo !== false); } catch (erro) { mostrarAviso(app, `Não foi possível carregar os times: ${erro.message}`); return; }
   const salvo = times.find((t) => String(t.id) === guardado(CHAVE_TIME));

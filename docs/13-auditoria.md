@@ -39,3 +39,9 @@
 1. A cada mudança no código: subir `VERSAO` em `sw.js` (o app recarrega sozinho na versão nova).
 2. Rodar `node tests/classificacao.test.mjs && node tests/rodadas.test.mjs` antes de enviar.
 3. Testar em 360 px (Início, Tabela, Clube e painel) e conferir o console.
+
+## Quem está online (Presence)
+- `js/presenca.js`: canal Realtime `online` com Presence; cada aparelho (chave = `aparelho_id`) anuncia o perfil pelo selo do topo (`mostrarPerfil`).
+- Não grava nada no banco e não guarda histórico. App em segundo plano sai da contagem (`untrack`) e volta ao abrir.
+- Painel do Adm (Ajustes → Online agora): total, torcedores, clubes logados (com escudo) e organização. Início da torcida: "N pessoas acompanhando agora" (só com 2 ou mais).
+- Usa a mesma conexão do tempo real: no plano gratuito, até 200 conexões simultâneas.

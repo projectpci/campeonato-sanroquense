@@ -1,6 +1,7 @@
 import { buscarCampeonato, buscarClassificacao, buscarArtilharia, listarJogos, listarRodadas } from '../api.js';
 import { ordenarClassificacao } from '../classificacao.js';
 import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
+import { aoMudarOnline } from '../presenca.js';
 import { cartaoJogo } from '../cartaoJogo.js';
 import { prepararChances } from '../probabilidade.js';
 import { carregarComCache } from '../cache.js';
@@ -97,6 +98,7 @@ function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }
 
     app.innerHTML = `
       ${htmlHero(campeonato)}
+      <p class="online-agora oculto" id="online-agora" aria-live="polite"></p>
       ${destaque.html}
       ${htmlSecaoJogos('Próxima rodada', proxima, porRodada(proxima).filter((j) => j.status === 'agendado' && !destaque.ids.includes(j.id)))}
       ${htmlSecaoJogos('Últimos resultados', ultimaEncerrada, porRodada(ultimaEncerrada).filter((j) => j.status === 'encerrado'))}
@@ -105,6 +107,16 @@ function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }
       ${CANAL_WHATSAPP ? `<p class="centro"><a class="botao" href="${escapar(CANAL_WHATSAPP)}" target="_blank" rel="noopener">${icone('whatsapp')} Entrar no canal do WhatsApp</a></p>` : ''}
       <p class="rodape-frase">Juntos pelo futebol de nossa comunidade!</p>
       <p class="centro texto-pequeno"><a class="texto-2" href="instalar.html">Instalar o app</a> · <a class="texto-2" href="index.html?sair">Trocar perfil</a></p>`;
+  pintarOnline();
+}
+
+// "23 pessoas acompanhando agora" (só aparece com 2 ou mais: sozinho é só você)
+let online = null;
+function pintarOnline() {
+  const alvo = document.getElementById('online-agora');
+  if (!alvo || !online) return;
+  alvo.classList.toggle('oculto', online.total < 2);
+  alvo.innerHTML = `<span class="ponto-online" aria-hidden="true"></span><strong>${online.total}</strong> pessoas acompanhando agora`;
 }
 
 async function carregar() {
@@ -121,4 +133,5 @@ if (checarConfiguracao(app)) {
   mostrarCarregando(app);
   carregar();
   assinarMudancas(carregar, TABELAS_JOGOS);
+  aoMudarOnline((r) => { online = r; pintarOnline(); });
 }

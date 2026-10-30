@@ -81,7 +81,8 @@ export function definirModo(modo) {
 // tipo: 'torcedor' | 'clube' | 'adm' · rotulo: texto curto do selo · quem: frase do menu · time: escudo do clube
 // voltar: { href, texto } quando a pessoa está numa página pública mas o perfil é clube ou organizador
 const CHAVE_CLUBE_SELO = 'clube_selo';
-export function mostrarPerfil({ tipo, rotulo, quem, time = null, voltar = null }) {
+// contar: entra na contagem de "online agora" (falso nas telas de entrada, antes do código/senha)
+export function mostrarPerfil({ tipo, rotulo, quem, time = null, voltar = null, contar = true }) {
   const selo = document.getElementById('btn-perfil');
   if (!selo) return;
   const simbolo = tipo === 'clube' && time ? escudo(time, 32) : icone({ torcedor: 'torcedor', clube: 'escudo', adm: 'coroa' }[tipo]);
@@ -93,7 +94,8 @@ export function mostrarPerfil({ tipo, rotulo, quem, time = null, voltar = null }
   link.classList.toggle('oculto', !voltar);
   if (voltar) { link.href = voltar.href; link.textContent = voltar.texto; }
   // o clube guarda nome e escudo para o selo aparecer certo também nas páginas públicas
-  if (tipo === 'clube' && time) { try { localStorage.setItem(CHAVE_CLUBE_SELO, JSON.stringify({ nome: time.nome, sigla: time.sigla, escudo_url: time.escudo_url })); } catch { /* sem armazenamento */ } }
+  if (tipo === 'clube' && time) { try { localStorage.setItem(CHAVE_CLUBE_SELO, JSON.stringify({ id: time.id, nome: time.nome, sigla: time.sigla, escudo_url: time.escudo_url })); } catch { /* sem armazenamento */ } }
+  if (contar) import('./presenca.js').then((m) => m.anunciar({ perfil: tipo, time })).catch(() => {});
 }
 
 const rotuloDoClube = (time) => time?.sigla || (time?.nome?.length > 10 ? `${time.nome.slice(0, 9)}…` : time?.nome) || 'Clube';

@@ -11,6 +11,7 @@ import { htmlElenco, htmlSeletorTimes, ligarElenco } from '../elencoTime.js';
 import { rodadaAtual } from '../rodadas.js';
 import { assinarMudancas } from '../realtime.js';
 import { criarFeed } from '../feed.js';
+import { aoMudarOnline } from '../presenca.js';
 import { botaoAvisosOrganizador } from '../avisos.js';
 
 const app = document.getElementById('app');
@@ -65,7 +66,7 @@ document.getElementById('btn-sair-header').addEventListener('click', sairDoPaine
 // ---------- Login ----------
 function telaLogin() {
   document.body.classList.add('painel--login'); // menu do painel só aparece depois de entrar
-  mostrarPerfil({ tipo: 'adm', rotulo: 'ADM', quem: 'Organizador · ainda não entrou' });
+  mostrarPerfil({ tipo: 'adm', rotulo: 'ADM', quem: 'Organizador · ainda não entrou', contar: false });
   app.innerHTML = `
     <form class="card form" id="form-login">
       <h2>Entrar</h2>
@@ -165,8 +166,32 @@ async function abaArtilharia(aba, jogos) {
 }
 
 // ---------- Ajustes: avisos, exportar dados, times e códigos, sair ----------
+// ---------- Online agora (Presence): atualiza sozinho enquanto Ajustes está aberto ----------
+let pararOnline = null;
+function htmlOnline(r) {
+  const clubes = r.clubes.map((c) => `
+    <li class="online__clube">${escudo({ nome: c.nome, escudo_url: c.escudo_url }, 32)}<span>${escapar(c.nome)}</span>${c.aparelhos > 1 ? `<small>${c.aparelhos} aparelhos</small>` : ''}</li>`).join('');
+  return `
+    <p class="online__total"><strong>${r.total}</strong> ${r.total === 1 ? 'pessoa no app agora' : 'pessoas no app agora'}</p>
+    <div class="online__numeros">
+      <div><strong>${r.torcedores}</strong><small>${r.torcedores === 1 ? 'Torcedor' : 'Torcedores'}</small></div>
+      <div><strong>${r.clubes.length}</strong><small>${r.clubes.length === 1 ? 'Clube' : 'Clubes'}</small></div>
+      <div><strong>${r.adm}</strong><small>Organização</small></div>
+    </div>
+    ${clubes ? `<ul class="online__clubes" aria-label="Clubes online">${clubes}</ul>` : '<p class="texto-2 texto-pequeno">Nenhum clube logado agora.</p>'}
+    <p class="texto-2 texto-pequeno">Conta só quem está com o app aberto na tela, incluindo você. Quem minimiza o app sai da conta e volta ao abrir.</p>`;
+}
+function ligarOnline(alvo) {
+  pararOnline?.();
+  pararOnline = aoMudarOnline((r) => { if (alvo.isConnected) alvo.innerHTML = htmlOnline(r); else pararOnline?.(); });
+}
+
 function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
   aba.innerHTML = `
+    <section class="ajuste online">
+      <h3><span class="ponto-online" aria-hidden="true"></span>Online agora</h3>
+      <div id="online-adm"><p class="texto-2 texto-pequeno">Contando quem está no app…</p></div>
+    </section>
     <section class="ajuste">
       <h3>Avisos no celular</h3>
       <p class="texto-2 texto-pequeno">Receba um aviso quando um time enviar foto para aprovar.</p>
@@ -185,6 +210,7 @@ function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
       <h3>Conta</h3>
       <button class="botao botao--perigo" id="btn-sair-painel">Sair do painel</button>
     </section>`;
+  ligarOnline(document.getElementById('online-adm'));
   botaoAvisosOrganizador(document.getElementById('avisos-adm'));
   document.getElementById('btn-csv').addEventListener('click', () => exportarCsv(jogos, rodadas));
   document.getElementById('btn-sair-painel').addEventListener('click', sairDoPainel);
