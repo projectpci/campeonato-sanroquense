@@ -117,9 +117,14 @@ export function criarFeed(container, { organizador = false, clube = null } = {})
 
   // ---------- Publicações ----------
   function htmlAutorComentario(c) {
-    if (c.oficial) return `<strong class="comentario__autor comentario__autor--org">${icone('coroa')}Organização</strong>`;
-    if (c.time_id) return `<strong class="comentario__autor comentario__autor--time">${escudo({ escudo_url: c.time?.escudo_url, nome: c.nome }, 32)}${escapar(c.nome)}</strong>`;
+    if (c.oficial) return `<strong class="comentario__autor comentario__autor--org">Organização <i class="comentario__selo">oficial</i></strong>`;
+    if (c.time_id) return `<strong class="comentario__autor comentario__autor--time">${escapar(c.nome)} <i class="comentario__selo comentario__selo--time">time</i></strong>`;
     return `<strong class="comentario__autor">${escapar(c.nome)}</strong>`;
+  }
+  function htmlAvatarComentario(c) {
+    if (c.oficial) return `<span class="avatar-feed avatar-feed--org avatar-feed--mini">${icone('coroa')}</span>`;
+    if (c.time_id) return `<span class="avatar-feed avatar-feed--mini">${escudo({ escudo_url: c.time?.escudo_url, nome: c.nome }, 32)}</span>`;
+    return `<span class="avatar-feed avatar-feed--mini avatar-feed--letra" aria-hidden="true">${escapar((c.nome ?? '?').trim().slice(0, 1).toUpperCase())}</span>`;
   }
 
   function htmlComentarios(p) {
@@ -133,8 +138,14 @@ export function criarFeed(container, { organizador = false, clube = null } = {})
       <section class="post__comentarios" aria-label="Comentários">
         ${todos.length > 2 && !aberto ? `<button class="link-botao post__ver-todos" data-ver-todos="${p.id}">Ver os ${todos.length} comentários</button>` : ''}
         ${lista.map((c) => `
-          <p class="comentario"><span>${htmlAutorComentario(c)} ${escapar(c.texto)}<small>${tempoRelativo(c.criado_em)}</small></span>
-            ${organizador ? `<button class="comentario__apagar" data-apagar-comentario="${c.id}" aria-label="Apagar comentário">${ICONES.lixeira}</button>` : ''}</p>`).join('')}
+          <div class="comentario">
+            ${htmlAvatarComentario(c)}
+            <div class="comentario__corpo">
+              <div class="comentario__balao">${htmlAutorComentario(c)}<p>${escapar(c.texto)}</p></div>
+              <small>${tempoRelativo(c.criado_em)}</small>
+            </div>
+            ${organizador ? `<button class="comentario__apagar" data-apagar-comentario="${c.id}" aria-label="Apagar comentário">${ICONES.lixeira}</button>` : ''}
+          </div>`).join('')}
         <form class="post__comentar" data-post="${p.id}">
           ${pedirNome ? '<input name="nome" maxlength="30" placeholder="Seu nome" required autocomplete="nickname" aria-label="Seu nome">' : ''}
           <input name="texto" maxlength="300" placeholder="${quem ? `Comente como ${escapar(quem)}` : 'Escreva um comentário'}" required autocomplete="off" aria-label="Comentário">
@@ -166,9 +177,9 @@ export function criarFeed(container, { organizador = false, clube = null } = {})
             <button class="botao" data-aprovar="${p.id}">Aprovar e publicar</button>
           </div>` : pendente ? '' : `
           <footer class="post__acoes">
-            <button class="post__acao post__curtir${curti ? ' post__curtir--ativo' : ''}" data-curtir="${p.id}" aria-pressed="${curti}" aria-label="${curti ? 'Descurtir' : 'Curtir'}">${ICONES.coracao}<span>${p.curtidas || ''}</span></button>
-            <button class="post__acao" data-ver-todos="${p.id}" aria-label="Comentários">${ICONES.comentario}<span>${qtd || ''}</span></button>
-            <button class="post__acao" data-compartilhar-post="${p.id}" aria-label="Compartilhar publicação">${ICONES.compartilhar}</button>
+            <button class="post__acao post__curtir${curti ? ' post__curtir--ativo' : ''}" data-curtir="${p.id}" aria-pressed="${curti}" aria-label="${curti ? 'Descurtir' : 'Curtir'}">${ICONES.coracao}<b class="post__rotulo">Curtir</b><span>${p.curtidas || ''}</span></button>
+            <button class="post__acao" data-ver-todos="${p.id}" aria-label="Comentários">${ICONES.comentario}<b class="post__rotulo">Comentar</b><span>${qtd || ''}</span></button>
+            <button class="post__acao post__acao--icone" data-compartilhar-post="${p.id}" aria-label="Compartilhar publicação">${ICONES.compartilhar}</button>
           </footer>
           ${htmlComentarios(p)}`}
       </article>`;
@@ -265,6 +276,7 @@ export function criarFeed(container, { organizador = false, clube = null } = {})
       post.curtidas = total;
       guardar(CHAVE_CURTIDAS, JSON.stringify([...estado.curtidas].slice(-500)));
       botao.classList.toggle('post__curtir--ativo', ativo);
+      botao.classList.toggle('post__curtir--pop', ativo && total > anterior); // animação só no toque, não ao redesenhar
       botao.setAttribute('aria-pressed', String(ativo));
       botao.setAttribute('aria-label', ativo ? 'Descurtir' : 'Curtir');
       botao.querySelector('span').textContent = total || '';

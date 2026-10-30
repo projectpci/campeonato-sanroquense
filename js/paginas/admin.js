@@ -31,8 +31,9 @@ const estado = { aba: abaDoEndereco(), rodadaId: null };
 const DOMINIO_USUARIO = 'sanroquense.app';
 
 // A marca do topo também fica no painel: só "Sair" leva para fora
-montarLayout(estado.aba, { paginas: MENU_ADM, inicio: '#jogos' });
-window.addEventListener('hashchange', () => { estado.aba = abaDoEndereco(); marcarNav(estado.aba); window.scrollTo(0, 0); if (estado.logado) carregar(); });
+montarLayout(estado.aba, { paginas: MENU_ADM, inicio: '#jogos', torcidometro: true });
+document.body.dataset.abaAdm = estado.aba; // o torcidômetro só aparece na aba Jogos (css)
+window.addEventListener('hashchange', () => { estado.aba = abaDoEndereco(); document.body.dataset.abaAdm = estado.aba; marcarNav(estado.aba); window.scrollTo(0, 0); if (estado.logado) carregar(); });
 document.querySelector('.faixa')?.remove();
 
 // ---------- Utilidades ----------

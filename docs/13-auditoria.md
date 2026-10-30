@@ -65,5 +65,5 @@
 - **Atenção:** com o código guardado por versão, se `VERSAO` não subir o celular continua com o código antigo. Módulo novo: incluir o nome na lista de `NUCLEO` (se esquecer, ele é baixado na primeira vez e guardado, mas fica fora da troca atômica de versão).
 
 ## Torcidômetro (v42)
-- `js/torcidometro.js`: barra compacta abaixo do título em todas as páginas (inserida por `montarLayout`; `torcidometro:false` desliga, como em `instalar.html`). Fica escondida nas telas de login (`body.painel--login`).
+- `js/torcidometro.js`: barra compacta abaixo do título, só no Início e na aba Jogos do painel do ADM (`montarLayout({ torcidometro: true })`; no ADM o css esconde nas outras abas por `body[data-aba-adm]`). Escondida nas telas de login (`body.painel--login`).
 - Dados: `torcida_declarada()` + times, guardados 60 s em `sessionStorage` (trocar de página não repete a consulta); o "online" vem do Presence (`aoMudarOnline`), sem consulta extra.

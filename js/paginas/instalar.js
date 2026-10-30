@@ -72,6 +72,6 @@ function desenhar() {
   app.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { aba = b.dataset.aba; desenhar(); }));
 }
 
-montarLayout('inicio', { torcidometro: false });
+montarLayout('inicio');
 document.querySelector('.faixa')?.remove();
 desenhar();

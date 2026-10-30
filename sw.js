@@ -1,6 +1,6 @@
 // Service worker: abre rápido e mostra a última tabela conhecida quando o celular está sem sinal.
 // Suba VERSAO a cada deploy: o código (html, js, css) fica guardado por versão e só muda quando ela sobe.
-const VERSAO = 'v42';
+const VERSAO = 'v43';
 const CACHE = `sanroquense-${VERSAO}`;
 // Fotos do mural e do elenco (Storage): cache à parte, com limite, para não encher o celular
 const CACHE_IMAGENS = 'sanroquense-imagens';

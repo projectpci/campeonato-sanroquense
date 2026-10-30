@@ -167,7 +167,7 @@ async function carregar() {
   }
 }
 
-montarLayout('inicio');
+montarLayout('inicio', { torcidometro: true });
 document.querySelector('.faixa')?.remove();
 if (checarConfiguracao(app)) {
   mostrarCarregando(app);
