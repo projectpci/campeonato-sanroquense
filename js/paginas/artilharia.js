@@ -4,25 +4,12 @@ import { assinarMudancas } from '../realtime.js';
 import { carregarComCache } from '../cache.js';
 import { compartilharImagem } from '../compartilhar.js';
 import { arteArtilharia, inserirArte } from '../artes.js';
-import { botaoCompartilhar, montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone } from '../ui.js';
+import { linhaArtilheiro } from '../tabelas.js';
+import { botaoCompartilhar, montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar } from '../ui.js';
 
-const CLASSES_PODIO = ['ouro', 'prata', 'bronze'];
 const app = document.getElementById('app');
 let timeFiltro = '';
 let dados = null;
-
-function linhaArtilheiro(a) {
-  const classe = CLASSES_PODIO[a.posicao - 1];
-  return `
-    <li class="artilheiro${a.posicao === 1 ? ' artilheiro--ouro' : ''}">
-      <span class="artilheiro__pos ${classe ?? ''}">${classe ? icone('coroa') : ''}${a.posicao}º</span>
-      <div>
-        <div class="artilheiro__nome">${escapar(a.jogador)}</div>
-        <div class="artilheiro__time">${escudo({ nome: a.time, escudo_url: a.escudo_url }, 32)} ${escapar(a.time)}</div>
-      </div>
-      <span class="artilheiro__gols">${a.gols}</span>
-    </li>`;
-}
 
 // Jogos encerrados cujos gols não têm autor lançado (ex.: rodadas jogadas antes do app)
 function jogosSemAutor(jogos) {

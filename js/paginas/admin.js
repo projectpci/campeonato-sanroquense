@@ -1,10 +1,12 @@
 // Área do organizador: login, confrontos/resultados e times.
 import {
-  buscarSessao, entrar, sair, listarTimes, listarRodadas, listarJogos, listarJogadores,
+  buscarSessao, entrar, sair, listarTimes, listarRodadas, listarJogos, listarJogadores, buscarClassificacao, buscarArtilharia,
   salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo, contarPostsPendentes,
 } from '../api.js';
 import { montarLayout, marcarNav, definirModo, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
+import { htmlTabela, linhaArtilheiro } from '../tabelas.js';
+import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
 import { htmlElenco, htmlSeletorTimes, ligarElenco } from '../elencoTime.js';
 import { rodadaAtual } from '../rodadas.js';
 import { assinarMudancas } from '../realtime.js';
@@ -15,11 +17,13 @@ const app = document.getElementById('app');
 // Menu do painel (embaixo no celular, em cima no computador): navega por #jogos / #elenco / #ajustes
 const MENU_ADM = [
   { id: 'jogos', rotulo: 'Jogos', href: '#jogos', icone: 'confrontos' },
+  { id: 'tabela', rotulo: 'Tabela', href: '#tabela', icone: 'tabela' },
+  { id: 'artilharia', rotulo: 'Artilharia', href: '#artilharia', icone: 'artilharia' },
   { id: 'elenco', rotulo: 'Elenco', href: '#elenco', icone: 'elenco' },
   { id: 'mural', rotulo: 'Mural', href: '#mural', icone: 'mural' },
   { id: 'ajustes', rotulo: 'Ajustes', href: '#ajustes', icone: 'engrenagem' },
 ];
-const abaDoEndereco = () => (['jogos', 'elenco', 'mural', 'ajustes'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'jogos');
+const abaDoEndereco = () => (MENU_ADM.some((m) => m.id === location.hash.slice(1)) ? location.hash.slice(1) : 'jogos');
 const estado = { aba: abaDoEndereco(), rodadaId: null };
 const DOMINIO_USUARIO = 'sanroquense.app';
 
@@ -119,7 +123,7 @@ async function carregar() {
   try {
     const [times, rodadas, jogos, jogadores, codigos, pendentes] = await Promise.all([listarTimes(), listarRodadas(), listarJogos(), listarJogadores(),
       estado.aba === 'ajustes' ? listarCodigos() : [], contarPostsPendentes().catch(() => 0)]);
-    const titulos = { jogos: 'Jogos e resultados', elenco: 'Elenco dos clubes', mural: 'Mural · moderação', ajustes: 'Ajustes' };
+    const titulos = { jogos: 'Jogos e resultados', tabela: 'Classificação', artilharia: 'Artilharia', elenco: 'Elenco dos clubes', mural: 'Mural · moderação', ajustes: 'Ajustes' };
     app.innerHTML = `<h2 class="admin__titulo">${titulos[estado.aba]}</h2><div id="aba"></div>`;
     // contador de fotos aguardando aprovação no item "Mural" do menu
     document.querySelectorAll('[data-nav="mural"]').forEach((item) => {
@@ -130,11 +134,32 @@ async function carregar() {
     feedAdm = null;
     if (estado.aba === 'mural') { feedAdm = criarFeed(aba, { organizador: true }); await feedAdm.carregar(); }
     else if (estado.aba === 'ajustes') abaAjustes(aba, { times, codigos, jogos, rodadas });
+    else if (estado.aba === 'tabela') await abaTabela(aba, jogos);
+    else if (estado.aba === 'artilharia') await abaArtilharia(aba, jogos);
     else if (estado.aba === 'elenco') abaElenco(aba, times, jogadores);
     else abaConfrontos(aba, { times, rodadas, jogos, jogadores });
   } catch (erro) {
     mostrarAviso(app, `Erro ao carregar: ${erro.message}`);
   }
+}
+
+// ---------- Tabela e artilharia (dentro do painel: o organizador confere sem sair dele) ----------
+async function abaTabela(aba, jogos) {
+  const linhas = ordenarClassificacao(await buscarClassificacao(), jogos.filter((j) => j.status === 'encerrado'));
+  aba.innerHTML = `
+    ${htmlTabela(linhas, { link: false })}
+    <p class="texto-2 texto-pequeno">J = Jogos · V = Vitórias · E = Empates · D = Derrotas · GP = Gols pró · GC = Gols contra · SG = Saldo de gols · PTS = Pontos</p>`;
+}
+
+async function abaArtilharia(aba, jogos) {
+  const lista = posicoesComEmpate((await buscarArtilharia()).map((a) => ({ ...a, gols: Number(a.gols) })));
+  // jogos encerrados com gols sem autor: o organizador vê o que falta lançar
+  const semAutor = jogos.filter((j) => j.status === 'encerrado'
+    && (j.gols ?? []).reduce((s, g) => s + g.quantidade, 0) < (j.gols_mandante ?? 0) + (j.gols_visitante ?? 0)).length;
+  aba.innerHTML = `
+    ${lista.length ? `<ol class="lista">${lista.map(linhaArtilheiro).join('')}</ol>` : '<p class="vazio">Nenhum gol registrado ainda.</p>'}
+    ${semAutor ? `<p class="aviso texto-pequeno">${semAutor} jogo${semAutor === 1 ? '' : 's'} encerrado${semAutor === 1 ? '' : 's'} sem todos os autores dos gols lançados: esses gols contam na tabela, mas não na artilharia.</p>` : ''}
+    <p class="texto-2 texto-pequeno">Gols contra não entram na artilharia.</p>`;
 }
 
 // ---------- Ajustes: avisos, exportar dados, times e códigos, sair ----------
