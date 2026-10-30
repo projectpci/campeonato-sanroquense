@@ -101,3 +101,4 @@
 - [x] Mural: torcedor só curte e comenta; clube e organização comentam identificados (sem digitar nome); nomes reservados bloqueados
 - [x] Chance de vitória com cor por percentual (vermelho → amarelo → verde); clube publica a arte da escalação no mural do app
 - [x] Painel: Tabela e Artilharia de volta no menu do Adm (dentro do painel, sem sair dele); js/tabelas.js compartilhado
+- [x] Selo de quem está logado no topo (Torcedor, clube com escudo, ADM) com menu Sair; faixa de jogos da tela inicial girando a cada 5 s

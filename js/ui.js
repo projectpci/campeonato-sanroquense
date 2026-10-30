@@ -12,6 +12,7 @@ const ICONES = {
   elenco: '<circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 14.6c2.6.2 4.6 1.9 5.3 5.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
   sino: '<path d="M6 9a6 6 0 0112 0c0 6 2 7 2 7H4s2-1 2-7zM10 20a2 2 0 004 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   engrenagem: '<circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+  torcedor: '<circle cx="12" cy="6.5" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 21v-5.5a6 6 0 0112 0V21M4 4l3 5M20 4l-3 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
   escudo: '<path d="M12 3l8 3v6c0 4.6-3.4 8.3-8 9-4.6-.7-8-4.4-8-9V6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8.5 12l2.5 2.5 4.5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   escalacao: '<rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 12h16M9 3v3h6V3M9 21v-3h6v3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/>',
   whatsapp:'<path d="M12 3a9 9 0 00-7.7 13.6L3 21l4.5-1.2A9 9 0 1012 3zm4.5 12.2c-.2.6-1.2 1.1-1.7 1.1-.4 0-1 .2-3.3-.7-2.8-1.2-4.5-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 .9-2.3c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 1.9c.1.2 0 .4-.1.6l-.4.5c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2 1.3 2.3 1.4.3.1.4.1.6-.1l.8-1c.2-.2.4-.2.6-.1l1.8.9c.2.1.4.2.5.3.1.2.1.7-.1 1.3z" fill="currentColor"/>',
@@ -43,16 +44,25 @@ export function montarLayout(ativa, { paginas = PAGINAS, inicio = ativa ? 'inici
     <header class="header">
       <a class="header__marca" href="${inicio}">${icone('coroa')}<span>CAMPEONATO <em>SRP</em></span></a>
       <nav class="nav header__nav" aria-label="Principal">${htmlNav(ativa, paginas)}</nav>
-      <a class="header__sair" id="btn-sair-header" href="index.html?sair">Sair</a>
+      <div class="perfil">
+        <button class="perfil__selo" id="btn-perfil" type="button" aria-haspopup="true" aria-expanded="false"></button>
+        <div class="perfil__menu" id="menu-perfil" hidden>
+          <p class="perfil__quem"></p>
+          <a class="perfil__voltar oculto" href="#"></a>
+          <a class="header__sair" id="btn-sair-header" href="index.html?sair">Sair do perfil</a>
+        </div>
+      </div>
     </header>`);
   document.body.insertAdjacentHTML('beforeend', `
     <nav class="nav" aria-label="Principal (celular)">${htmlNav(ativa, paginas)}</nav>`);
   // No desktop a nav inferior some e usa a do header
   const inferior = document.body.lastElementChild;
   inferior.classList.add('nav--inferior');
-  if (paginas === PAGINAS && ativa && !modoAtivo()) definirModo('torcedor');
-  // Páginas do torcedor: "Sair" / "Trocar perfil" encerram o perfil (clube e painel tratam o próprio Sair)
+  ligarMenuPerfil();
   if (paginas === PAGINAS) {
+    if (ativa && !modoAtivo()) definirModo('torcedor');
+    perfilNasPaginasPublicas();
+    // Páginas do torcedor: "Sair" / "Trocar perfil" encerram o perfil (clube e painel tratam o próprio Sair)
     document.addEventListener('click', (e) => { if (e.target.closest('a[href^="index.html?sair"]')) definirModo(''); });
   }
   // Sino de avisos no cabeçalho das páginas públicas (carregado depois, para não atrasar a tela)
@@ -65,6 +75,51 @@ export const DESTINO_DO_MODO = { torcedor: 'inicio.html', clube: 'clube.html', a
 export const modoAtivo = () => { try { return localStorage.getItem(CHAVE_MODO) ?? ''; } catch { return ''; } };
 export function definirModo(modo) {
   try { if (modo) localStorage.setItem(CHAVE_MODO, modo); else localStorage.removeItem(CHAVE_MODO); } catch { /* sem armazenamento */ }
+}
+
+// ---------- Selo "quem está logado" (topo) ----------
+// tipo: 'torcedor' | 'clube' | 'adm' · rotulo: texto curto do selo · quem: frase do menu · time: escudo do clube
+// voltar: { href, texto } quando a pessoa está numa página pública mas o perfil é clube ou organizador
+const CHAVE_CLUBE_SELO = 'clube_selo';
+export function mostrarPerfil({ tipo, rotulo, quem, time = null, voltar = null }) {
+  const selo = document.getElementById('btn-perfil');
+  if (!selo) return;
+  const simbolo = tipo === 'clube' && time ? escudo(time, 32) : icone({ torcedor: 'torcedor', clube: 'escudo', adm: 'coroa' }[tipo]);
+  selo.className = `perfil__selo perfil__selo--${tipo}`;
+  selo.innerHTML = `${simbolo}<span>${escapar(rotulo)}</span>`;
+  selo.setAttribute('aria-label', `${quem}. Abrir menu do perfil`);
+  document.querySelector('.perfil__quem').innerHTML = `<small>Você está como</small><strong>${escapar(quem)}</strong>`;
+  const link = document.querySelector('.perfil__voltar');
+  link.classList.toggle('oculto', !voltar);
+  if (voltar) { link.href = voltar.href; link.textContent = voltar.texto; }
+  // o clube guarda nome e escudo para o selo aparecer certo também nas páginas públicas
+  if (tipo === 'clube' && time) { try { localStorage.setItem(CHAVE_CLUBE_SELO, JSON.stringify({ nome: time.nome, sigla: time.sigla, escudo_url: time.escudo_url })); } catch { /* sem armazenamento */ } }
+}
+
+const rotuloDoClube = (time) => time?.sigla || (time?.nome?.length > 10 ? `${time.nome.slice(0, 9)}…` : time?.nome) || 'Clube';
+
+// Página pública: selo pelo perfil ativo (um clube ou o organizador pode abrir um link do torcedor)
+function perfilNasPaginasPublicas() {
+  const modo = modoAtivo();
+  if (modo === 'clube') {
+    let time = null;
+    try { time = JSON.parse(localStorage.getItem(CHAVE_CLUBE_SELO) ?? 'null'); } catch { /* sem armazenamento */ }
+    mostrarPerfil({ tipo: 'clube', rotulo: rotuloDoClube(time), quem: time ? `Clube ${time.nome}` : 'Clube', time, voltar: { href: 'clube.html', texto: 'Voltar para a área do clube' } });
+  } else if (modo === 'adm') {
+    mostrarPerfil({ tipo: 'adm', rotulo: 'ADM', quem: 'Organizador (ADM)', voltar: { href: 'admin.html', texto: 'Voltar para o painel' } });
+  } else {
+    mostrarPerfil({ tipo: 'torcedor', rotulo: 'Torcedor', quem: 'Torcedor' });
+  }
+}
+export const perfilDoClube = (time) => mostrarPerfil({ tipo: 'clube', rotulo: rotuloDoClube(time), quem: `Clube ${time.nome}`, time });
+
+function ligarMenuPerfil() {
+  const selo = document.getElementById('btn-perfil');
+  const menu = document.getElementById('menu-perfil');
+  const abrir = (sim) => { menu.hidden = !sim; selo.setAttribute('aria-expanded', String(sim)); };
+  selo.addEventListener('click', () => abrir(menu.hidden));
+  document.addEventListener('click', (e) => { if (!menu.hidden && !e.target.closest('.perfil')) abrir(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { abrir(false); selo.focus(); } });
 }
 
 // Escapa texto vindo do banco antes de colocar em innerHTML

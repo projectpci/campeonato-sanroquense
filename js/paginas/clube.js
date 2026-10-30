@@ -13,7 +13,7 @@ import { prepararFoto } from '../imagem.js';
 import { compartilharImagem, gerarImagem } from '../compartilhar.js';
 import { arteEscalacao, inserirArte } from '../artes.js';
 import { FORMACOES, FORMACAO_PADRAO, POSICOES, LINHAS, linhaDe, htmlCampo, htmlCarta, avatarJogador } from '../escalacao.js';
-import { montarLayout, marcarNav, definirModo, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData, horaDoJogo } from '../ui.js';
+import { montarLayout, marcarNav, definirModo, mostrarPerfil, perfilDoClube, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData, horaDoJogo } from '../ui.js';
 
 const app = document.getElementById('app');
 const CHAVE_CODIGO = 'mural_codigo'; // o mesmo do mural: entrou no clube, já publica no mural como o time
@@ -68,6 +68,7 @@ function tratarErro(erro) {
 // ---------- Entrada em 2 passos: 1) escolhe o time · 2) o time fica em destaque e pede o código ----------
 async function telaEntrada(mensagem = '') {
   document.body.classList.add('painel--login'); // o menu do clube só aparece depois de entrar
+  mostrarPerfil({ tipo: 'clube', rotulo: 'Clube', quem: 'Clube · ainda não entrou' });
   let times;
   try { times = (await listarTimes()).filter((t) => t.ativo !== false); } catch (erro) { mostrarAviso(app, `Não foi possível carregar os times: ${erro.message}`); return; }
   const salvo = times.find((t) => String(t.id) === guardado(CHAVE_TIME));
@@ -177,6 +178,7 @@ async function carregar() {
     estado.desatualizado = false;
     document.body.classList.remove('painel--login');
     definirModo('clube'); // o app passa a abrir direto na área do clube até "Sair"
+    perfilDoClube(time);
     if (!estado.escalacao) {
       const salva = await clubeBuscarEscalacao(estado.codigo);
       estado.escalacao = { formacao: salva.formacao ?? FORMACAO_PADRAO, titulares: salva.titulares ?? {}, reservas: salva.reservas ?? [] };

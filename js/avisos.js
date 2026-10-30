@@ -135,7 +135,7 @@ export function botaoAvisosOrganizador(container) {
 
 // Sino no canto do cabeçalho (todas as páginas públicas): liga/desliga os avisos de todos os jogos
 export function sinoNoCabecalho() {
-  const sair = document.querySelector('.header__sair');
+  const sair = document.querySelector('.header .perfil');
   if (!sair || document.getElementById('btn-sino')) return;
   const semApp = noIphoneSemApp();
   if (!suportado() && !semApp) return;

@@ -3,7 +3,7 @@ import {
   buscarSessao, entrar, sair, listarTimes, listarRodadas, listarJogos, listarJogadores, buscarClassificacao, buscarArtilharia,
   salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo, contarPostsPendentes,
 } from '../api.js';
-import { montarLayout, marcarNav, definirModo, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
+import { montarLayout, marcarNav, definirModo, mostrarPerfil, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
 import { htmlTabela, linhaArtilheiro } from '../tabelas.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
@@ -65,6 +65,7 @@ document.getElementById('btn-sair-header').addEventListener('click', sairDoPaine
 // ---------- Login ----------
 function telaLogin() {
   document.body.classList.add('painel--login'); // menu do painel só aparece depois de entrar
+  mostrarPerfil({ tipo: 'adm', rotulo: 'ADM', quem: 'Organizador · ainda não entrou' });
   app.innerHTML = `
     <form class="card form" id="form-login">
       <h2>Entrar</h2>
@@ -95,6 +96,7 @@ function entrouNoPainel() {
   estado.logado = true;
   document.body.classList.remove('painel--login');
   definirModo('adm'); // o app passa a abrir direto no painel até "Sair"
+  mostrarPerfil({ tipo: 'adm', rotulo: 'ADM', quem: 'Organizador (ADM)' });
 }
 
 async function iniciar() {

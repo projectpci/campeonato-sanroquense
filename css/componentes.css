@@ -1002,3 +1002,43 @@ body.entrada-corpo { overflow-x: hidden; }
 .comentario__autor--org { color: var(--cor-ouro); }
 .chance__barra { gap: 3px; }
 .barra-acoes__largo { grid-column: 1 / -1; }
+
+/* ================= v31: selo de quem está logado e faixa de jogos girando ================= */
+/* Selo do perfil no topo (substitui o botão Sair; o Sair fica no menu do selo) */
+.perfil { position: relative; flex: none; }
+@media (min-width: 768px) { .perfil { margin-left: var(--esp-3); } }
+.perfil__selo {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; max-width: 128px; padding: 0 var(--esp-3) 0 6px;
+  border: 1px solid var(--cor-borda-neon); border-radius: 999px; background: var(--cor-fundo-2); color: var(--cor-primaria);
+  font-family: var(--fonte-destaque); font-size: .85rem; text-transform: uppercase; cursor: pointer;
+}
+.perfil__selo span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.perfil__selo svg, .perfil__selo .escudo { flex: none; width: 26px; height: 26px; }
+.perfil__selo svg { padding: 3px; border-radius: 50%; background: var(--cor-fundo-3); }
+.perfil__selo--adm { border-color: var(--cor-ouro); color: var(--cor-ouro); }
+.perfil__selo--clube { border-color: var(--cor-borda-neon); color: var(--cor-texto); }
+.perfil__selo[aria-expanded="true"] { background: var(--cor-fundo-3); }
+.perfil__menu {
+  position: absolute; top: calc(100% + var(--esp-2)); right: 0; z-index: 60; display: grid; gap: var(--esp-2); min-width: 220px;
+  padding: var(--esp-3); border: 1px solid var(--cor-borda-neon); border-radius: var(--raio-grande); background: var(--cor-fundo-2); box-shadow: 0 8px 24px var(--cor-sombra);
+}
+.perfil__menu[hidden] { display: none; }
+.perfil__quem { display: grid; margin: 0; }
+.perfil__quem small { color: var(--cor-texto-2); font-size: .75rem; text-transform: uppercase; }
+.perfil__quem strong { font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.1rem; text-transform: uppercase; }
+.perfil__voltar { color: var(--cor-primaria); }
+.perfil__menu .header__sair { justify-content: center; margin: 0; }
+.header__sino { margin-right: var(--esp-2); }
+/* telas bem estreitas: a marca encolhe para caber marca + sino + selo */
+.header__marca { white-space: nowrap; min-width: 0; }
+@media (max-width: 380px) { .header__marca { font-size: .95rem; gap: 6px; } .header__marca svg { width: 20px; height: 20px; } .header { padding: 0 var(--esp-3); } .perfil__selo { max-width: 104px; } }
+
+/* Faixa de jogos da tela inicial: um jogo de cada vez, troca sozinha */
+.entrada__slides { display: grid; }
+.entrada__slide { grid-area: 1 / 1; display: grid; gap: var(--esp-2); opacity: 0; transform: translateX(16px); transition: opacity .45s ease, transform .45s ease; pointer-events: none; }
+.entrada__slide--ativo { opacity: 1; transform: none; pointer-events: auto; }
+.entrada__pontos { display: flex; justify-content: center; gap: 6px; }
+.entrada__pontos i { width: 6px; height: 6px; border-radius: 999px; background: var(--cor-borda); transition: width .3s ease, background .3s ease; cursor: pointer; }
+.entrada__pontos i.ativo { width: 18px; background: var(--cor-primaria); }
+.entrada__agora { transition: border-color .45s ease, box-shadow .45s ease; }
+@media (prefers-reduced-motion: reduce) { .entrada__slide, .entrada__pontos i { transition: none; transform: none; } }
