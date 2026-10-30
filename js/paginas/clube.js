@@ -4,13 +4,13 @@
 import {
   listarTimes, listarJogos, buscarClassificacao, buscarArtilharia, buscarCampeonato, listarJogadores,
   validarCodigo, enviarFotoElenco, clubeSalvarJogador, clubeApagarJogador, clubeSalvarTecnico, clubeBuscarEscalacao, clubeSalvarEscalacao,
-  clubePublicarEscalacao, clubeRetirarEscalacao,
+  clubePublicarEscalacao, clubeRetirarEscalacao, publicarPost,
 } from '../api.js';
 import { criarFeed } from '../feed.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
 import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
 import { prepararFoto } from '../imagem.js';
-import { compartilharImagem } from '../compartilhar.js';
+import { compartilharImagem, gerarImagem } from '../compartilhar.js';
 import { arteEscalacao, inserirArte } from '../artes.js';
 import { FORMACOES, FORMACAO_PADRAO, POSICOES, LINHAS, linhaDe, htmlCampo, htmlCarta, avatarJogador } from '../escalacao.js';
 import { montarLayout, marcarNav, definirModo, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData, horaDoJogo } from '../ui.js';
@@ -415,6 +415,7 @@ const SECOES = {
       <div class="barra-acoes">
         <button class="botao botao--secundario" data-salvar-escalacao>${estado.alterada ? 'Salvar alterações' : 'Salvo ✔'}</button>
         <button class="botao" data-compartilhar-escalacao>${icone('whatsapp')} Compartilhar</button>
+        <button class="botao botao--secundario barra-acoes__largo" data-mural-escalacao>${icone('mural')} Publicar no mural do app</button>
       </div>`;
 
     const mudou = () => { estado.alterada = true; marcarEscalacaoPendente(); SECOES.escalacao(alvo); };
@@ -433,6 +434,7 @@ const SECOES = {
     alvo.querySelector('[data-publicar-escalacao]')?.addEventListener('click', () => publicarEscalacao(alvo, true));
     alvo.querySelector('[data-retirar-escalacao]')?.addEventListener('click', () => publicarEscalacao(alvo, false));
     alvo.querySelector('[data-compartilhar-escalacao]').addEventListener('click', (e) => compartilharEscalacao(e.currentTarget, jogadores));
+    alvo.querySelector('[data-mural-escalacao]').addEventListener('click', (e) => publicarEscalacaoNoMural(e.currentTarget, jogadores));
   },
 
   // Mural geral dentro da área do clube: publica, curte e comenta como o time (sem digitar nome)
@@ -571,6 +573,27 @@ async function compartilharEscalacao(botao, jogadores) {
     await compartilharImagem(arte, `escalacao-${estado.time.sigla ?? 'time'}.jpg`.toLowerCase());
   } catch (erro) {
     toast(`Não foi possível gerar a imagem: ${erro.message}`, true);
+  } finally {
+    botao.disabled = false;
+  }
+}
+
+// Publica a arte da escalação no mural do app (entra depois da aprovação do organizador)
+async function publicarEscalacaoNoMural(botao, jogadores) {
+  if (Object.keys(estado.escalacao.titulares).length < 11 && !confirm('A escalação ainda não tem 11 jogadores. Publicar assim mesmo?')) return;
+  const jogo = proximoJogo();
+  botao.disabled = true;
+  toast('Gerando imagem...');
+  try {
+    const arte = inserirArte('arte-escalacao', arteEscalacao(estado.dados.campeonato, estado.time, estado.escalacao, jogadores, jogo));
+    arte.classList.remove('arte--story'); // no mural vai sempre no formato post (4:5)
+    const foto = await prepararFoto(await gerarImagem(arte));
+    const descricao = jogo ? `📋 Escalação do ${estado.time.nome} para o jogo contra ${adversarioDe(jogo).nome}. Bora! ⚽` : `📋 Escalação do ${estado.time.nome}. Bora! ⚽`;
+    toast('Publicando no mural...');
+    await publicarPost({ codigo: estado.codigo, descricao, foto, jogoId: jogo?.id ?? null });
+    toast('Enviada! Aparece no mural depois da aprovação do organizador.');
+  } catch (erro) {
+    tratarErro(erro);
   } finally {
     botao.disabled = false;
   }

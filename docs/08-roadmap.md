@@ -99,3 +99,4 @@
 - [x] Chance de vitória (modelo Elo com saldo de gols e mando) abaixo dos próximos jogos
 - [x] Perfil fixo (torcedor, clube, organizador) até tocar em Sair; área do clube com menu próprio (Meu clube, Elenco, Escalação, Campeonato, Mural)
 - [x] Mural: torcedor só curte e comenta; clube e organização comentam identificados (sem digitar nome); nomes reservados bloqueados
+- [x] Chance de vitória com cor por percentual (vermelho → amarelo → verde); clube publica a arte da escalação no mural do app

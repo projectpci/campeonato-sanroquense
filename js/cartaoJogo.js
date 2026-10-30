@@ -15,21 +15,30 @@ function listaGols(jogo, timeId) {
     .join('');
 }
 
+// Cor de um lado da barra pelo próprio percentual: vermelho (≤35%) → amarelo (50%) → verde (≥65%)
+function corDaChance(pct) {
+  const peso = (de, ate) => Math.round(Math.min(1, Math.max(0, (pct - de) / (ate - de))) * 100);
+  return pct >= 50
+    ? `color-mix(in oklab, var(--cor-chance-alta) ${peso(50, 65)}%, var(--cor-chance-media))`
+    : `color-mix(in oklab, var(--cor-chance-media) ${peso(35, 50)}%, var(--cor-chance-baixa))`;
+}
+
 // Barra "Chance de vitória" (só nos próximos jogos; ver js/probabilidade.js)
 function htmlChance(jogo) {
   const c = chanceDoCard(jogo);
   if (!c) return '';
   const favoritoMandante = c.mandante >= c.visitante;
+  const lado = (pct, favorito) => `<span class="${favorito ? 'chance__favorito' : ''}" style="color:${corDaChance(pct)}">${pct}%</span>`;
   return `
     <div class="chance" role="img" aria-label="Chance de vitória: ${escapar(jogo.mandante.nome)} ${c.mandante}%, ${escapar(jogo.visitante.nome)} ${c.visitante}%">
       <div class="chance__rotulos">
-        <span class="${favoritoMandante ? 'chance__favorito' : ''}">${c.mandante}%</span>
+        ${lado(c.mandante, favoritoMandante)}
         <span class="chance__titulo" title="Calculada pela força dos times nos resultados do campeonato (vitórias, saldo de gols e adversários enfrentados) e pelo mando de campo">Chance de vitória</span>
-        <span class="${favoritoMandante ? '' : 'chance__favorito'}">${c.visitante}%</span>
+        ${lado(c.visitante, !favoritoMandante)}
       </div>
       <div class="chance__barra">
-        <i class="${favoritoMandante ? 'chance__forte' : 'chance__clara'}" style="flex-grow:${c.mandante}"></i>
-        <i class="${favoritoMandante ? 'chance__clara' : 'chance__forte'}" style="flex-grow:${c.visitante}"></i>
+        <i style="flex-grow:${c.mandante};background:${corDaChance(c.mandante)}"></i>
+        <i style="flex-grow:${c.visitante};background:${corDaChance(c.visitante)}"></i>
       </div>
     </div>`;
 }

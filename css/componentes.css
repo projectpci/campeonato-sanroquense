@@ -970,8 +970,6 @@ body.entrada-corpo { overflow-x: hidden; }
 .chance__favorito { color: var(--cor-texto); font-weight: 800; }
 .chance__barra { display: flex; gap: 4px; height: 10px; }
 .chance__barra i { flex-basis: 0; min-width: 6px; border-radius: 999px; transition: flex-grow .6s ease; }
-.chance__forte { background: var(--cor-chance-forte); }
-.chance__clara { background: var(--cor-chance-clara); }
 @media (prefers-reduced-motion: reduce) { .chance__barra i { transition: none; } }
 
 /* ================= v28: perfis fixos, menu do clube, curtidas e comentário identificado ================= */
@@ -1002,3 +1000,5 @@ body.entrada-corpo { overflow-x: hidden; }
 .comentario__autor .escudo { width: 18px; height: 18px; }
 .comentario__autor svg { width: 14px; height: 14px; }
 .comentario__autor--org { color: var(--cor-ouro); }
+.chance__barra { gap: 3px; }
+.barra-acoes__largo { grid-column: 1 / -1; }
