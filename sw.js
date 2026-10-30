@@ -1,6 +1,6 @@
 // Service worker: abre rápido e mostra a última tabela conhecida quando o celular está sem sinal.
 // Suba VERSAO a cada deploy para limpar o cache antigo.
-const VERSAO = 'v19';
+const VERSAO = 'v20';
 const CACHE = `sanroquense-${VERSAO}`;
 
 const NUCLEO = [

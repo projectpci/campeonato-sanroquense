@@ -94,7 +94,7 @@ async function carregar() {
   try {
     const [times, rodadas, jogos, jogadores, codigos, pendentes] = await Promise.all([listarTimes(), listarRodadas(), listarJogos(), listarJogadores(),
       estado.aba === 'times' ? listarCodigos() : [], contarPostsPendentes().catch(() => 0)]);
-    const abas = [['confrontos', 'Confrontos e resultados'], ['times', 'Times'], ['elenco', 'Elenco']];
+    const abas = [['confrontos', 'Jogos e resultados'], ['times', 'Times'], ['elenco', 'Elenco']];
     app.innerHTML = `
       <div class="admin__topo">
         <h2>Organizador</h2>
@@ -103,7 +103,7 @@ async function carregar() {
           <button class="botao botao--secundario" id="btn-csv">Exportar CSV</button>
         </div>
       </div>
-      <div class="chips" role="tablist">${abas.map(([id, rotulo]) =>
+      <div class="chips chips--quebra abas-adm" role="tablist">${abas.map(([id, rotulo]) =>
         `<button class="chip${estado.aba === id ? ' chip--ativo' : ''}" data-aba="${id}">${rotulo}</button>`).join('')}</div>
       <div id="avisos-adm" class="avisos-adm"></div>
       <div id="aba"></div>`;
