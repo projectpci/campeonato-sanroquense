@@ -3,17 +3,11 @@ import { escapar, escudo, formatarData, horaDoJogo, icone } from './ui.js';
 import { registrarJogo } from './compartilharJogo.js';
 import { chanceDoCard } from './probabilidade.js';
 import { ligarTorcidaOnline } from './torcidaOnline.js';
+import { resumoDosGols, textoDoGol } from './golsDoJogo.js';
 import './jogoExtras.js'; // botões "Escalações" e "Craque do jogo"
 
 function listaGols(jogo, timeId) {
-  return (jogo.gols ?? [])
-    .filter((g) => g.time_id === timeId)
-    .map((g) => {
-      const nome = g.jogador?.nome ?? 'Gol contra';
-      const detalhe = g.contra ? ' (contra)' : g.quantidade > 1 ? ` (${g.quantidade})` : '';
-      return `<li>⚽ ${escapar(nome)}${detalhe}</li>`;
-    })
-    .join('');
+  return resumoDosGols(jogo, timeId).map((r) => `<li>${r.tipo === 'contra' ? '↩' : r.tipo === 'penalti' ? '🥅' : '⚽'} ${escapar(textoDoGol(r))}</li>`).join('');
 }
 
 // Cor de um lado da barra pelo próprio percentual: vermelho (≤35%) → amarelo (50%) → verde (≥65%)
@@ -89,7 +83,7 @@ export function cartaoJogo(jogo, extras = {}) {
       </div>
       ${htmlChance(jogo)}
       ${htmlTorcida(jogo, aoVivo)}
-      ${encerrado ? `
+      ${(encerrado || aoVivo) && (jogo.gols ?? []).length ? `
       <div class="jogo__gols">
         <ul>${listaGols(jogo, jogo.mandante_id)}</ul>
         <ul>${listaGols(jogo, jogo.visitante_id)}</ul>

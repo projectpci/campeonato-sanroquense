@@ -1,6 +1,7 @@
 // Templates das artes exportadas em PNG (1080×1350). Só montam HTML; o CSS está em compartilhar.css.
 import { escapar, escudo, formatarData, horaDoJogo } from './ui.js';
 import { htmlCampo, avatarJogador } from './escalacao.js';
+import { resumoDosGols, textoDoGol } from './golsDoJogo.js';
 
 const hoje = () => new Date().toLocaleDateString('pt-BR');
 const sinal = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
@@ -55,8 +56,7 @@ export function arteClassificacao(campeonato, linhas) {
 
 export function arteRodada(campeonato, rodada, jogos) {
   const data = rodada.data ? ` · ${formatarData(rodada.data)}` : '';
-  const gols = (j, timeId) => (j.gols ?? []).filter((g) => g.time_id === timeId)
-    .map((g) => `${escapar(g.jogador?.nome ?? 'Gol contra')}${g.contra ? ' (contra)' : g.quantidade > 1 ? ` (${g.quantidade})` : ''}`).join(', ');
+  const gols = (j, timeId) => resumoDosGols(j, timeId).map((r) => escapar(textoDoGol(r))).join(', ');
   const cartoes = jogos.map((j) => {
     const encerrado = j.status === 'encerrado';
     return `
@@ -91,8 +91,7 @@ export function arteJogo(campeonato, jogo) {
   const faixa = encerrado ? 'Resultado final' : aoVivo ? 'Ao vivo' : hoje ? 'Hoje tem jogo' : 'Próximo jogo';
   const quando = [jogo.rodada?.numero ? `Rodada ${jogo.rodada.numero}` : '', jogo.data_hora ? formatarData(jogo.data_hora) : '',
     jogo.data_hora && !encerrado ? horaDoJogo(jogo) : ''].filter(Boolean).join(' · ');
-  const gols = (timeId) => (jogo.gols ?? []).filter((g) => g.time_id === timeId)
-    .map((g) => `<span>⚽ ${escapar(g.jogador?.nome ?? 'Gol contra')}${g.contra ? ' (contra)' : g.quantidade > 1 ? ` (${g.quantidade})` : ''}</span>`).join('');
+  const gols = (timeId) => resumoDosGols(jogo, timeId).map((r) => `<span>⚽ ${escapar(textoDoGol(r))}</span>`).join('');
   const time = (t) => `<div class="arte-partida__time">${escudo(t, 48)}<strong>${escapar(t.nome)}</strong></div>`;
   const centro = encerrado || aoVivo
     ? `<div class="arte-partida__placar"><b>${jogo.gols_mandante ?? 0}</b><i>×</i><b>${jogo.gols_visitante ?? 0}</b></div>`

@@ -148,15 +148,15 @@ function excluirJogo(id) {
   jogos.splice(jogos.findIndex((x) => x.id === id), 1);
 }
 
-function salvarResultado(jogoId, gm, gv, lista) {
+function salvarResultado(jogoId, gm, gv, lista, encerrar = true) {
   const jogo = jogos.find((x) => x.id === jogoId);
-  const soma = (timeId) => lista.filter((g) => g.time_id === timeId).reduce((s, g) => s + g.quantidade, 0);
+  const soma = (timeId) => lista.filter((g) => g.time_id === timeId).reduce((s, g) => s + (g.quantidade ?? 1), 0);
   if (soma(jogo.mandante_id) !== gm || soma(jogo.visitante_id) !== gv) throw new Error('Soma dos gols não confere com o placar.');
   jogo.gols = lista.map((g, k) => ({
-    id: jogoId * 100 + k, time_id: g.time_id, quantidade: g.quantidade, contra: Boolean(g.contra),
+    id: jogoId * 100 + k, time_id: g.time_id, quantidade: g.quantidade ?? 1, contra: Boolean(g.contra), penalti: Boolean(g.penalti) && !g.contra,
     jogador: g.jogador_nome ? jogadorId(timeDoAutor(g.time_id, jogo.mandante_id, jogo.visitante_id, g.contra), g.jogador_nome.trim()) : null,
   }));
-  Object.assign(jogo, { gols_mandante: gm, gols_visitante: gv, status: 'encerrado', atualizado_em: new Date().toISOString() });
+  Object.assign(jogo, { gols_mandante: gm, gols_visitante: gv, status: encerrar ? 'encerrado' : 'ao_vivo', atualizado_em: new Date().toISOString() });
 }
 
 function reabrirJogo(jogoId) {

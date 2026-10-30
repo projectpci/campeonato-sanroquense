@@ -23,7 +23,7 @@ Blocos (de cima para baixo):
 - Seletor de rodada no topo (chips roláveis horizontais: `R1 R2 R3 …`), abre na rodada atual.
 - Cabeçalho da rodada: "RODADA 3 · 02/11".
 - Lista de **cards de jogo** (ver design system).
-- Jogo encerrado: placar grande + lista de gols por time (`⚽ Nome (2)` / `⚽ Nome (contra)`).
+- Jogo encerrado e ao vivo: placar grande + gols por time na ordem em que saíram (`⚽ Nome`, `🥅 Nome (p)` pênalti, `↩ Nome (contra)`; mesmo autor junto: `Nome (2)`).
 - Botão Compartilhar → imagem **da rodada** (resultados ou agenda).
 
 ---

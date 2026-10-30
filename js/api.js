@@ -19,7 +19,7 @@ const SELECT_JOGO = `
   mandante:times!jogos_mandante_id_fkey(id, nome, sigla, escudo_url),
   visitante:times!jogos_visitante_id_fkey(id, nome, sigla, escudo_url),
   rodada:rodadas(id, numero, data),
-  gols(id, time_id, quantidade, contra, jogador:jogadores(id, nome)),
+  gols(id, time_id, quantidade, contra, penalti, jogador:jogadores(id, nome)),
   escalacoes:escalacoes_jogo(time_id)
 `;
 
@@ -138,14 +138,15 @@ export const excluirJogo = (id) =>
   demo ? dadosDemo.excluirJogo(id) :
   executar(cliente().from('jogos').delete().eq('id', id));
 
-// listaGols: [{ time_id, jogador_nome, quantidade, contra }]
-export const salvarResultado = (jogoId, golsMandante, golsVisitante, listaGols) =>
-  demo ? dadosDemo.salvarResultado(jogoId, golsMandante, golsVisitante, listaGols) :
+// listaGols: [{ time_id, jogador_nome, quantidade, contra, penalti }] na ordem dos gols; encerrar=false mantém o jogo ao vivo
+export const salvarResultado = (jogoId, golsMandante, golsVisitante, listaGols, encerrar = true) =>
+  demo ? dadosDemo.salvarResultado(jogoId, golsMandante, golsVisitante, listaGols, encerrar) :
   executar(cliente().rpc('salvar_resultado', {
     p_jogo_id: jogoId,
     p_gols_mandante: golsMandante,
     p_gols_visitante: golsVisitante,
     p_gols: listaGols,
+    p_encerrar: encerrar,
   }));
 
 // Volta o jogo para agendado e apaga os gols

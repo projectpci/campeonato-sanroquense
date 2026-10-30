@@ -264,3 +264,13 @@ create table torcedores_declarados (aparelho uuid primary key, time_id bigint no
 alter table torcedores_declarados enable row level security; -- sem políticas: só as funções
 -- declarar_time(p_aparelho uuid, p_time_id bigint): grava/troca/remove · torcida_declarada(): (time_id, torcedores)
 ```
+
+## Pênalti e resultado ao vivo (v41)
+Migração `gols_penalti_e_resultado_ao_vivo`:
+```sql
+alter table gols add column penalti boolean not null default false;  -- pênalti conta como gol normal (artilharia); gol contra nunca é pênalti
+-- salvar_resultado ganhou p_encerrar (default true): false mantém o jogo 'ao_vivo' e grava os gols marcados até agora
+-- p_gols = [{"time_id":1,"jogador_nome":"Pedro","quantidade":1,"contra":false,"penalti":true}, ...]
+-- A ORDEM da lista é a ordem dos gols na partida (ids crescentes); a súmula envia um gol por linha (quantidade 1).
+```
+A função completa está no banco (`salvar_resultado(bigint, integer, integer, jsonb, boolean default true)`).

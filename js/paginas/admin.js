@@ -1,10 +1,12 @@
 // Área do organizador: login, confrontos/resultados e times.
 import {
   buscarSessao, entrar, sair, listarTimes, listarRodadas, listarJogos, listarJogadores, buscarClassificacao, buscarArtilharia,
-  salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, salvarResultado, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo, contarPostsPendentes, listarPicosOnline, torcidaDeclarada,
+  salvarTime, enviarEscudo, salvarRodada, salvarJogo, excluirJogo, excluirTime, excluirRodada, reabrirJogo, atualizarPlacarAoVivo, listarCodigos, gerarCodigo, contarPostsPendentes, listarPicosOnline, torcidaDeclarada,
 } from '../api.js';
 import { montarLayout, marcarNav, definirModo, mostrarPerfil, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
+import { resumoDosGols, textoDoGol } from '../golsDoJogo.js';
+import { abrirSumula, painelAoVivo, ligarMarcacaoAoVivo } from '../sumula.js';
 import { htmlTabela, linhaArtilheiro } from '../tabelas.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
 import { htmlElenco, htmlSeletorTimes, ligarElenco } from '../elencoTime.js';
@@ -441,61 +443,63 @@ function abaConfrontos(aba, { times, rodadas, jogos, jogadores }) {
   document.getElementById('editar-rodada')?.addEventListener('click', () => dialogoRodada(rodadas, rodada));
   aba.querySelectorAll('[data-menu]').forEach((b) => b.addEventListener('click', () =>
     menuDoJogo(jogos.find((j) => j.id === Number(b.dataset.menu)), { rodada, times, dosJogos, jogadores })));
-  // +/− do placar ao vivo: atualiza a tela na hora e grava em segundo plano (volta ao banco se falhar)
-  aba.querySelectorAll('[data-gol]').forEach((b) => b.addEventListener('click', () => {
-    const [id, lado, delta] = b.dataset.gol.split(':');
-    const jogo = jogos.find((j) => j.id === Number(id));
-    jogo.gols_mandante = Math.max(0, (jogo.gols_mandante ?? 0) + (lado === 'm' ? Number(delta) : 0));
-    jogo.gols_visitante = Math.max(0, (jogo.gols_visitante ?? 0) + (lado === 'v' ? Number(delta) : 0));
-    abaConfrontos(aba, { times, rodadas, jogos, jogadores });
-    Promise.resolve().then(() => atualizarPlacarAoVivo(jogo.id, jogo.gols_mandante, jogo.gols_visitante))
-      .catch((erro) => { toast(erro.message, true); carregar(); });
-  }));
+  ligarMarcacaoAoVivo(aba, jogos, jogadores, { executar });
 }
 
-// Engrenagem do card: todas as ações do jogo numa lista grande, fácil de tocar no celular
+// Engrenagem do card: ações do jogo em cartões grandes, com a principal em destaque
 function menuDoJogo(jogo, { rodada, times, dosJogos, jogadores }) {
+  const sumula = () => abrirSumula(jogo, jogadores, { executar });
   const itens = [];
   if (jogo.status === 'agendado') {
-    itens.push(['Lançar resultado', () => dialogoResultado(jogo, jogadores)]);
-    itens.push(['Iniciar ao vivo', () => executar(() => atualizarPlacarAoVivo(jogo.id, 0, 0), 'Jogo iniciado — placar ao vivo ligado')]);
+    itens.push({ icone: '⚽', rotulo: 'Lançar resultado', dica: 'Placar e quem fez os gols', acao: sumula, destaque: true });
+    itens.push({ icone: '🔴', rotulo: 'Iniciar ao vivo', dica: 'Liga o placar em tempo real para a torcida',
+      acao: () => executar(() => atualizarPlacarAoVivo(jogo.id, 0, 0), 'Jogo iniciado — placar ao vivo ligado') });
   } else if (jogo.status === 'ao_vivo') {
-    itens.push(['Encerrar jogo', () => dialogoResultado(jogo, jogadores)]);
-    itens.push(['Cancelar ao vivo', () => {
+    itens.push({ icone: '🏁', rotulo: 'Encerrar jogo', dica: 'Confere os gols e fecha o resultado', acao: sumula, destaque: true });
+    itens.push({ icone: '↩', rotulo: 'Cancelar ao vivo', dica: 'Apaga o placar parcial e volta para agendado', acao: () => {
       if (confirm('Cancelar o jogo ao vivo? O placar parcial será apagado e o jogo volta para agendado.')) {
         executar(() => reabrirJogo(jogo.id), 'Jogo voltou para agendado');
       }
-    }]);
+    } });
   } else {
-    itens.push(['Corrigir resultado', () => dialogoResultado(jogo, jogadores)]);
+    itens.push({ icone: '✏️', rotulo: 'Editar resultado', dica: 'Corrigir placar, autores e tipo dos gols', acao: sumula, destaque: true });
   }
-  itens.push(['Editar confronto', () => dialogoConfronto(rodada, times, dosJogos, jogo)]);
-  itens.push(['Excluir', () => {
+  itens.push({ icone: '📅', rotulo: 'Editar confronto', dica: 'Times, data e horário', acao: () => dialogoConfronto(rodada, times, dosJogos, jogo) });
+  itens.push({ icone: '🗑', rotulo: 'Excluir confronto', dica: jogo.status === 'encerrado' ? 'A classificação será recalculada' : 'Remove este jogo da rodada', perigo: true, acao: () => {
     const aviso = jogo.status === 'encerrado' ? 'Este jogo já foi encerrado e a classificação será recalculada. Excluir?' : 'Excluir este confronto?';
     if (confirm(aviso)) executar(() => excluirJogo(jogo.id), 'Confronto excluído');
-  }, true]);
+  } });
 
+  const placar = jogo.status === 'agendado' ? '×' : `${jogo.gols_mandante ?? 0} × ${jogo.gols_visitante ?? 0}`;
   const d = abrirDialogo(`
     <div class="form menu-jogo">
-      <h2>${escapar(jogo.mandante.nome)} × ${escapar(jogo.visitante.nome)}</h2>
-      ${itens.map(([rotulo, , perigo], i) =>
-        `<button class="botao ${perigo ? 'botao--perigo' : 'botao--secundario'}" data-i="${i}">${rotulo}</button>`).join('')}
-      <button class="link-botao" data-fechar>Fechar</button>
+      <div class="menu-jogo__topo">
+        <div class="menu-jogo__time">${escudo(jogo.mandante, 48)}<span>${escapar(jogo.mandante.nome)}</span></div>
+        <strong class="menu-jogo__placar">${placar}</strong>
+        <div class="menu-jogo__time">${escudo(jogo.visitante, 48)}<span>${escapar(jogo.visitante.nome)}</span></div>
+      </div>
+      <div class="menu-jogo__lista">
+        ${itens.map((it, i) => `
+          <button class="menu-jogo__item${it.destaque ? ' menu-jogo__item--destaque' : ''}${it.perigo ? ' menu-jogo__item--perigo' : ''}" type="button" data-i="${i}">
+            <span class="menu-jogo__icone" aria-hidden="true">${it.icone}</span>
+            <span><b>${it.rotulo}</b><small>${it.dica}</small></span>
+          </button>`).join('')}
+      </div>
+      <button class="link-botao" type="button" data-fechar>Fechar</button>
     </div>`);
   d.addEventListener('click', (e) => {
     if (e.target === d || e.target.closest('[data-fechar]')) return d.close();
     const botao = e.target.closest('[data-i]');
     if (!botao) return;
     d.close();
-    itens[Number(botao.dataset.i)][1]();
+    itens[Number(botao.dataset.i)].acao();
   });
 }
 
 // Backup: baixa todos os jogos (com autores dos gols) em CSV, abre direto no Excel
 function exportarCsv(jogos, rodadas) {
   const numero = (id) => rodadas.find((r) => r.id === id)?.numero ?? '';
-  const autores = (j) => (j.gols ?? []).map((g) =>
-    `${g.jogador?.nome ?? 'sem nome'}${g.quantidade > 1 ? ` (${g.quantidade})` : ''}${g.contra ? ' (contra)' : ''}`).join(', ');
+  const autores = (j) => [j.mandante_id, j.visitante_id].flatMap((id) => resumoDosGols(j, id).map(textoDoGol)).join(', ');
   const linhas = [['Rodada', 'Data/hora', 'Mandante', 'Gols mandante', 'Gols visitante', 'Visitante', 'Status', 'Autores dos gols'],
     ...[...jogos].sort((a, b) => numero(a.rodada_id) - numero(b.rodada_id)).map((j) => [
       numero(j.rodada_id), j.data_hora ?? '', j.mandante.nome, j.gols_mandante ?? '', j.gols_visitante ?? '', j.visitante.nome, j.status, autores(j)])];
@@ -506,15 +510,9 @@ function exportarCsv(jogos, rodadas) {
 }
 
 function cartaoAdmin(j) {
-  // Placar ao vivo: +/− por time (atualiza para a torcida em tempo real)
-  const controle = (lado, nome) => `
-    <div class="aovivo__time"><span class="texto-2 texto-pequeno">${escapar(nome)}</span>
-      <button class="botao botao--secundario" data-gol="${j.id}:${lado}:-1" aria-label="Tirar gol de ${escapar(nome)}">−</button>
-      <button class="botao" data-gol="${j.id}:${lado}:1" aria-label="Gol de ${escapar(nome)}">+ Gol</button></div>`;
   return cartaoJogo(j, {
     acao: `<button class="engrenagem" data-menu="${j.id}" aria-label="Ações do jogo" title="Ações do jogo">${icone('engrenagem')}</button>`,
-    rodape: j.status === 'ao_vivo'
-      ? `<div class="aovivo"><div class="aovivo__controles">${controle('m', j.mandante.nome)}${controle('v', j.visitante.nome)}</div></div>` : '',
+    rodape: j.status === 'ao_vivo' ? painelAoVivo(j) : '',
   });
 }
 
@@ -549,6 +547,7 @@ function dialogoRodada(rodadas, rodada = {}) {
   });
 }
 
+// Novo / editar confronto: a prévia do jogo muda conforme os times escolhidos
 function dialogoConfronto(rodada, times, jogosDaRodada, jogo = null) {
   const ocupados = new Set(jogosDaRodada.filter((j) => j.id !== jogo?.id).flatMap((j) => [j.mandante_id, j.visitante_id]));
   const livres = times.filter((t) => (t.ativo || [jogo?.mandante_id, jogo?.visitante_id].includes(t.id)) && !ocupados.has(t.id));
@@ -556,24 +555,47 @@ function dialogoConfronto(rodada, times, jogosDaRodada, jogo = null) {
   const dataLocal = jogo?.data_hora ? new Date(new Date(jogo.data_hora) - new Date(jogo.data_hora).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
   const aDefinir = jogo?.horario_definido === false;
   const d = abrirDialogo(`
-    <form class="form" method="dialog">
-      <h2>${jogo ? 'Editar' : 'Novo'} confronto · Rodada ${rodada.numero}</h2>
+    <form class="form confronto" method="dialog">
+      <div class="folha__topo">
+        <div><span class="sumula__status">Rodada ${rodada.numero}</span><h2>${jogo ? 'Editar' : 'Novo'} confronto</h2></div>
+        <button class="link-botao" type="button" data-fechar aria-label="Fechar">✕</button>
+      </div>
       ${livres.length < 2 ? '<p class="aviso">Não há times livres suficientes nesta rodada.</p>' : ''}
-      <label class="campo">Mandante<select name="mandante" required>${opcoes(jogo?.mandante_id)}</select></label>
-      <label class="campo">Visitante<select name="visitante" required>${opcoes(jogo?.visitante_id)}</select></label>
-      <div class="form__linha">
+      <div class="confronto__previa" aria-hidden="true">
+        <div class="confronto__lado" data-previa="mandante"></div><i>×</i><div class="confronto__lado" data-previa="visitante"></div>
+      </div>
+      <div class="confronto__times">
+        <label class="campo">Mandante<select name="mandante" required>${opcoes(jogo?.mandante_id)}</select></label>
+        <label class="campo">Visitante<select name="visitante" required>${opcoes(jogo?.visitante_id)}</select></label>
+      </div>
+      <div class="confronto__quando">
         <label class="campo">Data<input type="date" name="data" value="${dataLocal.slice(0, 10)}"></label>
         <label class="campo">Hora<input type="time" name="hora" value="${aDefinir ? '' : dataLocal.slice(11, 16)}" ${aDefinir ? 'disabled' : ''}></label>
       </div>
       <label class="campo campo--check"><input type="checkbox" name="a_definir" ${aDefinir ? 'checked' : ''}> Horário a definir</label>
+      <p class="aviso texto-pequeno oculto" data-igual>Escolha times diferentes para mandante e visitante.</p>
       <div class="form__acoes">
         <button class="botao botao--secundario" type="button" data-fechar>Cancelar</button>
-        <button class="botao" type="submit" ${livres.length < 2 ? 'disabled' : ''}>Salvar</button>
+        <button class="botao" type="submit" ${livres.length < 2 ? 'disabled' : ''}>Salvar confronto</button>
       </div>
     </form>`);
+  const mandante = d.querySelector('[name=mandante]');
   const visitante = d.querySelector('[name=visitante]');
   if (!jogo && visitante.options.length > 1) visitante.selectedIndex = 1;
-  d.querySelector('[data-fechar]').addEventListener('click', () => d.close());
+  const salvar = d.querySelector('[type=submit]');
+  const previa = () => {
+    for (const [lado, campo] of [['mandante', mandante], ['visitante', visitante]]) {
+      const time = times.find((t) => t.id === Number(campo.value));
+      d.querySelector(`[data-previa="${lado}"]`).innerHTML = time ? `${escudo(time, 48)}<span>${escapar(time.nome)}</span>` : '<span class="texto-2">—</span>';
+    }
+    const igual = mandante.value && mandante.value === visitante.value;
+    d.querySelector('[data-igual]').classList.toggle('oculto', !igual);
+    salvar.disabled = livres.length < 2 || igual;
+  };
+  mandante.addEventListener('change', previa);
+  visitante.addEventListener('change', previa);
+  previa();
+  d.querySelectorAll('[data-fechar]').forEach((b) => b.addEventListener('click', () => d.close()));
   const campoHora = d.querySelector('[name=hora]');
   d.querySelector('[name=a_definir]').addEventListener('change', (e) => { campoHora.disabled = e.target.checked; });
   d.querySelector('form').addEventListener('submit', (e) => {
@@ -591,170 +613,6 @@ function dialogoConfronto(rodada, times, jogosDaRodada, jogo = null) {
       d.close();
     }, 'Confronto salvo ✔');
   });
-}
-
-// ---------- Formulário de resultado (placar + autores dos gols) ----------
-function linhaGol(nomeLista, gol = {}) {
-  return `
-    <div class="gol-linha">
-      <input class="gol-nome" list="${nomeLista}" placeholder="Jogador" value="${escapar(gol.jogador?.nome ?? '')}">
-      <input class="gol-qtd" type="number" min="1" value="${gol.quantidade ?? 1}" aria-label="Quantidade de gols">
-      <label class="gol-contra"><input type="checkbox" ${gol.contra ? 'checked' : ''}> contra</label>
-      <button type="button" class="botao botao--secundario gol-remover" aria-label="Remover autor">✕</button>
-      <small class="gol-aviso oculto"></small>
-    </div>`;
-}
-
-// "Dudú", "dudu " e "DUDU" são o mesmo jogador
-const normalizarNome = (nome) => String(nome ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
-
-function dialogoResultado(jogo, jogadores) {
-  const lado = (time, adversario, rotulo) => ({ time, adversario, rotulo });
-  const lados = [lado(jogo.mandante, jogo.visitante, 'mandante'), lado(jogo.visitante, jogo.mandante, 'visitante')];
-  const elencoDe = (timeId) => jogadores.filter((j) => j.time_id === timeId && j.ativo !== false);
-  const datalist = (timeId) => `<datalist id="dl-${timeId}">${elencoDe(timeId)
-    .map((j) => `<option value="${escapar(j.nome)}"${j.numero != null ? ` label="${j.numero}"` : ''}>`).join('')}</datalist>`;
-  const golsDoTime = (timeId) => (jogo.gols ?? []).filter((g) => g.time_id === timeId);
-
-  const d = abrirDialogo(`
-    <form class="form" id="form-resultado">
-      <section class="form" data-etapa="placar">
-        <h2>Resultado</h2>
-        <div class="placar-form">
-          <div class="jogo__time">${escudo(jogo.mandante, 48)}<span>${escapar(jogo.mandante.nome)}</span></div>
-          <input class="placar-input" type="number" min="0" name="gm" required value="${jogo.gols_mandante ?? 0}" aria-label="Gols ${escapar(jogo.mandante.nome)}">
-          <span>×</span>
-          <input class="placar-input" type="number" min="0" name="gv" required value="${jogo.gols_visitante ?? 0}" aria-label="Gols ${escapar(jogo.visitante.nome)}">
-          <div class="jogo__time">${escudo(jogo.visitante, 48)}<span>${escapar(jogo.visitante.nome)}</span></div>
-        </div>
-        <div class="form__acoes">
-          ${jogo.status === 'encerrado' ? '<button class="botao botao--perigo" type="button" id="reabrir">Reabrir jogo</button>' : ''}
-          <button class="botao botao--secundario" type="button" data-fechar>Cancelar</button>
-          <button class="botao" type="submit" id="avancar">Informar gols</button>
-        </div>
-      </section>
-      <section class="form oculto" data-etapa="gols">
-        <h2>Quem fez os gols?</h2>
-        <p class="texto-2" id="resumo-placar"></p>
-        ${datalist(jogo.mandante_id)}${datalist(jogo.visitante_id)}
-        ${lados.map(({ time }) => `
-          <fieldset class="gols-time" data-time="${time.id}">
-            <legend>${escapar(time.nome)} <span class="soma" data-soma="${time.id}"></span></legend>
-            <div class="gols-lista">${golsDoTime(time.id).map((g) => linhaGol(`dl-${time.id}`, g)).join('')}</div>
-            <button type="button" class="botao botao--secundario" data-add="${time.id}">+ adicionar autor</button>
-          </fieldset>`).join('')}
-        <div class="form__acoes">
-          <button class="botao botao--secundario" type="button" id="voltar">Voltar ao placar</button>
-          <button class="botao" type="submit" id="salvar-resultado">Salvar resultado</button>
-        </div>
-      </section>
-    </form>`);
-
-  const form = d.querySelector('form');
-  const placar = () => [Number(form.gm.value) || 0, Number(form.gv.value) || 0];
-  const etapa = (nome) => d.querySelectorAll('[data-etapa]').forEach((s) => s.classList.toggle('oculto', s.dataset.etapa !== nome));
-  const naEtapaGols = () => !d.querySelector('[data-etapa="gols"]').classList.contains('oculto');
-
-  // Só aparecem os times que marcaram; cada um começa com uma linha já com o total de gols
-  const abrirGols = () => {
-    const [gm, gv] = placar();
-    d.querySelector('#resumo-placar').textContent = `${jogo.mandante.nome} ${gm} × ${gv} ${jogo.visitante.nome}`;
-    for (const [time, gols] of [[jogo.mandante, gm], [jogo.visitante, gv]]) {
-      const bloco = d.querySelector(`.gols-time[data-time="${time.id}"]`);
-      bloco.classList.toggle('oculto', gols === 0);
-      const lista = bloco.querySelector('.gols-lista');
-      if (gols > 0 && !lista.children.length) {
-        lista.insertAdjacentHTML('beforeend', linhaGol(`dl-${time.id}`, { quantidade: gols }));
-        ajustarLista(lista.firstElementChild, time.id);
-      }
-    }
-    etapa('gols');
-    validar();
-  };
-
-  // Em gol contra o autor é do adversário: troca a lista de sugestões da linha
-  const timeDoAutor = (linha, timeId) => (linha.querySelector('.gol-contra input').checked
-    ? (timeId === jogo.mandante_id ? jogo.visitante_id : jogo.mandante_id) : timeId);
-  const ajustarLista = (linha, timeId) => {
-    linha.querySelector('.gol-nome').setAttribute('list', `dl-${timeDoAutor(linha, timeId)}`);
-  };
-
-  // Nome igual ao do elenco (sem acento/maiúscula) vira o nome cadastrado; nome fora do elenco ganha um aviso
-  const conferirElenco = (linha, timeId, corrigir = false) => {
-    const campo = linha.querySelector('.gol-nome');
-    const aviso = linha.querySelector('.gol-aviso');
-    const elenco = elencoDe(timeDoAutor(linha, timeId));
-    const achado = elenco.find((j) => normalizarNome(j.nome) === normalizarNome(campo.value));
-    if (corrigir && achado && campo.value !== achado.nome) campo.value = achado.nome;
-    const fora = elenco.length > 0 && campo.value.trim() && !achado;
-    aviso.textContent = fora ? 'Fora do elenco do clube: será cadastrado como jogador novo. Confira a grafia.' : '';
-    aviso.classList.toggle('oculto', !fora);
-  };
-  const conferirTodos = (corrigir) => d.querySelectorAll('.gols-time').forEach((bloco) =>
-    bloco.querySelectorAll('.gol-linha').forEach((l) => conferirElenco(l, Number(bloco.dataset.time), corrigir)));
-
-  const coletar = () => [...d.querySelectorAll('.gols-time:not(.oculto)')].flatMap((bloco) =>
-    [...bloco.querySelectorAll('.gol-linha')].map((linha) => ({
-      time_id: Number(bloco.dataset.time),
-      jogador_nome: linha.querySelector('.gol-nome').value.trim(),
-      quantidade: Number(linha.querySelector('.gol-qtd').value) || 0,
-      contra: linha.querySelector('.gol-contra input').checked,
-    })));
-
-  const validar = () => {
-    const gols = coletar();
-    const [gm, gv] = placar();
-    const alvo = { [jogo.mandante_id]: gm, [jogo.visitante_id]: gv };
-    let valido = true;
-    for (const id of [jogo.mandante_id, jogo.visitante_id]) {
-      const soma = gols.filter((g) => g.time_id === id).reduce((s, g) => s + g.quantidade, 0);
-      const ok = soma === alvo[id];
-      valido &&= ok;
-      const el = d.querySelector(`[data-soma="${id}"]`);
-      el.textContent = `${soma}/${alvo[id]} ${ok ? '✔' : '✖'}`;
-      el.className = `soma ${ok ? 'soma--ok' : 'soma--erro'}`;
-    }
-    const semNome = gols.some((g) => !g.contra && !g.jogador_nome);
-    valido &&= !semNome && gols.every((g) => g.quantidade > 0);
-    d.querySelector('#salvar-resultado').disabled = !valido;
-  };
-
-  d.addEventListener('input', (e) => {
-    const linha = e.target.closest('.gol-linha');
-    if (linha) {
-      const timeId = Number(e.target.closest('.gols-time').dataset.time);
-      if (e.target.closest('.gol-contra')) ajustarLista(linha, timeId);
-      conferirElenco(linha, timeId);
-    }
-    validar();
-  });
-  // ao sair do campo (ou escolher da lista), padroniza a grafia do nome
-  d.addEventListener('change', (e) => { if (e.target.matches('.gol-nome')) { conferirTodos(true); validar(); } });
-  d.addEventListener('click', (e) => {
-    const add = e.target.closest('[data-add]');
-    if (add) {
-      d.querySelector(`.gols-time[data-time="${add.dataset.add}"] .gols-lista`).insertAdjacentHTML('beforeend', linhaGol(`dl-${add.dataset.add}`));
-      validar();
-    }
-    if (e.target.closest('.gol-remover')) { e.target.closest('.gol-linha').remove(); validar(); }
-  });
-  d.querySelectorAll('.gols-time').forEach((bloco) => bloco.querySelectorAll('.gol-linha').forEach((l) => ajustarLista(l, Number(bloco.dataset.time))));
-  conferirTodos(false);
-  d.querySelector('[data-fechar]').addEventListener('click', () => d.close());
-  d.querySelector('#reabrir')?.addEventListener('click', () => {
-    if (confirm('Reabrir o jogo apaga o placar e os gols lançados. Continuar?')) executar(async () => { await reabrirJogo(jogo.id); d.close(); }, 'Jogo reaberto');
-  });
-  d.querySelector('#voltar').addEventListener('click', () => etapa('placar'));
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const [gm, gv] = placar();
-    if (!naEtapaGols()) {
-      if (gm + gv > 0) { abrirGols(); return; } // 0×0 não tem autores: salva direto
-    } else if (d.querySelector('#salvar-resultado').disabled) return;
-    conferirTodos(true);
-    executar(async () => { await salvarResultado(jogo.id, gm, gv, coletar()); d.close(); }, 'Resultado salvo ✔');
-  });
-  validar();
 }
 
 if (checarConfiguracao(app)) iniciar();

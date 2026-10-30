@@ -110,3 +110,4 @@
 - [x] "+ Adicionar confronto" saiu da aba Jogos e foi para Ajustes → Novo confronto (escolhe a rodada)
 - [x] Navegação mais rápida: código guardado por versão no service worker (sem ~7 idas e voltas por página), Supabase e config carregando juntos, bolinha online mais leve
 - [x] Crédito discreto "Desenvolvido por Caio Cavalcante" no rodapé da tela inicial e do Início (sw v40)
+- [x] Súmula do organizador (v41): lançar/editar resultado com botões Gol pró · Pênalti · Contra por time, escolha do jogador por busca, lista de gols em ordem, placar calculado dos gols, marcar gol ao vivo, desfazer último gol; menu do jogo e novo/editar confronto redesenhados; gols (com pênalti/contra) aparecem no card ao vivo
