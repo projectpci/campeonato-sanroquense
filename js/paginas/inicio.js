@@ -2,6 +2,7 @@ import { buscarCampeonato, buscarClassificacao, buscarArtilharia, listarJogos, l
 import { ordenarClassificacao } from '../classificacao.js';
 import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
 import { cartaoJogo } from '../cartaoJogo.js';
+import { prepararChances } from '../probabilidade.js';
 import { carregarComCache } from '../cache.js';
 import { rodadaDoProximoJogo } from '../rodadas.js';
 import { CANAL_WHATSAPP } from '../supabase.js';
@@ -86,6 +87,7 @@ async function buscar() {
 }
 
 function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }) {
+  prepararChances(jogos); // chance de vitória nos próximos jogos
     const porRodada = (r) => jogos.filter((j) => j.rodada_id === r?.id);
     const destaque = htmlDestaque(jogos);
     // próxima rodada = a do próximo jogo pelo calendário (não uma rodada antiga que ficou sem resultado)

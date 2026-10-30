@@ -30,3 +30,6 @@ compartilhado `js/elencoTime.js` (`htmlElenco`, `htmlEscolhaTime`, `elencoAtivo`
 Seletor de times em escudos circulares (anel neon no escolhido, contador de jogadores), cabeçalho do time com resumo por linha
 (goleiros/defesa/meio/ataque), técnico, busca por nome ou número, jogadores agrupados por linha com a cor da posição, gols na carta
 e **ficha do jogador** (folha que sobe de baixo: foto grande, número, posição, time e gols). `ligarElenco` liga busca e ficha.
+
+## Chance de vitória (v27)
+`js/probabilidade.js`: força de cada time no estilo Elo (todos começam com 1500; a cada resultado o vencedor ganha pontos do adversário, mais contra time forte e em placar largo, com peso `1 + 0,6·ln(|saldo|+1)`; K = 36; mando de campo = +35). A chance de cada lado é a expectativa de resultado (empate conta meio a meio), arredondada e limitada a 5%–95%. A barra aparece nos próximos jogos agendados (até 7 dias depois do primeiro que vem) em Início, Confrontos e na página do time. Testes em `tests/probabilidade.test.mjs`.

@@ -96,3 +96,4 @@
 - [x] Auditoria: tempo real por página, pausa em segundo plano, demo sob demanda, cache de imagens com limite, índices — ver docs/13
 - [x] Painel com menu próprio (Jogos, Elenco, Mural, Ajustes, Ver site); Exportar CSV e Times em Ajustes; compartilhar só com ícone
 - [x] Painel 100%% interno (Mural dentro do painel); cartões de times com Copiar; mural estilo feed com post só de texto
+- [x] Chance de vitória (modelo Elo com saldo de gols e mando) abaixo dos próximos jogos

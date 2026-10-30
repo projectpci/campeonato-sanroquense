@@ -1,6 +1,7 @@
 // Renderiza o card de um jogo (usado em Confrontos e Início).
 import { escapar, escudo, formatarData, horaDoJogo, icone } from './ui.js';
 import { registrarJogo } from './compartilharJogo.js';
+import { chanceDoCard } from './probabilidade.js';
 import './jogoExtras.js'; // botões "Escalações" e "Craque do jogo"
 
 function listaGols(jogo, timeId) {
@@ -12,6 +13,25 @@ function listaGols(jogo, timeId) {
       return `<li>⚽ ${escapar(nome)}${detalhe}</li>`;
     })
     .join('');
+}
+
+// Barra "Chance de vitória" (só nos próximos jogos; ver js/probabilidade.js)
+function htmlChance(jogo) {
+  const c = chanceDoCard(jogo);
+  if (!c) return '';
+  const favoritoMandante = c.mandante >= c.visitante;
+  return `
+    <div class="chance" role="img" aria-label="Chance de vitória: ${escapar(jogo.mandante.nome)} ${c.mandante}%, ${escapar(jogo.visitante.nome)} ${c.visitante}%">
+      <div class="chance__rotulos">
+        <span class="${favoritoMandante ? 'chance__favorito' : ''}">${c.mandante}%</span>
+        <span class="chance__titulo" title="Calculada pela força dos times nos resultados do campeonato (vitórias, saldo de gols e adversários enfrentados) e pelo mando de campo">Chance de vitória</span>
+        <span class="${favoritoMandante ? '' : 'chance__favorito'}">${c.visitante}%</span>
+      </div>
+      <div class="chance__barra">
+        <i class="${favoritoMandante ? 'chance__forte' : 'chance__clara'}" style="flex-grow:${c.mandante}"></i>
+        <i class="${favoritoMandante ? 'chance__clara' : 'chance__forte'}" style="flex-grow:${c.visitante}"></i>
+      </div>
+    </div>`;
 }
 
 // `extras` (só no painel do organizador): { acao } vai ao lado do selo de status, { rodape } vai no fim do card.
@@ -46,6 +66,7 @@ export function cartaoJogo(jogo, extras = {}) {
         <div class="jogo__centro">${centro}</div>
         <div class="jogo__time">${escudo(jogo.visitante, 48)}<span>${escapar(jogo.visitante.nome)}</span></div>
       </div>
+      ${htmlChance(jogo)}
       ${encerrado ? `
       <div class="jogo__gols">
         <ul>${listaGols(jogo, jogo.mandante_id)}</ul>

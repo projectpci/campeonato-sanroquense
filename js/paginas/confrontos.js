@@ -1,6 +1,7 @@
 import { buscarCampeonato, listarRodadas, listarJogos } from '../api.js';
 import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
 import { cartaoJogo } from '../cartaoJogo.js';
+import { prepararChances } from '../probabilidade.js';
 import { carregarComCache } from '../cache.js';
 import { compartilharImagem } from '../compartilhar.js';
 import { arteRodada, inserirArte } from '../artes.js';
@@ -12,6 +13,7 @@ let rodadaSelecionada = null;
 let dados = null;
 
 function renderizar(rodadas, jogos) {
+  prepararChances(jogos); // chance de vitória nos próximos jogos
   if (!rodadas.length) {
     app.innerHTML = '<p class="carregando">Nenhuma rodada cadastrada ainda.</p>';
     return;

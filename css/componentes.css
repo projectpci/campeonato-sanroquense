@@ -962,3 +962,14 @@ body.entrada-corpo { overflow-x: hidden; }
 .time-adm--novo { place-items: center; min-height: 140px; border-style: dashed; color: var(--cor-primaria); cursor: pointer; font-family: var(--fonte-destaque); font-size: 1.1rem; text-transform: uppercase; }
 .time-adm--novo:hover { background: var(--cor-fundo-2); }
 .ajuste .botao svg { width: 18px; height: 18px; flex: none; }
+
+/* ================= v27: chance de vitória nos próximos jogos ================= */
+.chance { display: grid; gap: 6px; margin-top: var(--esp-3); padding-top: var(--esp-3); border-top: 1px solid var(--cor-borda); }
+.chance__rotulos { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: var(--esp-2); font-size: .95rem; color: var(--cor-texto-2); }
+.chance__titulo { text-align: center; color: var(--cor-texto); font-size: .9rem; cursor: help; }
+.chance__favorito { color: var(--cor-texto); font-weight: 800; }
+.chance__barra { display: flex; gap: 4px; height: 10px; }
+.chance__barra i { flex-basis: 0; min-width: 6px; border-radius: 999px; transition: flex-grow .6s ease; }
+.chance__forte { background: var(--cor-chance-forte); }
+.chance__clara { background: var(--cor-chance-clara); }
+@media (prefers-reduced-motion: reduce) { .chance__barra i { transition: none; } }

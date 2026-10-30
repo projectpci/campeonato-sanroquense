@@ -4,6 +4,7 @@ import { htmlElenco, elencoAtivo, ligarElenco, golsPorJogador } from '../elencoT
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
 import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
 import { cartaoJogo } from '../cartaoJogo.js';
+import { prepararChances } from '../probabilidade.js';
 import { carregarComCache } from '../cache.js';
 import { botaoAvisos } from '../avisos.js';
 import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo } from '../ui.js';
@@ -48,6 +49,7 @@ function htmlElencoDoTime(time, jogadores = []) {
 }
 
 function desenhar({ linhas, encerrados, jogos, artilharia, jogadores, time }) {
+  prepararChances(jogos); // chance de vitória nos próximos jogos
   const ordenadas = ordenarClassificacao(linhas, encerrados);
   const t = ordenadas.find((l) => l.time_id === timeId);
   if (!t) { mostrarAviso(app, 'Time não encontrado.'); return; }

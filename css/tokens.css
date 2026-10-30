@@ -22,6 +22,9 @@
   --cor-linha-campo:      rgba(255, 255, 255, .55);
   --cor-vaga-vazia:       rgba(0, 0, 0, .25);
   --cor-sombra:           rgba(0, 0, 0, .45);
+  /* barra "Chance de vitória" */
+  --cor-chance-forte:     #00B84A;
+  --cor-chance-clara:     #86DCA6;
   /* cores das linhas (cartas do elenco e posições) */
   --cor-pos-gol:          #F5C518;
   --cor-pos-def:          #3FA9F5;
