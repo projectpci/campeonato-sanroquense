@@ -654,3 +654,92 @@ button.escolha-time:hover, button.escolha-time:focus-visible { border-color: var
 .clube-entrada__time h2 { margin: 0; font-family: var(--fonte-titulo); font-size: 2rem; color: var(--cor-primaria); text-shadow: var(--cor-brilho); }
 .clube-entrada--codigo .senha { max-width: none; }
 .clube-entrada--codigo .link-botao { justify-self: center; padding: var(--esp-2); }
+
+/* ================= Elenco (visual moderno) ================= */
+/* Seletor de times: escudos em fila, o escolhido com anel neon */
+.seletor-times {
+  display: flex; gap: var(--esp-3); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
+  margin: 0 calc(var(--esp-4) * -1) var(--esp-4); padding: var(--esp-2) var(--esp-4) var(--esp-3);
+}
+.seletor-times::-webkit-scrollbar { display: none; }
+.seletor-times__item {
+  flex: none; display: grid; justify-items: center; gap: var(--esp-1); width: 76px; padding: 0; scroll-snap-align: center;
+  border: 0; background: none; color: var(--cor-texto-2); cursor: pointer; font: inherit;
+}
+.seletor-times__escudo {
+  position: relative; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%;
+  background: var(--cor-fundo-2); border: 2px solid var(--cor-borda); transition: transform .15s, border-color .15s, box-shadow .15s;
+}
+.seletor-times__escudo .escudo { width: 46px; height: 46px; }
+.seletor-times__escudo i {
+  position: absolute; right: -4px; bottom: -2px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px;
+  display: grid; place-items: center; background: var(--cor-fundo); border: 1px solid var(--cor-borda); font-style: normal;
+  font-family: var(--fonte-destaque); font-size: .72rem; color: var(--cor-texto);
+}
+.seletor-times__nome { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--fonte-destaque); font-size: .72rem; text-transform: uppercase; }
+.seletor-times__item:hover .seletor-times__escudo { transform: translateY(-2px); }
+.seletor-times__item--ativo { color: var(--cor-primaria); }
+.seletor-times__item--ativo .seletor-times__escudo { border-color: var(--cor-primaria); box-shadow: var(--cor-brilho); transform: scale(1.06); }
+.seletor-times__item--ativo .seletor-times__escudo i { background: var(--cor-primaria-forte); border-color: var(--cor-primaria-forte); color: var(--cor-texto-inverso); }
+
+/* Cabeçalho do time */
+.elenco { display: grid; gap: var(--esp-4); }
+.elenco__topo {
+  display: flex; align-items: center; gap: var(--esp-4); padding: var(--esp-4); border-radius: var(--raio-grande);
+  border: 1px solid var(--cor-borda-neon); box-shadow: var(--cor-brilho);
+  background: radial-gradient(ellipse at 10% 0%, var(--cor-fundo-3) 0%, var(--cor-fundo-2) 60%, var(--cor-fundo) 100%);
+}
+.elenco__topo .escudo { width: 84px; height: 84px; flex: none; filter: drop-shadow(0 4px 12px var(--cor-sombra)); }
+.elenco__titulo { display: grid; gap: var(--esp-1); min-width: 0; }
+.elenco__titulo h2 { margin: 0; font-family: var(--fonte-titulo); font-size: 1.7rem; line-height: 1.1; text-shadow: var(--cor-brilho); }
+.elenco__titulo p { margin: 0; color: var(--cor-texto-2); }
+.elenco__resumo { display: flex; flex-wrap: wrap; gap: var(--esp-1) var(--esp-2); }
+.elenco__linha { --cor-linha: var(--cor-texto-2); display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; color: var(--cor-texto-2); }
+.elenco__linha::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--cor-linha); }
+.elenco__linha b { color: var(--cor-texto); }
+.elenco__linha--gol { --cor-linha: var(--cor-pos-gol); }
+.elenco__linha--def { --cor-linha: var(--cor-pos-def); }
+.elenco__linha--mei { --cor-linha: var(--cor-pos-mei); }
+.elenco__linha--ata { --cor-linha: var(--cor-pos-ata); }
+.elenco__link { font-size: .85rem; }
+
+/* Técnico */
+.elenco__tecnico { display: flex; align-items: center; gap: var(--esp-3); padding: var(--esp-3); border-radius: var(--raio-grande); background: var(--cor-fundo-2); border: 1px solid var(--cor-borda); border-left: 3px solid var(--cor-ouro); }
+.elenco__tecnico span { display: grid; }
+.elenco__tecnico small { color: var(--cor-ouro); font-family: var(--fonte-destaque); text-transform: uppercase; letter-spacing: .05em; }
+.elenco__tecnico strong { text-transform: uppercase; }
+
+/* Grupos por linha */
+.elenco__grupo { display: grid; gap: var(--esp-2); }
+.elenco__grupo-titulo { --cor-linha: var(--cor-texto-2); display: flex; align-items: center; gap: var(--esp-2); margin: 0; font-size: 1rem; text-transform: uppercase; }
+.elenco__grupo-titulo::before { content: ""; width: 4px; height: 18px; border-radius: 2px; background: var(--cor-linha); }
+.elenco__grupo-titulo span { margin-left: auto; min-width: 26px; padding: 1px 8px; border-radius: 999px; background: var(--cor-fundo-2); border: 1px solid var(--cor-borda); text-align: center; font-size: .8rem; color: var(--cor-texto-2); }
+.elenco__grupo-titulo--gol { --cor-linha: var(--cor-pos-gol); }
+.elenco__grupo-titulo--def { --cor-linha: var(--cor-pos-def); }
+.elenco__grupo-titulo--mei { --cor-linha: var(--cor-pos-mei); }
+.elenco__grupo-titulo--ata { --cor-linha: var(--cor-pos-ata); }
+.elenco .cartas { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+.carta__gols { position: absolute; top: var(--esp-3); right: var(--esp-3); padding: 0 6px; border-radius: 8px; background: var(--cor-fundo); font-size: .75rem; font-weight: 800; box-shadow: 0 2px 6px var(--cor-sombra); }
+
+/* Ficha do jogador (folha que sobe de baixo) */
+.ficha { padding: 0; overflow: hidden; }
+.ficha__foto {
+  --cor-linha: var(--cor-texto-2);
+  position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; max-height: 46vh;
+  background: linear-gradient(180deg, var(--cor-fundo-3), var(--cor-fundo)); border-bottom: 4px solid var(--cor-linha);
+}
+.ficha__foto img { width: 100%; height: 100%; object-fit: cover; }
+.ficha__foto span { font-family: var(--fonte-titulo); font-size: 6rem; color: var(--cor-texto-2); }
+.ficha__foto--gol { --cor-linha: var(--cor-pos-gol); }
+.ficha__foto--def { --cor-linha: var(--cor-pos-def); }
+.ficha__foto--mei { --cor-linha: var(--cor-pos-mei); }
+.ficha__foto--ata { --cor-linha: var(--cor-pos-ata); }
+.ficha__numero { position: absolute; left: var(--esp-4); bottom: var(--esp-3); font-family: var(--fonte-destaque); font-size: 4rem; line-height: 1; color: var(--cor-texto); text-shadow: 0 4px 16px var(--cor-sombra); }
+.ficha__corpo { display: grid; gap: var(--esp-3); padding: var(--esp-4); }
+.ficha__corpo h2 { margin: 0; font-family: var(--fonte-titulo); font-size: 1.8rem; line-height: 1.1; }
+.ficha__time { display: flex; align-items: center; gap: var(--esp-2); margin: 0; color: var(--cor-texto-2); text-transform: uppercase; font-weight: 700; }
+.ficha__dados { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--esp-2); margin: 0; }
+.ficha__dados div { display: grid; gap: 2px; padding: var(--esp-3) var(--esp-2); border-radius: var(--raio); background: var(--cor-fundo-2); border: 1px solid var(--cor-borda); text-align: center; }
+.ficha__dados dt { font-size: .7rem; color: var(--cor-texto-2); text-transform: uppercase; }
+.ficha__dados dd { margin: 0; font-family: var(--fonte-destaque); font-size: 1.3rem; color: var(--cor-primaria); }
+@media (prefers-reduced-motion: reduce) { .seletor-times__escudo { transition: none; } }

@@ -5,7 +5,7 @@ import {
 } from '../api.js';
 import { montarLayout, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData } from '../ui.js';
 import { cartaoJogo } from '../cartaoJogo.js';
-import { htmlElenco, htmlEscolhaTime, elencoAtivo } from '../elencoTime.js';
+import { htmlElenco, htmlSeletorTimes, ligarElenco } from '../elencoTime.js';
 import { rodadaAtual } from '../rodadas.js';
 import { assinarMudancas } from '../realtime.js';
 import { botaoAvisosOrganizador } from '../avisos.js';
@@ -212,13 +212,14 @@ function abaElenco(aba, times, jogadores) {
   const ativos = times.filter((t) => t.ativo !== false);
   if (!ativos.some((t) => t.id === estado.elencoTimeId)) estado.elencoTimeId = ativos[0]?.id ?? null;
   const time = ativos.find((t) => t.id === estado.elencoTimeId);
-  const qtd = time ? elencoAtivo(jogadores, time.id).length : 0;
-  aba.innerHTML = `
-    ${htmlEscolhaTime(ativos, jogadores, estado.elencoTimeId)}
-    ${time ? `<div class="admin__topo"><h3>${escapar(time.nome)} · ${qtd} jogador${qtd === 1 ? '' : 'es'}</h3></div>
-      ${htmlElenco(time, jogadores, 'O clube ainda não cadastrou jogadores. O cadastro é feito pela Área do clube, com o código do time.')}` : ''}`;
+  aba.innerHTML = `${htmlSeletorTimes(ativos, jogadores, estado.elencoTimeId)}<div id="elenco-adm"></div>`;
+  if (time) {
+    const alvo = document.getElementById('elenco-adm');
+    alvo.innerHTML = htmlElenco(time, jogadores, { vazio: 'O clube ainda não cadastrou jogadores. O cadastro é feito pela Área do clube, com o código do time.' });
+    ligarElenco(alvo, { time, jogadores });
+  }
   aba.querySelectorAll('[data-elenco-time]').forEach((b) => b.addEventListener('click', () => { estado.elencoTimeId = Number(b.dataset.elencoTime); abaElenco(aba, times, jogadores); }));
-  aba.querySelector('.chip--ativo')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  aba.querySelector('.seletor-times__item--ativo')?.scrollIntoView({ inline: 'center', block: 'nearest' });
 }
 
 // ---------- Aba Confrontos e resultados ----------

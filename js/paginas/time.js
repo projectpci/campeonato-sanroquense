@@ -1,6 +1,6 @@
 // Página de um time: posição, campanha, forma recente, jogos e artilheiros.
 import { buscarClassificacao, buscarArtilharia, listarJogos, listarJogosEncerrados, listarJogadores, listarTimes } from '../api.js';
-import { htmlElenco, elencoAtivo } from '../elencoTime.js';
+import { htmlElenco, elencoAtivo, ligarElenco, golsPorJogador } from '../elencoTime.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
 import { assinarMudancas } from '../realtime.js';
 import { cartaoJogo } from '../cartaoJogo.js';
@@ -44,7 +44,7 @@ function htmlArtilheiros(artilharia) {
 
 function htmlElencoDoTime(time, jogadores = []) {
   if (!time || (!elencoAtivo(jogadores, time.id).length && !time.tecnico_nome)) return '';
-  return `<section class="secao"><h3>Elenco</h3>${htmlElenco(time, jogadores)}</section>`;
+  return `<section class="secao" id="elenco-do-time"><h3>Elenco</h3>${htmlElenco(time, jogadores, { cabecalho: false })}</section>`;
 }
 
 function desenhar({ linhas, encerrados, jogos, artilharia, jogadores, time }) {
@@ -76,6 +76,8 @@ function desenhar({ linhas, encerrados, jogos, artilharia, jogadores, time }) {
     ${htmlElencoDoTime(time, jogadores)}
     ${htmlArtilheiros(artilharia)}`;
   botaoAvisos(document.getElementById('avisos-time'), { timeId, nome: t.nome });
+  const elencoDoTime = document.getElementById('elenco-do-time');
+  if (elencoDoTime) ligarElenco(elencoDoTime, { time, jogadores, gols: golsPorJogador(artilharia) });
 }
 
 async function carregar() {

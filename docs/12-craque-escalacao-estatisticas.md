@@ -25,3 +25,8 @@ Todo "Compartilhar" pergunta **Post** (1080×1350) ou **Story** (1080×1920, cla
 ## Página Elenco (torcedor)
 `elenco.html` (6º item do menu): chips com os escudos e o elenco do time escolhido (técnico e cartas). Componente
 compartilhado `js/elencoTime.js` (`htmlElenco`, `htmlEscolhaTime`, `elencoAtivo`), usado também no painel e na página do time.
+
+### Visual do elenco (v22)
+Seletor de times em escudos circulares (anel neon no escolhido, contador de jogadores), cabeçalho do time com resumo por linha
+(goleiros/defesa/meio/ataque), técnico, busca por nome ou número, jogadores agrupados por linha com a cor da posição, gols na carta
+e **ficha do jogador** (folha que sobe de baixo: foto grande, número, posição, time e gols). `ligarElenco` liga busca e ficha.
