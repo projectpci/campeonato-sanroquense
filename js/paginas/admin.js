@@ -248,6 +248,16 @@ async function ligarTorcidas(alvo, times) {
 function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
   aba.innerHTML = `
     <section class="ajuste">
+      <h3>⚽ Novo confronto</h3>
+      ${rodadas.length ? `
+        <p class="texto-2 texto-pequeno">Escolha a rodada e adicione o jogo (data, horário e times).</p>
+        <div class="novo-confronto">
+          <label class="seletor"><span class="sr-only">Rodada</span>
+            <select id="rodada-novo-confronto">${rodadas.map((r) => `<option value="${r.id}"${r.id === (estado.rodadaId ?? rodadaAtual(rodadas, jogos)) ? ' selected' : ''}>Rodada ${r.numero}${r.data ? ` · ${formatarData(r.data)}` : ''}</option>`).join('')}</select></label>
+          <button class="botao" id="novo-confronto">+ Adicionar confronto</button>
+        </div>` : '<p class="texto-2 texto-pequeno">Crie a primeira rodada em Jogos (+ Rodada).</p>'}
+    </section>
+    <section class="ajuste">
       <h3>❤️ Torcidas</h3>
       <div id="ajuste-torcidas"><p class="texto-2 texto-pequeno">Contando as torcidas…</p></div>
     </section>
@@ -270,6 +280,11 @@ function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
       <button class="botao botao--perigo" id="btn-sair-painel">Sair do painel</button>
     </section>`;
   ligarTorcidas(document.getElementById('ajuste-torcidas'), times);
+  document.getElementById('novo-confronto')?.addEventListener('click', () => {
+    const rodada = rodadas.find((r) => r.id === Number(document.getElementById('rodada-novo-confronto').value));
+    estado.rodadaId = rodada.id; // ao voltar para Jogos, já abre nesta rodada
+    dialogoConfronto(rodada, times, jogos.filter((j) => j.rodada_id === rodada.id));
+  });
   botaoAvisosOrganizador(document.getElementById('avisos-adm'));
   document.getElementById('btn-csv').addEventListener('click', () => exportarCsv(jogos, rodadas));
   document.getElementById('btn-sair-painel').addEventListener('click', sairDoPainel);
@@ -419,13 +434,11 @@ function abaConfrontos(aba, { times, rodadas, jogos, jogadores }) {
       <div class="admin__topo"><h3>Rodada ${rodada.numero}${rodada.data ? ` · ${formatarData(rodada.data)}` : ''}</h3>
         <button class="botao botao--secundario" id="editar-rodada">Editar rodada</button></div>
       ${rodada.observacao ? `<p class="texto-2">${escapar(rodada.observacao)}</p>` : ''}
-      <div class="secao">${dosJogos.map((j) => cartaoAdmin(j)).join('') || '<p class="texto-2">Nenhum confronto ainda.</p>'}</div>
-      <button class="botao" id="novo-confronto">+ Adicionar confronto</button>` : '<p class="texto-2">Crie a primeira rodada.</p>'}`;
+      <div class="secao">${dosJogos.map((j) => cartaoAdmin(j)).join('') || '<p class="texto-2">Nenhum confronto ainda. Adicione em Ajustes → Novo confronto.</p>'}</div>` : '<p class="texto-2">Crie a primeira rodada.</p>'}`;
 
   aba.querySelectorAll('[data-rodada]').forEach((b) => b.addEventListener('click', () => { estado.rodadaId = Number(b.dataset.rodada); carregar(); }));
   document.getElementById('nova-rodada').addEventListener('click', () => dialogoRodada(rodadas));
   document.getElementById('editar-rodada')?.addEventListener('click', () => dialogoRodada(rodadas, rodada));
-  document.getElementById('novo-confronto')?.addEventListener('click', () => dialogoConfronto(rodada, times, dosJogos));
   aba.querySelectorAll('[data-menu]').forEach((b) => b.addEventListener('click', () =>
     menuDoJogo(jogos.find((j) => j.id === Number(b.dataset.menu)), { rodada, times, dosJogos, jogadores })));
   // +/− do placar ao vivo: atualiza a tela na hora e grava em segundo plano (volta ao banco se falhar)
