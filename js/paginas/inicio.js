@@ -110,13 +110,14 @@ function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }
   pintarOnline();
 }
 
-// "23 pessoas acompanhando agora" (só aparece com 2 ou mais: sozinho é só você)
+// "23 pessoas acompanhando agora" (aparece assim que o canal responde, contando você)
 let online = null;
 function pintarOnline() {
   const alvo = document.getElementById('online-agora');
   if (!alvo || !online) return;
-  alvo.classList.toggle('oculto', online.total < 2);
-  alvo.innerHTML = `<span class="ponto-online" aria-hidden="true"></span><strong>${online.total}</strong> pessoas acompanhando agora`;
+  const total = Math.max(1, online.total); // o próprio aparelho pode entrar no canal um instante depois
+  alvo.classList.remove('oculto');
+  alvo.innerHTML = `<span class="ponto-online" aria-hidden="true"></span><strong>${total}</strong> ${total === 1 ? 'pessoa acompanhando agora' : 'pessoas acompanhando agora'}`;
 }
 
 async function carregar() {
