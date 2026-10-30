@@ -25,24 +25,52 @@
 </head>
 <body class="entrada-corpo">
   <main class="entrada">
-    <svg class="entrada__coroa" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18l1-11-5 4-5-7-5 7-5-4z" fill="currentColor"/></svg>
-    <h1 class="entrada__titulo">Campeonato<br><em>SRP</em></h1>
-    <p class="texto-2">Campo Maicon Santos · São Roque do Paraguaçu – BA</p>
+    <span class="entrada__brilho" aria-hidden="true"></span>
 
-    <div class="entrada__opcoes">
-      <a class="entrada__opcao" href="inicio.html">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8l4 3-1.5 4.5h-5L8 11z" fill="currentColor"/></svg>
-        <strong>Torcedor</strong>
-      </a>
-      <a class="entrada__opcao entrada__opcao--clube" href="clube.html">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 8v8M8.5 10.5h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <strong>Clube</strong>
-      </a>
-    </div>
-    <p class="centro texto-pequeno"><a href="instalar.html">Como instalar o app e ativar os avisos</a></p>
-    <p class="centro texto-pequeno"><a class="entrada__organizador" href="admin.html">Área do organizador</a></p>
+    <header class="entrada__marca">
+      <svg class="entrada__coroa" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18l1-11-5 4-5-7-5 7-5-4z" fill="currentColor"/></svg>
+      <h1 class="entrada__titulo">Campeonato <em>SRP</em></h1>
+      <p class="entrada__local">Campo Maicon Santos · São Roque do Paraguaçu – BA</p>
+      <ul class="entrada__numeros" aria-label="O campeonato">
+        <li><b>10</b> times</li><li><b>45</b> jogos</li><li><b>1</b> campeão</li>
+      </ul>
+    </header>
+
+    <a class="entrada__agora oculto" id="entrada-agora" href="inicio.html"></a>
+
+    <section class="entrada__escolha" aria-labelledby="pergunta">
+      <h2 class="entrada__pergunta" id="pergunta">Como você quer entrar?</h2>
+      <div class="entrada__opcoes">
+        <a class="entrada__opcao" href="inicio.html" data-perfil="torcedor">
+          <span class="entrada__icone" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2.2" fill="currentColor"/><path d="M4 3.5l3.5 5.5 4.5 1.8 4.5-1.8L20 3.5"/><path d="M12 10.8v4.4l-3.2 6.3M12 15.2l3.2 6.3"/></svg>
+          </span>
+          <strong>Torcedor</strong>
+          <span class="entrada__seta" aria-hidden="true">→</span>
+        </a>
+        <a class="entrada__opcao" href="clube.html" data-perfil="clube">
+          <span class="entrada__icone" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8.5 3L3 6.2l2.2 4.3 2.8-1.2V21h8V9.3l2.8 1.2L21 6.2 15.5 3c-.6 1.6-1.9 2.6-3.5 2.6S9.1 4.6 8.5 3z"/><path d="M10.5 12.5h3" stroke-linecap="round"/></svg>
+          </span>
+          <strong>Clube</strong>
+          <span class="entrada__seta" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+
+    <a class="entrada__adm" href="admin.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 018 0V11"/></svg>
+      Área do organizador
+    </a>
+
+    <div class="entrada__escudos" aria-hidden="true"><div class="entrada__faixa" id="entrada-escudos"></div></div>
+
+    <a class="entrada__instalar" href="instalar.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4M5 20h14"/></svg>
+      Instalar o app e receber os gols no celular
+    </a>
     <p class="rodape-frase">Juntos pelo futebol de nossa comunidade!</p>
   </main>
-  <script type="module" src="js/pwa.js"></script>
+  <script type="module" src="js/paginas/entrada.js"></script>
 </body>
 </html>

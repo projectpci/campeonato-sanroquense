@@ -98,3 +98,10 @@ Abas:
 | ⚽ | Artilharia | `artilharia.html` |
 
 Usar ícones SVG inline (não emoji) na versão final.
+
+## Tela inicial (index.html) — v23
+Ordem pensada como história: **marca** (coroa, nome, local, "10 times · 45 jogos · 1 campeão") → **agora** (cartão com o jogo
+ao vivo, "Hoje tem jogo" ou o próximo jogo, que leva ao Início) → **escolha** ("Como você quer entrar?": Torcedor com ícone de
+torcida e Clube com ícone de camisa; o último perfil usado ganha o selo "Continuar") → **Área do organizador** (botão dourado
+com cadeado) → escudos dos 10 times correndo em faixa → instalar o app. Entrada em cascata e respeito a "reduzir movimento".
+Dados de `js/paginas/entrada.js`; se o banco não responder, a tela funciona só com os botões.

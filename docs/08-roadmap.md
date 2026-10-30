@@ -92,3 +92,4 @@
 - [x] Só o Adm aprova/apaga posts; aba Elenco no painel; entrada do clube em 2 passos
 - [x] Mural: moderação só no modo organizador (?moderar=1); página Elenco no menu do torcedor
 - [x] Elenco redesenhado: seletor de escudos, resumo por linha, busca, grupos por posição e ficha do jogador
+- [x] Tela inicial redesenhada (marca, jogo de agora, escolha com ícones novos, organizador destacado, escudos em faixa)
