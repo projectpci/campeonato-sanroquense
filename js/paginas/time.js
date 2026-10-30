@@ -1,8 +1,8 @@
 // Página de um time: posição, campanha, forma recente, jogos e artilheiros.
-import { buscarClassificacao, buscarArtilharia, listarJogos, listarJogosEncerrados, listarJogadores, listarTimes } from '../api.js';
+import { buscarClassificacao, buscarArtilharia, listarJogos, listarJogadores, listarTimes } from '../api.js';
 import { htmlElenco, elencoAtivo, ligarElenco, golsPorJogador } from '../elencoTime.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
-import { assinarMudancas } from '../realtime.js';
+import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
 import { cartaoJogo } from '../cartaoJogo.js';
 import { carregarComCache } from '../cache.js';
 import { botaoAvisos } from '../avisos.js';
@@ -13,10 +13,10 @@ const timeId = Number(new URLSearchParams(location.search).get('id'));
 const sinal = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 
 const buscar = async () => {
-  const [linhas, encerrados, jogos, artilharia, jogadores, times] = await Promise.all([
-    buscarClassificacao(), listarJogosEncerrados(), listarJogos(), buscarArtilharia(timeId), listarJogadores(timeId), listarTimes(),
+  const [linhas, jogos, artilharia, jogadores, times] = await Promise.all([
+    buscarClassificacao(), listarJogos(), buscarArtilharia(timeId), listarJogadores(timeId), listarTimes(),
   ]);
-  return { linhas, encerrados, jogos, artilharia, jogadores, time: times.find((x) => x.id === timeId) };
+  return { linhas, encerrados: jogos.filter((j) => j.status === 'encerrado'), jogos, artilharia, jogadores, time: times.find((x) => x.id === timeId) };
 };
 
 // V / E / D dos últimos 5 jogos encerrados, do mais recente para o mais antigo
@@ -95,6 +95,6 @@ if (checarConfiguracao(app)) {
   else {
     mostrarCarregando(app);
     carregar();
-    assinarMudancas(carregar);
+    assinarMudancas(carregar, [...TABELAS_JOGOS, 'jogadores']);
   }
 }

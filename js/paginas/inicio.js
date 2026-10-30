@@ -1,6 +1,6 @@
-import { buscarCampeonato, buscarClassificacao, buscarArtilharia, listarJogos, listarJogosEncerrados, listarRodadas } from '../api.js';
+import { buscarCampeonato, buscarClassificacao, buscarArtilharia, listarJogos, listarRodadas } from '../api.js';
 import { ordenarClassificacao } from '../classificacao.js';
-import { assinarMudancas } from '../realtime.js';
+import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
 import { cartaoJogo } from '../cartaoJogo.js';
 import { carregarComCache } from '../cache.js';
 import { rodadaDoProximoJogo } from '../rodadas.js';
@@ -79,10 +79,10 @@ function htmlDestaque(jogos) {
 }
 
 async function buscar() {
-  const [campeonato, rodadas, jogos, encerrados, linhas, artilharia] = await Promise.all([
-    buscarCampeonato(), listarRodadas(), listarJogos(), listarJogosEncerrados(), buscarClassificacao(), buscarArtilharia(),
+  const [campeonato, rodadas, jogos, linhas, artilharia] = await Promise.all([
+    buscarCampeonato(), listarRodadas(), listarJogos(), buscarClassificacao(), buscarArtilharia(),
   ]);
-  return { campeonato, rodadas, jogos, encerrados, linhas, artilharia };
+  return { campeonato, rodadas, jogos, encerrados: jogos.filter((j) => j.status === 'encerrado'), linhas, artilharia };
 }
 
 function desenhar({ campeonato, rodadas, jogos, encerrados, linhas, artilharia }) {
@@ -118,5 +118,5 @@ document.querySelector('.faixa')?.remove();
 if (checarConfiguracao(app)) {
   mostrarCarregando(app);
   carregar();
-  assinarMudancas(carregar);
+  assinarMudancas(carregar, TABELAS_JOGOS);
 }

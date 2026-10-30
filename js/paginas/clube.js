@@ -1,12 +1,12 @@
 // Área do clube: o time entra com o código de acesso (o mesmo do mural) e tem jogos, tabela, artilharia,
 // elenco (técnico e jogadores com foto), escalação para compartilhar e o mural do clube.
 import {
-  listarTimes, listarJogos, buscarClassificacao, listarJogosEncerrados, buscarArtilharia, buscarCampeonato, listarJogadores,
+  listarTimes, listarJogos, buscarClassificacao, buscarArtilharia, buscarCampeonato, listarJogadores,
   validarCodigo, enviarFotoElenco, clubeSalvarJogador, clubeApagarJogador, clubeSalvarTecnico, clubeBuscarEscalacao, clubeSalvarEscalacao,
   clubeMeusPosts, publicarPost, urlFoto, clubePublicarEscalacao, clubeRetirarEscalacao,
 } from '../api.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
-import { assinarMudancas } from '../realtime.js';
+import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
 import { prepararFoto } from '../imagem.js';
 import { compartilharImagem } from '../compartilhar.js';
 import { arteEscalacao, inserirArte } from '../artes.js';
@@ -141,10 +141,10 @@ function sairDoClube(mensagem = '') {
 
 // ---------- Dados ----------
 async function buscar() {
-  const [campeonato, times, jogos, encerrados, linhas, artilharia, jogadores] = await Promise.all([
-    buscarCampeonato(), listarTimes(), listarJogos(), listarJogosEncerrados(), buscarClassificacao(), buscarArtilharia(), listarJogadores(),
+  const [campeonato, times, jogos, linhas, artilharia, jogadores] = await Promise.all([
+    buscarCampeonato(), listarTimes(), listarJogos(), buscarClassificacao(), buscarArtilharia(), listarJogadores(),
   ]);
-  return { campeonato, times, jogos, encerrados, linhas, artilharia, jogadores };
+  return { campeonato, times, jogos, encerrados: jogos.filter((j) => j.status === 'encerrado'), linhas, artilharia, jogadores };
 }
 
 async function carregar() {
@@ -690,6 +690,6 @@ if (checarConfiguracao(app)) {
   estado.codigo = guardado(CHAVE_CODIGO);
   if (estado.codigo && guardado(CHAVE_TIME)) { mostrarCarregando(app); carregar(); } else telaEntrada();
   // Realtime: não redesenha com uma janela aberta (alguém editando o elenco) nem com a escalação por salvar
-  assinarMudancas(() => { if (estado.time && !document.querySelector('dialog[open]') && !estado.alterada) carregar(); });
+  assinarMudancas(() => { if (estado.time && !document.querySelector('dialog[open]') && !estado.alterada) carregar(); }, [...TABELAS_JOGOS, 'jogadores']);
   window.addEventListener('beforeunload', (e) => { if (estado.alterada) e.preventDefault(); });
 }

@@ -1,5 +1,5 @@
 import { buscarCampeonato, listarRodadas, listarJogos } from '../api.js';
-import { assinarMudancas } from '../realtime.js';
+import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
 import { cartaoJogo } from '../cartaoJogo.js';
 import { carregarComCache } from '../cache.js';
 import { compartilharImagem } from '../compartilhar.js';
@@ -57,7 +57,7 @@ montarLayout('confrontos');
 if (checarConfiguracao(app)) {
   mostrarCarregando(app);
   carregar();
-  assinarMudancas(carregar);
+  assinarMudancas(carregar, TABELAS_JOGOS);
   botaoCompartilhar(async () => {
     if (!dados?.rodada) throw new Error('nenhuma rodada selecionada');
     await compartilharImagem(inserirArte('arte-rodada', arteRodada(dados.campeonato, dados.rodada, dados.jogos)), `rodada-${dados.rodada.numero}.jpg`);

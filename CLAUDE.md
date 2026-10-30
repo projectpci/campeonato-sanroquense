@@ -30,6 +30,7 @@ código versionado no **GitHub** e publicado no **GitHub Pages**.
 | `docs/10-avisos-e-time.md` | Cache da última visita, destaque do início, página do time e avisos (Web Push) |
 | `docs/11-area-do-clube.md` | Área do clube: acesso por código, elenco com foto, escalação e arte |
 | `docs/12-craque-escalacao-estatisticas.md` | Escalação publicada, elenco público, craque do jogo, estatísticas e story 9:16 |
+| `docs/13-auditoria.md` | Auditoria de estabilidade/fluidez, limites do plano gratuito e como manter |
 
 ## Regras de código
 1. **Mobile-first.** Testar sempre em 360px de largura. Nada de rolagem horizontal na página (só dentro da tabela, se inevitável).
@@ -38,7 +39,7 @@ código versionado no **GitHub** e publicado no **GitHub Pages**.
 4. Toda escrita no banco passa por usuário autenticado (organizador). Leitura é pública.
 5. Classificação e artilharia vêm das **views** do Supabase; o desempate fino (confronto direto) é aplicado em `js/classificacao.js`.
 6. Salvar resultado sempre pela função `salvar_resultado` (RPC) — garante atomicidade e valida soma dos gols.
-7. Toda página assina o **Realtime** e re-renderiza ao receber mudança.
+7. Toda página assina o **Realtime** (só as tabelas que mostra: `assinarMudancas(callback, tabelas)`) e re-renderiza ao receber mudança.
 8. Cores e fontes só via variáveis CSS de `css/tokens.css`. Não usar cor "solta".
 9. Funções pequenas, um módulo por responsabilidade. Sem dependências além das listadas.
 10. Antes de concluir uma tarefa: checar console sem erros, layout em celular e desktop, e atualizar o checklist em `docs/08-roadmap.md`.

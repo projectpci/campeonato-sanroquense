@@ -252,5 +252,5 @@ montarLayout('mural');
 if (checarConfiguracao(app)) {
   mostrarCarregando(app);
   carregar();
-  assinarMudancas(carregar);
+  assinarMudancas(carregar, ['posts', 'comentarios']);
 }

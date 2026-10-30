@@ -63,5 +63,5 @@ if (checarConfiguracao(app)) {
   mostrarCarregando(app);
   carregar();
   // Realtime: não redesenha com a ficha do jogador aberta
-  assinarMudancas(() => { if (!document.querySelector('dialog[open]')) carregar(); });
+  assinarMudancas(() => { if (!document.querySelector('dialog[open]')) carregar(); }, ['jogadores', 'times', 'gols']);
 }

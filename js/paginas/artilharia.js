@@ -67,7 +67,7 @@ montarLayout('artilharia');
 if (checarConfiguracao(app)) {
   mostrarCarregando(app);
   carregar();
-  assinarMudancas(carregar);
+  assinarMudancas(carregar, ['gols', 'jogos', 'jogadores', 'times']);
   botaoCompartilhar(async () => {
     if (!dados?.lista.length) throw new Error('nenhum gol registrado ainda');
     await compartilharImagem(inserirArte('arte-artilharia', arteArtilharia(dados.campeonato, dados.lista)), 'artilharia.jpg');

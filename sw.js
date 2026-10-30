@@ -1,7 +1,10 @@
 // Service worker: abre rápido e mostra a última tabela conhecida quando o celular está sem sinal.
 // Suba VERSAO a cada deploy para limpar o cache antigo.
-const VERSAO = 'v23';
+const VERSAO = 'v24';
 const CACHE = `sanroquense-${VERSAO}`;
+// Fotos do mural e do elenco (Storage): cache à parte, com limite, para não encher o celular
+const CACHE_IMAGENS = 'sanroquense-imagens';
+const LIMITE_IMAGENS = 150;
 
 const NUCLEO = [
   './', 'index.html', 'inicio.html', 'confrontos.html', 'classificacao.html', 'artilharia.html', 'admin.html', 'time.html', 'instalar.html', 'clube.html', 'elenco.html',
@@ -19,7 +22,7 @@ self.addEventListener('install', (evento) => {
 self.addEventListener('activate', (evento) => {
   evento.waitUntil(
     caches.keys()
-      .then((chaves) => Promise.all(chaves.filter((c) => c !== CACHE).map((c) => caches.delete(c))))
+      .then((chaves) => Promise.all(chaves.filter((c) => c !== CACHE && c !== CACHE_IMAGENS).map((c) => caches.delete(c))))
       .then(() => self.clients.claim()),
   );
 });
@@ -35,7 +38,8 @@ self.addEventListener('fetch', (evento) => {
   // Dados e o código do próprio site: rede primeiro (sempre a versão nova); imagens, fontes e bibliotecas: cache primeiro
   const ehDados = url.hostname.endsWith('.supabase.co') && url.pathname.includes('/rest/');
   const ehCodigo = url.origin === location.origin && /(\.(html|js|css|webmanifest)|\/)$/.test(url.pathname);
-  evento.respondWith(ehDados || ehCodigo ? redePrimeiro(request, ehCodigo) : cachePrimeiro(request));
+  const ehFoto = url.hostname.endsWith('.supabase.co') && url.pathname.includes('/storage/');
+  evento.respondWith(ehDados || ehCodigo ? redePrimeiro(request, ehCodigo) : cachePrimeiro(request, ehFoto ? CACHE_IMAGENS : CACHE));
 });
 
 // `revalidar`: o GitHub Pages deixa o navegador guardar os arquivos por 10 min; aqui sempre pergunta se mudou (304 é barato)
@@ -57,16 +61,24 @@ async function redePrimeiro(request, revalidar = false) {
   }
 }
 
-async function cachePrimeiro(request) {
-  const cache = await caches.open(CACHE);
+async function cachePrimeiro(request, nomeCache = CACHE) {
+  const cache = await caches.open(nomeCache);
   const guardada = await cache.match(request);
   const atualizar = fetch(request)
     .then((resposta) => {
-      if (resposta.status === 200 || resposta.type === 'opaque') cache.put(request, resposta.clone());
+      if (resposta.status === 200 || resposta.type === 'opaque') {
+        cache.put(request, resposta.clone()).then(() => { if (nomeCache === CACHE_IMAGENS) aparar(cache); });
+      }
       return resposta;
     })
     .catch(() => guardada);
   return guardada ?? atualizar;
+}
+
+// Mantém só as fotos mais recentes (as mais antigas saem primeiro)
+async function aparar(cache) {
+  const chaves = await cache.keys();
+  await Promise.all(chaves.slice(0, Math.max(0, chaves.length - LIMITE_IMAGENS)).map((k) => cache.delete(k)));
 }
 
 // Avisos (Web Push): mostra a notificação e, ao tocar, abre o app

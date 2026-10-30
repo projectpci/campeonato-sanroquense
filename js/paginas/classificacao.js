@@ -75,7 +75,7 @@ montarLayout('classificacao');
 if (checarConfiguracao(app)) {
   mostrarCarregando(app);
   carregar();
-  assinarMudancas(carregar);
+  assinarMudancas(carregar, ['jogos', 'times']);
   botaoCompartilhar(async () => {
     if (!dados) return;
     await compartilharImagem(inserirArte('arte-classificacao', arteClassificacao(dados.campeonato, dados.ordenadas)), 'classificacao.jpg');

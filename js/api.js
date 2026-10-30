@@ -1,6 +1,7 @@
 // Única porta para o banco. Não manipula DOM.
 import { supabase, CAMPEONATO_ID, demo } from './supabase.js';
-import { dadosDemo } from './demo.js';
+// Dados fictícios só são baixados no modo demonstração (localhost sem config.js)
+const dadosDemo = demo ? (await import('./demo.js')).dadosDemo : null;
 
 function cliente() {
   if (!supabase) throw new Error('Modo demonstração: configure js/config.js para salvar dados.');
