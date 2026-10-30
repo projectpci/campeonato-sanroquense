@@ -1110,13 +1110,6 @@ body.entrada-corpo { overflow-x: hidden; }
 .perfil__extra .avisos .botao { width: 100%; }
 button.escolha-time--ativo { border-color: var(--cor-primaria); background: var(--cor-fundo-3); box-shadow: var(--cor-brilho); }
 
-/* Início: convite para escolher o time */
-.convite-time { display: grid; gap: var(--esp-2); margin-bottom: var(--esp-3); border-color: var(--cor-borda-neon); }
-.convite-time__topo { display: flex; align-items: baseline; justify-content: space-between; gap: var(--esp-2); }
-.convite-time__topo strong { font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.1rem; text-transform: uppercase; }
-.convite-time__lista { display: flex; gap: var(--esp-2); overflow-x: auto; padding-bottom: var(--esp-1); scroll-snap-type: x mandatory; }
-.convite-time__lista .escolha-time { flex: none; width: auto; flex-direction: column; gap: 4px; padding: var(--esp-2) var(--esp-3); scroll-snap-align: start; text-align: center; font-size: .75rem; }
-.convite-time__lista .escolha-time span { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Início: cartão "Meu time" */
 .meu-time-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--esp-3); margin-bottom: var(--esp-3); color: var(--cor-texto); border-color: var(--cor-borda-neon); }
@@ -1143,3 +1136,47 @@ button.escolha-time--ativo { border-color: var(--cor-primaria); background: var(
 /* ADM: pico do dia */
 .online__picos { margin: 0; color: var(--cor-texto-2); }
 .online__picos strong { color: var(--cor-texto); }
+
+/* ================= v36: configurações do torcedor, torcida declarada (clube e ADM) ================= */
+/* Menu do selo (torcedor) */
+.perfil__extra .botao svg { width: 18px; height: 18px; }
+
+/* Configurações do torcedor */
+.configuracoes .form { gap: var(--esp-3); grid-template-columns: minmax(0, 1fr); }
+.configuracoes .form > * { min-width: 0; }
+.config { display: grid; gap: var(--esp-2); padding-top: var(--esp-3); border-top: 1px solid var(--cor-borda); }
+.config h3 { margin: 0; font-size: 1rem; }
+.config__time { display: flex; align-items: center; gap: var(--esp-3); }
+.config__time .escudo { width: 48px; height: 48px; }
+.config__time strong { flex: 1; min-width: 0; font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.2rem; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.config__time > span { flex: 1; }
+.config__nome { display: flex; gap: var(--esp-2); }
+.config__nome input { flex: 1; min-width: 0; min-height: 44px; padding: 0 var(--esp-3); background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); color: var(--cor-texto); font: inherit; }
+.opcoes-avisos { display: grid; gap: var(--esp-2); }
+.opcao-aviso { min-height: 44px; padding: 0 var(--esp-3); border: 1px solid var(--cor-borda); border-radius: var(--raio); background: var(--cor-fundo); color: var(--cor-texto-2); font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
+.opcao-aviso--ativa { border-color: var(--cor-primaria); background: var(--cor-fundo-3); color: var(--cor-texto); box-shadow: var(--cor-brilho); }
+.opcao-aviso--ativa::before { content: "✓ "; color: var(--cor-primaria); }
+
+/* Área do clube: torcida declarada */
+.clube-torcida { display: grid; gap: 2px; padding: var(--esp-2) var(--esp-3); border-radius: var(--raio); background: var(--cor-fundo); border: 1px solid var(--cor-borda); }
+.clube-torcida__numero strong { font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.3rem; color: var(--cor-primaria); }
+.clube-torcida__extra { font-size: .8rem; color: var(--cor-texto-2); }
+.clube-torcida__online { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--cor-texto); }
+.clube-torcida__online.oculto { display: none; }
+
+/* ADM: torcidas */
+.torcidas__total { margin: 0 0 var(--esp-2); color: var(--cor-texto-2); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.torcidas__total strong { font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.5rem; color: var(--cor-primaria); }
+.torcidas { display: grid; gap: var(--esp-2); margin: 0 0 var(--esp-2); padding: 0; list-style: none; }
+.torcidas__linha { display: grid; grid-template-columns: 26px 28px 1fr auto auto; align-items: center; gap: var(--esp-2); }
+.torcidas__linha .escudo { width: 28px; height: 28px; }
+.torcidas__pos { font-family: var(--fonte-destaque); color: var(--cor-texto-2); text-align: right; }
+.torcidas__nome { display: grid; gap: 4px; min-width: 0; font-weight: 700; text-transform: uppercase; font-size: .85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.torcidas__nome i { display: block; height: 6px; min-width: 2px; border-radius: 999px; background: var(--cor-primaria-forte); }
+.torcidas__n { display: grid; justify-items: end; line-height: 1.1; }
+.torcidas__n strong { font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.2rem; }
+.torcidas__n small { font-size: .7rem; color: var(--cor-texto-2); }
+.torcidas__on { min-width: 34px; font-size: .8rem; color: var(--cor-positivo); text-align: right; }
+.torcidas__on--zero { color: var(--cor-texto-2); opacity: .6; }
+.config__nome input { width: 0; }
+.config__nome .botao { flex: none; padding-left: var(--esp-3); padding-right: var(--esp-3); }

@@ -4,8 +4,9 @@
 import {
   listarTimes, listarJogos, buscarClassificacao, buscarArtilharia, buscarCampeonato, listarJogadores,
   validarCodigo, enviarFotoElenco, clubeSalvarJogador, clubeApagarJogador, clubeSalvarTecnico, clubeBuscarEscalacao, clubeSalvarEscalacao,
-  clubePublicarEscalacao, clubeRetirarEscalacao, publicarPost,
+  clubePublicarEscalacao, clubeRetirarEscalacao, publicarPost, torcidaDeclarada,
 } from '../api.js';
+import { aoMudarOnline } from '../presenca.js';
 import { criarFeed } from '../feed.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
 import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
@@ -158,10 +159,10 @@ function sairDoPerfil(e) {
 
 // ---------- Dados ----------
 async function buscar() {
-  const [campeonato, times, jogos, linhas, artilharia, jogadores] = await Promise.all([
-    buscarCampeonato(), listarTimes(), listarJogos(), buscarClassificacao(), buscarArtilharia(), listarJogadores(),
+  const [campeonato, times, jogos, linhas, artilharia, jogadores, torcida] = await Promise.all([
+    buscarCampeonato(), listarTimes(), listarJogos(), buscarClassificacao(), buscarArtilharia(), listarJogadores(), torcidaDeclarada().catch(() => ({})),
   ]);
-  return { campeonato, times, jogos, encerrados: jogos.filter((j) => j.status === 'encerrado'), linhas, artilharia, jogadores };
+  return { campeonato, times, jogos, encerrados: jogos.filter((j) => j.status === 'encerrado'), linhas, artilharia, jogadores, torcida };
 }
 
 async function carregar() {
@@ -206,6 +207,27 @@ function resultadoDe(j) {
 const diasAte = (iso) => Math.round((new Date(new Date(iso).toDateString()) - new Date(new Date().toDateString())) / 86400000);
 const quando = (iso) => { const n = diasAte(iso); return n < 0 ? '' : n === 0 ? 'hoje' : n === 1 ? 'amanhã' : `em ${n} dias`; };
 
+// ---------- Torcida do clube: declarados (time do coração) e quantos estão com o app aberto agora ----------
+let torcidaOnline = null;
+function htmlTorcidaDoClube() {
+  const declarados = estado.dados.torcida?.[estado.time.id] ?? 0;
+  const total = Object.values(estado.dados.torcida ?? {}).reduce((a, b) => a + b, 0);
+  const posicao = Object.values(estado.dados.torcida ?? {}).filter((n) => n > declarados).length + 1;
+  return `
+    <div class="clube-torcida">
+      <span class="clube-torcida__numero">❤️ <strong>${declarados}</strong> ${declarados === 1 ? 'torcedor declarado' : 'torcedores declarados'}</span>
+      <span class="clube-torcida__extra">${declarados ? `${posicao}ª maior torcida${total ? ` · ${Math.round((declarados / total) * 100)}% do app` : ''}` : 'Divulgue o app para a sua torcida!'}</span>
+      <span class="clube-torcida__online oculto" id="torcida-online"></span>
+    </div>`;
+}
+function pintarTorcidaOnline() {
+  const alvo = document.getElementById('torcida-online');
+  if (!alvo || !torcidaOnline || !estado.time) return;
+  const n = torcidaOnline.torcida[estado.time.id] ?? 0;
+  alvo.classList.toggle('oculto', !n);
+  alvo.innerHTML = `<span class="ponto-online" aria-hidden="true"></span>${n} ${n === 1 ? 'torcedor online agora' : 'torcedores online agora'}`;
+}
+
 // ---------- Tela ----------
 function htmlHero() {
   const { time, dados } = estado;
@@ -228,6 +250,7 @@ function htmlHero() {
         <div><strong>${linha?.j ?? 0}</strong><small>Jogos</small></div>
         <div><strong>${elenco().length}</strong><small>Elenco</small></div>
       </div>
+      ${htmlTorcidaDoClube()}
       ${jogo ? `
         <div class="clube-hero__proximo">
           <span class="texto-pequeno">Próximo jogo${jogo.data_hora ? ` · ${escapar(quando(jogo.data_hora))}` : ''}</span>
@@ -252,6 +275,7 @@ function desenhar() {
   app.innerHTML = `${htmlTopo()}<div id="aba-clube" class="clube-conteudo clube-conteudo--entrar"></div>`;
   estado.feed = null;
   SECOES[estado.aba](document.getElementById('aba-clube'));
+  pintarTorcidaOnline();
 }
 
 // Ponto no item "Escalação" do menu enquanto houver alteração por salvar
@@ -715,4 +739,5 @@ if (checarConfiguracao(app)) {
   }, [...TABELAS_JOGOS, 'jogadores']);
   assinarMudancas(() => { if (estado.aba === 'mural' && estado.feed) estado.feed.carregar().catch(tratarErro); }, ['posts', 'comentarios']);
   window.addEventListener('beforeunload', (e) => { if (estado.alterada) e.preventDefault(); });
+  aoMudarOnline((r) => { torcidaOnline = r; pintarTorcidaOnline(); });
 }

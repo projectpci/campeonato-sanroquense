@@ -257,3 +257,10 @@ alter table pico_online enable row level security;
 create policy "leitura organizador" on pico_online for select to authenticated using (true);
 -- registrar_pico_online(p_total int): security definer, só aumenta o pico do dia (horário da Bahia); execute para anon e authenticated
 ```
+
+## torcedores_declarados (time do coração por aparelho)
+```sql
+create table torcedores_declarados (aparelho uuid primary key, time_id bigint not null references times(id) on delete cascade, atualizado_em timestamptz not null default now());
+alter table torcedores_declarados enable row level security; -- sem políticas: só as funções
+-- declarar_time(p_aparelho uuid, p_time_id bigint): grava/troca/remove · torcida_declarada(): (time_id, torcedores)
+```

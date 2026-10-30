@@ -358,3 +358,13 @@ export const registrarPicoOnline = (total) =>
 // Só o organizador lê
 export const listarPicosOnline = (dias = 14) =>
   demo ? [] : executar(cliente().from('pico_online').select('dia, pico, hora').order('dia', { ascending: false }).limit(dias));
+
+// ---------- Torcida declarada (time do coração, um por aparelho) ----------
+export const declararTime = (aparelho, timeId) =>
+  demo ? null : executar(cliente().rpc('declarar_time', { p_aparelho: aparelho, p_time_id: timeId ?? null }));
+// { [time_id]: número de torcedores que declararam o time }
+export async function torcidaDeclarada() {
+  if (demo) return {};
+  const linhas = await executar(cliente().rpc('torcida_declarada'));
+  return Object.fromEntries((linhas ?? []).map((l) => [l.time_id, Number(l.torcedores)]));
+}

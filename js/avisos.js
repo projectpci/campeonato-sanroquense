@@ -134,6 +134,49 @@ export function botaoAvisosOrganizador(container) {
   desenhar();
 }
 
+// Configurações do torcedor: Desligados / Só o meu time / Todos os jogos
+function alcanceAtual(time) {
+  const e = lerEstado();
+  if (e.todos) return 'todos';
+  if (!e.times.length) return 'nenhum';
+  return time && e.times.length === 1 && e.times[0] === time.id ? 'meu' : 'outros';
+}
+export function opcoesAvisos(container) {
+  if (!container) return;
+  if (noIphoneSemApp()) { container.innerHTML = '<p class="texto-2 texto-pequeno">No iPhone, instale o app (Compartilhar → Adicionar à Tela de Início) para receber avisos.</p>'; return; }
+  if (!suportado()) { container.innerHTML = '<p class="texto-2 texto-pequeno">Este navegador não recebe avisos.</p>'; return; }
+  const desenhar = () => {
+    const time = meuTime();
+    const atual = alcanceAtual(time);
+    const opcoes = [['nenhum', 'Desligados'], ...(time ? [['meu', `Só os jogos do ${time.nome}`]] : []), ['todos', 'Todos os jogos']];
+    container.innerHTML = `
+      <div class="opcoes-avisos" role="radiogroup" aria-label="Avisos no celular">${opcoes.map(([id, rotulo]) => `
+        <button type="button" class="opcao-aviso${atual === id ? ' opcao-aviso--ativa' : ''}" role="radio" aria-checked="${atual === id}" data-alcance="${id}">${escapar(rotulo)}</button>`).join('')}</div>
+      ${atual === 'outros' ? `<p class="texto-2 texto-pequeno">Você segue ${lerEstado().times.length} time(s) pela página do time.</p>` : ''}`;
+    container.querySelectorAll('[data-alcance]').forEach((b) => b.addEventListener('click', async () => {
+      const alcance = b.dataset.alcance;
+      if (alcance === atual) return;
+      container.querySelectorAll('button').forEach((x) => { x.disabled = true; });
+      try {
+        await salvar(alcance === 'nenhum' ? { todos: false, times: [] } : alcance === 'meu' ? { todos: false, times: [time.id] } : { todos: true, times: [] });
+        toast(alcance === 'nenhum' ? 'Avisos desligados' : 'Avisos ligados ✔');
+        document.dispatchEvent(new CustomEvent('avisos-mudou'));
+      } catch (erro) {
+        toast(`Não foi possível mudar os avisos: ${erro.message}`, true);
+      }
+      desenhar();
+    }));
+  };
+  desenhar();
+}
+
+// Trocou o time do coração com os avisos em "só o meu time": passam para o time novo
+export async function acompanharTrocaDeTime(anterior, novo) {
+  const e = lerEstado();
+  if (!anterior || e.todos || !(e.times.length === 1 && e.times[0] === anterior.id)) return;
+  try { await salvar(novo ? { todos: false, times: [novo.id] } : { todos: false, times: [] }); } catch { /* segue como estava */ }
+}
+
 // "Avisar de quê?": só os jogos do time do coração ou todos. Resolve 'meu', 'todos' ou null (fechou)
 function escolherAlcance(time) {
   return new Promise((resolver) => {

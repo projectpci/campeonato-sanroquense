@@ -1,7 +1,7 @@
 // Helpers de interface: layout (header + nav), escudo, toast, loading, formatação.
 import { demo, semConfiguracao } from './supabase.js';
 import './pwa.js';
-import { meuTime, escolherMeuTime } from './meuTime.js';
+import { meuTime, declararNoBanco, perguntarNaPrimeiraVez } from './meuTime.js';
 
 const ICONES = {
   coroa: '<path d="M3 18h18l1-11-5 4-5-7-5 7-5-4z" fill="currentColor"/>',
@@ -115,24 +115,23 @@ function perfilNasPaginasPublicas() {
   } else {
     perfilDoTorcedor();
     document.addEventListener('meu-time-mudou', perfilDoTorcedor);
+    declararNoBanco();                                // aparelho que já tinha time entra na contagem
+    setTimeout(() => perguntarNaPrimeiraVez().catch(() => {}), 1200); // depois da tela carregar
   }
 }
 
-// Torcedor: o selo leva o escudo do time do coração; o menu mostra "Meu time" (trocar) e os avisos desse time
+// Torcedor: o selo leva o escudo do time do coração; o menu mostra "Meu time" e as Configurações
 function perfilDoTorcedor() {
   const time = meuTime();
   mostrarPerfil({ tipo: 'torcedor', rotulo: 'Torcedor', quem: time ? `Torcedor do ${time.nome}` : 'Torcedor', time });
   const extra = document.getElementById('perfil-extra');
-  extra.innerHTML = time ? `
-    <div class="meu-time">${escudo(time, 32)}<span><small>Meu time</small><strong>${escapar(time.nome)}</strong></span>
-      <button class="link-botao" type="button" data-trocar-meu-time>Trocar</button></div>
-    <div id="avisos-meu-time"></div>`
-    : '<button class="botao botao--secundario" type="button" data-trocar-meu-time>⚽ Escolher meu time</button>';
-  extra.querySelector('[data-trocar-meu-time]').addEventListener('click', async () => {
-    const { listarTimes } = await import('./api.js');
-    escolherMeuTime((await listarTimes()).filter((t) => t.ativo !== false));
+  extra.innerHTML = `
+    ${time ? `<div class="meu-time">${escudo(time, 32)}<span><small>Meu time</small><strong>${escapar(time.nome)}</strong></span></div>` : ''}
+    <button class="botao botao--secundario" type="button" data-configurar>${icone('engrenagem')} Configurações</button>`;
+  extra.querySelector('[data-configurar]').addEventListener('click', () => {
+    document.getElementById('menu-perfil').hidden = true;
+    import('./configTorcedor.js').then((m) => m.abrirConfiguracoes()).catch(() => {});
   });
-  if (time) import('./avisos.js').then((m) => m.botaoAvisos(document.getElementById('avisos-meu-time'), { timeId: time.id, nome: time.nome })).catch(() => {});
 }
 export const perfilDoClube = (time) => mostrarPerfil({ tipo: 'clube', rotulo: rotuloDoClube(time), quem: `Clube ${time.nome}`, time });
 
