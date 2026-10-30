@@ -1373,3 +1373,71 @@ body[data-aba-adm]:not([data-aba-adm="jogos"]) .torcidometro { display: none; } 
 .post__moderar { padding: var(--esp-3) var(--esp-4); }
 .comentario > .avatar-feed { flex: none; }
 .comentario .comentario__autor--org { color: var(--cor-ouro); }
+
+/* ================= v44: elenco por WhatsApp (formulário dos clubes e importação do organizador) ================= */
+.header:has(.header__marca:only-child) { justify-content: center; }
+.cadastro__passos { display: grid; gap: var(--esp-2); }
+.cadastro__passos p { display: flex; align-items: center; gap: var(--esp-3); margin: 0; }
+.cadastro__passos b { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--cor-primaria-forte); color: var(--cor-texto-inverso); font-family: var(--fonte-destaque); font-weight: 400; }
+.cadastro__time { margin-top: var(--esp-3); }
+.cadastro__time select, .cadastro__time input { min-height: 48px; }
+.cadastro__secao { --cor-linha: var(--cor-texto-2); display: grid; gap: var(--esp-2); margin-top: var(--esp-4); padding: var(--esp-3); border-radius: 22px; background: var(--cor-fundo-2); border: 1px solid color-mix(in srgb, var(--cor-linha) 45%, var(--cor-borda)); border-top: 4px solid var(--cor-linha); }
+.cadastro__secao--gol { --cor-linha: var(--cor-pos-gol); }
+.cadastro__secao--def { --cor-linha: var(--cor-pos-def); }
+.cadastro__secao--mei { --cor-linha: var(--cor-pos-mei); }
+.cadastro__secao--ata { --cor-linha: var(--cor-pos-ata); }
+.cadastro__secao h3 { display: flex; align-items: center; gap: var(--esp-2); margin: 0; font-size: 1.05rem; text-transform: uppercase; letter-spacing: .04em; }
+.cadastro__secao h3 small { margin-left: auto; min-width: 26px; padding: 1px 8px; border-radius: 999px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); text-align: center; font-size: .8rem; color: var(--cor-linha); }
+.cadastro__linhas { display: grid; gap: var(--esp-2); }
+.cadastro__linha { display: grid; grid-template-columns: 56px minmax(0, 1fr) 44px; gap: var(--esp-2); align-items: center; }
+.cadastro__linha input { min-height: 46px; min-width: 0; padding: 0 var(--esp-3); background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); color: var(--cor-texto); font: inherit; font-size: 1rem; }
+.cadastro__numero { text-align: center; font-family: var(--fonte-destaque); font-size: 1.15rem !important; color: var(--cor-linha) !important; }
+.cadastro__linha input:focus { outline: none; border-color: var(--cor-linha); box-shadow: 0 0 0 2px color-mix(in srgb, var(--cor-linha) 30%, transparent); }
+.cadastro__remover { min-height: 46px; border-radius: var(--raio); background: transparent; border: 1px solid var(--cor-borda); color: var(--cor-texto-2); cursor: pointer; }
+.cadastro__remover:hover { color: var(--cor-negativo); border-color: var(--cor-negativo); }
+.cadastro__linha--erro input { border-color: var(--cor-negativo); }
+.cadastro__aviso { grid-column: 1 / -1; color: var(--cor-negativo); font-size: .8rem; }
+.cadastro__secao > .botao { justify-self: start; }
+.cadastro__nota { margin: var(--esp-4) 0 var(--esp-2); text-align: center; }
+.cadastro__barra { position: sticky; bottom: var(--esp-2); z-index: 15; display: flex; align-items: center; gap: var(--esp-2); margin-top: var(--esp-3); padding: var(--esp-2) var(--esp-3); border-radius: var(--raio-grande); background: var(--cor-fundo-2); border: 1px solid var(--cor-borda-neon); box-shadow: 0 -4px 18px var(--cor-sombra); }
+.cadastro__total { display: grid; line-height: 1.1; font-size: .85rem; color: var(--cor-texto-2); }
+.cadastro__total b { font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.5rem; color: var(--cor-primaria); }
+.cadastro__total small { font-size: .7rem; color: var(--cor-ouro); }
+.cadastro__barra .botao { white-space: nowrap; }
+.cadastro__enviar { margin-left: auto; flex: 1 1 auto; min-height: 48px; font-size: 1.1rem; }
+.cadastro__barra .botao svg { width: 20px; height: 20px; }
+body > main.conteudo:has(.cadastro__barra) { padding-bottom: var(--esp-5); }
+
+/* Importação do organizador */
+.importar { display: grid; gap: var(--esp-3); }
+.importar h2, .importar h3 { margin: 0; }
+.importar h3 { font-size: 1rem; text-transform: uppercase; letter-spacing: .03em; }
+.importar__painel { display: grid; gap: var(--esp-3); }
+.importar__geral { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--esp-2); align-items: center; }
+.importar__geral input { min-width: 0; min-height: 40px; padding: 0 var(--esp-3); background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); color: var(--cor-texto-2); font: inherit; font-size: .85rem; }
+.importar__times { display: grid; gap: var(--esp-2); margin: 0; padding: 0; list-style: none; }
+.importar__times li { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto auto; align-items: center; gap: var(--esp-2); }
+.importar__times li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; text-transform: uppercase; font-size: .9rem; }
+.importar a.botao { text-decoration: none; }
+.importar__texto { width: 100%; min-height: 180px; padding: var(--esp-3); background: var(--cor-fundo); border: 1px solid var(--cor-borda-neon); border-radius: var(--raio); color: var(--cor-texto); font: inherit; resize: vertical; }
+.importar__clube { display: grid; gap: var(--esp-2); padding: var(--esp-3); border-radius: 18px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); }
+.importar__clube--sem-time { border-color: var(--cor-negativo); }
+.importar__clube header { display: grid; gap: var(--esp-1); }
+.importar__clube header select { min-height: 44px; width: 100%; padding: 0 var(--esp-3); background: var(--cor-fundo-2); border: 1px solid var(--cor-borda-neon); border-radius: var(--raio); color: var(--cor-texto); font: inherit; font-weight: 700; }
+.importar__contagem { font-size: .8rem; color: var(--cor-texto-2); }
+.importar__jogadores { display: grid; gap: var(--esp-2); }
+.importar__jogador { display: grid; grid-template-columns: 22px 46px minmax(0, 1fr) 76px; gap: 6px; align-items: center; }
+.importar__jogador input[type="text"], .importar__jogador input:not([type]), .importar__jogador select, .importar__jogador input[inputmode] { min-height: 40px; min-width: 0; padding: 0 var(--esp-2); background: var(--cor-fundo-2); border: 1px solid var(--cor-borda); border-radius: 8px; color: var(--cor-texto); font: inherit; font-size: .95rem; }
+.importar__jogador input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--cor-primaria-forte); }
+.importar__num { text-align: center; }
+.importar__jogador--fora > :not(:first-child) { opacity: .4; }
+.importar__estado { grid-column: 2 / -1; margin-top: -2px; font-size: .75rem; color: var(--cor-texto-2); }
+.importar__estado:empty { display: none; }
+.importar__estado--novo { color: var(--cor-primaria); }
+.importar__estado--aviso { color: var(--cor-ouro); }
+.importar__estado--erro { color: var(--cor-negativo); }
+.importar__rodape { position: sticky; bottom: calc(-1 * var(--esp-4)); display: flex; justify-content: flex-end; gap: var(--esp-2); margin: 0 calc(-1 * var(--esp-4)) calc(-1 * var(--esp-4)); padding: var(--esp-3) var(--esp-4); background: var(--cor-fundo-2); border-top: 1px solid var(--cor-borda); }
+.importar__rodape .botao { white-space: nowrap; padding: 0 var(--esp-3); }
+.importar__rodape .botao { white-space: nowrap; padding: 0 var(--esp-3); }
+.importar__rodape .botao:last-child { flex: 1; }
+.elenco__ferramentas { display: flex; justify-content: flex-end; margin-bottom: var(--esp-3); }

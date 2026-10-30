@@ -15,7 +15,7 @@ const TIPOS = {
 const normalizarNome = (nome) => String(nome ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
 
 // Folha que sobe de baixo no celular; não fecha as outras janelas (o seletor de autor abre por cima da súmula)
-function criarFolha(html, classe) {
+export function criarFolha(html, classe) {
   const d = document.createElement('dialog');
   d.className = `dialogo dialogo--folha ${classe}`;
   d.innerHTML = html;

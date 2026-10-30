@@ -303,6 +303,39 @@ export const clubeSalvarTecnico = (codigo, nome, fotoUrl) =>
   demo ? dadosDemo.clubeSalvarTecnico(codigo, nome, fotoUrl) :
   rpcClube('clube_salvar_tecnico', { p_codigo: codigo, p_nome: nome, p_foto_url: fotoUrl || null });
 
+// Importação em massa do organizador (elencos recebidos por WhatsApp). lotes: [{ time_id, tecnico?, jogadores: [{ nome, numero, posicao }] }]
+// Jogador que já existe no time (mesmo nome, sem acento/maiúscula) só recebe número e posição; os demais são criados.
+export async function importarElenco(lotes) {
+  if (demo) throw new Error('A importação não está disponível no modo demonstração.');
+  const chaveNome = (n) => String(n ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const existentes = await executar(cliente().from('jogadores').select('id, time_id, nome').in('time_id', [...new Set(lotes.map((l) => l.time_id))]));
+  const total = { novos: 0, atualizados: 0, tecnicos: 0 };
+  for (const lote of lotes) {
+    const doTime = existentes.filter((e) => e.time_id === lote.time_id);
+    const novos = [];
+    const atualizacoes = [];
+    const vistos = new Set();
+    for (const j of lote.jogadores) {
+      const k = chaveNome(j.nome);
+      if (vistos.has(k)) continue;
+      vistos.add(k);
+      const ja = doTime.find((e) => chaveNome(e.nome) === k);
+      if (ja) {
+        const campos = { ativo: true };
+        if (j.numero != null) campos.numero = j.numero;
+        if (j.posicao) campos.posicao = j.posicao;
+        atualizacoes.push(executar(cliente().from('jogadores').update(campos).eq('id', ja.id)));
+      } else novos.push({ time_id: lote.time_id, nome: j.nome.trim(), numero: j.numero ?? null, posicao: j.posicao || null, ativo: true });
+    }
+    await Promise.all(atualizacoes);
+    if (novos.length) await executar(cliente().from('jogadores').insert(novos));
+    if (lote.tecnico) { await executar(cliente().from('times').update({ tecnico_nome: lote.tecnico }).eq('id', lote.time_id)); total.tecnicos++; }
+    total.novos += novos.length;
+    total.atualizados += atualizacoes.length;
+  }
+  return total;
+}
+
 export const clubeBuscarEscalacao = (codigo) =>
   demo ? dadosDemo.clubeBuscarEscalacao(codigo) :
   rpcClube('clube_buscar_escalacao', { p_codigo: codigo });

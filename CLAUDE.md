@@ -31,6 +31,7 @@ código versionado no **GitHub** e publicado no **GitHub Pages**.
 | `docs/11-area-do-clube.md` | Área do clube: acesso por código, elenco com foto, escalação e arte |
 | `docs/12-craque-escalacao-estatisticas.md` | Escalação publicada, elenco público, craque do jogo, estatísticas e story 9:16 |
 | `docs/13-auditoria.md` | Auditoria de estabilidade/fluidez, limites do plano gratuito e como manter |
+| `docs/14-elenco-whatsapp.md` | Formulário do elenco para os clubes (WhatsApp) e importação em massa do organizador |
 
 ## Regras de código
 1. **Mobile-first.** Testar sempre em 360px de largura. Nada de rolagem horizontal na página (só dentro da tabela, se inevitável).

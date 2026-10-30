@@ -18,6 +18,8 @@ export const semConfiguracao = !configurado && !ehLocal;
 
 export const CAMPEONATO_ID = config?.CAMPEONATO_ID ?? 1;
 export const CANAL_WHATSAPP = config?.CANAL_WHATSAPP_URL ?? '';
+// Opcional: número do organizador (só dígitos, com 55 + DDD) que recebe o elenco enviado pelo formulário dos clubes
+export const WHATSAPP_ELENCO = String(config?.WHATSAPP_ELENCO ?? '').replace(/\D/g, '');
 
 export let supabase = null;
 if (configurado) {

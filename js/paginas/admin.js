@@ -10,6 +10,7 @@ import { abrirSumula, painelAoVivo, ligarMarcacaoAoVivo } from '../sumula.js';
 import { htmlTabela, linhaArtilheiro } from '../tabelas.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
 import { htmlElenco, htmlSeletorTimes, ligarElenco } from '../elencoTime.js';
+import { abrirElencoWhatsApp } from '../importacaoElenco.js';
 import { rodadaAtual } from '../rodadas.js';
 import { assinarMudancas } from '../realtime.js';
 import { criarFeed } from '../feed.js';
@@ -378,7 +379,9 @@ function abaElenco(aba, times, jogadores) {
   const ativos = times.filter((t) => t.ativo !== false);
   if (!ativos.some((t) => t.id === estado.elencoTimeId)) estado.elencoTimeId = ativos[0]?.id ?? null;
   const time = ativos.find((t) => t.id === estado.elencoTimeId);
-  aba.innerHTML = `${htmlSeletorTimes(ativos, jogadores, estado.elencoTimeId)}<div id="elenco-adm"></div>`;
+  aba.innerHTML = `<div class="elenco__ferramentas"><button class="botao botao--secundario" type="button" id="elenco-zap">📲 Elenco por WhatsApp</button></div>
+    ${htmlSeletorTimes(ativos, jogadores, estado.elencoTimeId)}<div id="elenco-adm"></div>`;
+  document.getElementById('elenco-zap').addEventListener('click', () => abrirElencoWhatsApp({ times, jogadores, executar }));
   if (time) {
     const alvo = document.getElementById('elenco-adm');
     alvo.innerHTML = htmlElenco(time, jogadores, { vazio: 'O clube ainda não cadastrou jogadores. O cadastro é feito pela Área do clube, com o código do time.' });

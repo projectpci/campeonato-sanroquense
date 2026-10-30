@@ -113,3 +113,4 @@
 - [x] Súmula do organizador (v41): lançar/editar resultado com botões Gol pró · Pênalti · Contra por time, escolha do jogador por busca, lista de gols em ordem, placar calculado dos gols, marcar gol ao vivo, desfazer último gol; menu do jogo e novo/editar confronto redesenhados; gols (com pênalti/contra) aparecem no card ao vivo
 - [x] Torcidômetro (v42, ajustado na v43): barra no Início e na aba Jogos do ADM (não mais em todas as páginas); time do coração/clube destacado; saiu de Ajustes do ADM
 - [x] Elenco e Mural redesenhados (v43): cartas verticais com foto em degradê, cabeçalho e técnico em cartão; publicação com botões em pílula (Curtir/Comentar/Compartilhar), comentários em balão com avatar e selo oficial/time
+- [x] Elenco por WhatsApp (v44): formulário `cadastro-elenco.html` para os clubes (mensagem no formato do sistema), leitor da mensagem e importação em massa no painel (Elenco → 📲 Elenco por WhatsApp), links por time e modelo em branco
