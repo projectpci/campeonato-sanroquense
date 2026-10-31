@@ -102,6 +102,7 @@ export function mostrarPerfil({ tipo, rotulo, quem, time = null, voltar = null, 
   // o clube guarda nome e escudo para o selo aparecer certo também nas páginas públicas
   if (tipo === 'clube' && time) { try { localStorage.setItem(CHAVE_CLUBE_SELO, JSON.stringify({ id: time.id, nome: time.nome, sigla: time.sigla, escudo_url: time.escudo_url })); } catch { /* sem armazenamento */ } }
   if (contar) import('./presenca.js').then((m) => m.anunciar({ perfil: tipo, time })).catch(() => {});
+  if (contar) import('./acessos.js').then((m) => m.registrarVisita({ perfil: tipo })).catch(() => {}); // acessos por dia (anônimo)
 }
 
 const rotuloDoClube = (time) => time?.sigla || (time?.nome?.length > 10 ? `${time.nome.slice(0, 9)}…` : time?.nome) || 'Clube';

@@ -274,3 +274,6 @@ alter table gols add column penalti boolean not null default false;  -- pênalti
 -- A ORDEM da lista é a ordem dos gols na partida (ids crescentes); a súmula envia um gol por linha (quantidade 1).
 ```
 A função completa está no banco (`salvar_resultado(bigint, integer, integer, jsonb, boolean default true)`).
+
+## acessos_dia (contagem anônima por aparelho e por dia, v47)
+Migração `acessos_e_instalacoes_por_dia`: tabela `acessos_dia (dia, aparelho, perfil, instalado, plataforma, primeiro_em)` com chave `(dia, aparelho)`; RLS só leitura para o organizador; escrita por `registrar_acesso(p_aparelho, p_perfil, p_instalado, p_plataforma)` (SECURITY DEFINER, ignora identificador fora do formato UUID) e resumo por `acessos_resumo(p_dias)` (só autenticado).

@@ -67,3 +67,9 @@
 ## Torcidômetro (v42)
 - `js/torcidometro.js`: barra compacta abaixo do título, só no Início e na aba Jogos do painel do ADM (`montarLayout({ torcidometro: true })`; no ADM o css esconde nas outras abas por `body[data-aba-adm]`). Escondida nas telas de login (`body.painel--login`).
 - Dados: `torcida_declarada()` + times, guardados 60 s em `sessionStorage` (trocar de página não repete a consulta); o "online" vem do Presence (`aoMudarOnline`), sem consulta extra.
+
+## Acessos e instalações (v47)
+- Tabela `acessos_dia (dia, aparelho, perfil, instalado, plataforma)`: 1 linha por aparelho e por dia (dia na hora da Bahia). Escrita só pela função `registrar_acesso` (aceita só identificador no formato de UUID); leitura só do organizador (RLS) e pelo resumo `acessos_resumo(dias)`.
+- `js/acessos.js`: cada aparelho avisa 1 vez por dia (e de novo ao virar clube/ADM ou ao ser instalado). Não envia nome nem telefone. Em localhost não conta (use `?acesso` para testar).
+- **Instalado** = abriu pelo ícone do app (`display-mode: standalone` ou `navigator.standalone` no iPhone); no Android o evento `appinstalled` também marca. Conta aparelhos, não pessoas.
+- Painel: Ajustes → 📊 Acessos e instalações (`js/painelAcessos.js`): hoje, totais, 14 dias (acessos, instalados, novos) e o pico de pessoas ao mesmo tempo. A contagem começa no dia do deploy; não há histórico anterior.

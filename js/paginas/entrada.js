@@ -5,6 +5,7 @@ import '../pwa.js';
 import { listarTimes, listarJogos } from '../api.js';
 import { semConfiguracao } from '../supabase.js';
 import { escapar, escudo, formatarData, horaDoJogo, modoAtivo, definirModo } from '../ui.js';
+import { registrarVisita } from '../acessos.js';
 
 window.__appIniciou = true; // js/resgate.js: a tela inicial abriu
 
@@ -107,3 +108,4 @@ if (new URLSearchParams(location.search).has('sair')) {
 
 lembrarPerfil();
 enfeitar();
+registrarVisita({ perfil: ['torcedor', 'clube', 'adm'].includes(modoAtivo()) ? modoAtivo() : 'torcedor' });

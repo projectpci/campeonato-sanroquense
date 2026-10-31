@@ -422,6 +422,13 @@ export const rankingCraques = () =>
 // Qualquer aparelho informa quando vê um número maior; a função do banco só aumenta (máx. 300)
 export const registrarPicoOnline = (total) =>
   demo ? null : executar(cliente().rpc('registrar_pico_online', { p_total: total }));
+// ---------- Acessos e instalações (contagem anônima por aparelho e por dia) ----------
+export const registrarAcesso = ({ aparelho, perfil, instalado, plataforma }) =>
+  demo ? null : executar(cliente().rpc('registrar_acesso', { p_aparelho: aparelho, p_perfil: perfil, p_instalado: instalado, p_plataforma: plataforma }));
+// Só o organizador lê
+export const resumoAcessos = (dias = 14) =>
+  demo ? Promise.reject(new Error('Indisponível no modo demonstração.')) : executar(cliente().rpc('acessos_resumo', { p_dias: dias }));
+
 // Só o organizador lê
 export const listarPicosOnline = (dias = 14) =>
   demo ? [] : executar(cliente().from('pico_online').select('dia, pico, hora').order('dia', { ascending: false }).limit(dias));

@@ -11,6 +11,7 @@ import { htmlTabela, linhaArtilheiro } from '../tabelas.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
 import { htmlElenco, htmlSeletorTimes, htmlAvisoElencos, ligarElenco } from '../elencoTime.js';
 import { dialogoJogadorAdm, dialogoTecnicoAdm } from '../elencoAdm.js';
+import { ligarAcessos } from '../painelAcessos.js';
 import { abrirElencoWhatsApp } from '../importacaoElenco.js';
 import { rodadaAtual } from '../rodadas.js';
 import { assinarMudancas } from '../realtime.js';
@@ -235,6 +236,10 @@ function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
         </div>` : '<p class="texto-2 texto-pequeno">Crie a primeira rodada em Jogos (+ Rodada).</p>'}
     </section>
     <section class="ajuste">
+      <h3>📊 Acessos e instalações</h3>
+      <div id="ajuste-acessos"><p class="texto-2 texto-pequeno">Contando os acessos…</p></div>
+    </section>
+    <section class="ajuste">
       <h3>Avisos no celular</h3>
       <p class="texto-2 texto-pequeno">Receba um aviso quando um time enviar foto para aprovar.</p>
       <div id="avisos-adm"></div>
@@ -257,6 +262,7 @@ function abaAjustes(aba, { times, codigos, jogos, rodadas }) {
     estado.rodadaId = rodada.id; // ao voltar para Jogos, já abre nesta rodada
     dialogoConfronto(rodada, times, jogos.filter((j) => j.rodada_id === rodada.id));
   });
+  ligarAcessos(document.getElementById('ajuste-acessos'));
   botaoAvisosOrganizador(document.getElementById('avisos-adm'));
   document.getElementById('btn-csv').addEventListener('click', () => exportarCsv(jogos, rodadas));
   document.getElementById('btn-sair-painel').addEventListener('click', sairDoPainel);
