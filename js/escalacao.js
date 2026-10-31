@@ -18,9 +18,14 @@ export const FORMACOES = {
 };
 export const FORMACAO_PADRAO = '4-4-2';
 
-// Linhas do elenco (filtro e cor das cartas): [id, rótulo, posições]
-export const LINHAS = [['todos', 'Todos', null], ['gol', 'Goleiros', ['GOL']], ['def', 'Defesa', ['ZAG', 'LAT']], ['mei', 'Meio', ['VOL', 'MEI']], ['ata', 'Ataque', ['ATA']]];
-export const linhaDe = (posicao) => LINHAS.find(([, , grupos]) => grupos?.includes(posicao))?.[0] ?? 'sem';
+// Filtros e seções do elenco: uma por posição (a mesma divisão do formulário de cadastro): [id, rótulo, posições]
+export const LINHAS = [['todos', 'Todos', null], ['GOL', 'Goleiros', ['GOL']], ['ZAG', 'Zagueiros', ['ZAG']], ['LAT', 'Laterais', ['LAT']],
+  ['VOL', 'Volantes', ['VOL']], ['MEI', 'Meias', ['MEI']], ['ATA', 'Atacantes', ['ATA']]];
+// Família de cor da posição (cartas, títulos e fichas): gol, def (zagueiro e lateral), mei (volante e meia), ata
+const FAMILIAS = [['gol', ['GOL']], ['def', ['ZAG', 'LAT']], ['mei', ['VOL', 'MEI']], ['ata', ['ATA']]];
+export const linhaDe = (posicao) => FAMILIAS.find(([, posicoes]) => posicoes.includes(posicao))?.[0] ?? 'sem';
+// Menos que isso, o elenco aparece como "incompleto" (um time em campo tem 11)
+export const MINIMO_ELENCO = 11;
 
 export const POSICOES = [['GOL', 'Goleiro'], ['ZAG', 'Zagueiro'], ['LAT', 'Lateral'], ['VOL', 'Volante'], ['MEI', 'Meia'], ['ATA', 'Atacante']];
 

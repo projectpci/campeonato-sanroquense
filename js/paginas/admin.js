@@ -9,7 +9,8 @@ import { resumoDosGols, textoDoGol } from '../golsDoJogo.js';
 import { abrirSumula, painelAoVivo, ligarMarcacaoAoVivo } from '../sumula.js';
 import { htmlTabela, linhaArtilheiro } from '../tabelas.js';
 import { ordenarClassificacao, posicoesComEmpate } from '../classificacao.js';
-import { htmlElenco, htmlSeletorTimes, ligarElenco } from '../elencoTime.js';
+import { htmlElenco, htmlSeletorTimes, htmlAvisoElencos, ligarElenco } from '../elencoTime.js';
+import { dialogoJogadorAdm, dialogoTecnicoAdm } from '../elencoAdm.js';
 import { abrirElencoWhatsApp } from '../importacaoElenco.js';
 import { rodadaAtual } from '../rodadas.js';
 import { assinarMudancas } from '../realtime.js';
@@ -374,18 +375,27 @@ function dialogoTime(time) {
   });
 }
 
-// ---------- Aba Elenco (ver o elenco cadastrado por cada clube) ----------
+// ---------- Aba Elenco (o organizador também cadastra e edita jogadores e técnico) ----------
 function abaElenco(aba, times, jogadores) {
   const ativos = times.filter((t) => t.ativo !== false);
   if (!ativos.some((t) => t.id === estado.elencoTimeId)) estado.elencoTimeId = ativos[0]?.id ?? null;
   const time = ativos.find((t) => t.id === estado.elencoTimeId);
-  aba.innerHTML = `<div class="elenco__ferramentas"><button class="botao botao--secundario" type="button" id="elenco-zap">📲 Elenco por WhatsApp</button></div>
-    ${htmlSeletorTimes(ativos, jogadores, estado.elencoTimeId)}<div id="elenco-adm"></div>`;
+  aba.innerHTML = `
+    <div class="elenco__ferramentas"><button class="botao botao--secundario" type="button" id="elenco-zap">📲 Elenco por WhatsApp</button></div>
+    ${htmlAvisoElencos(ativos, jogadores)}
+    ${htmlSeletorTimes(ativos, jogadores, estado.elencoTimeId)}
+    ${time ? `<div class="elenco__acoes-adm">
+      <button class="botao" type="button" id="adm-novo-jogador">+ Jogador</button>
+      <button class="botao botao--secundario" type="button" id="adm-tecnico">Técnico</button>
+    </div>` : ''}
+    <div id="elenco-adm"></div>`;
   document.getElementById('elenco-zap').addEventListener('click', () => abrirElencoWhatsApp({ times, jogadores, executar }));
   if (time) {
     const alvo = document.getElementById('elenco-adm');
-    alvo.innerHTML = htmlElenco(time, jogadores, { vazio: 'O clube ainda não cadastrou jogadores. O cadastro é feito pela Área do clube, com o código do time.' });
-    ligarElenco(alvo, { time, jogadores });
+    alvo.innerHTML = htmlElenco(time, jogadores, { admin: true });
+    ligarElenco(alvo, { time, jogadores, aoTocar: (jogador) => dialogoJogadorAdm({ time, jogador, executar }) });
+    document.getElementById('adm-novo-jogador').addEventListener('click', () => dialogoJogadorAdm({ time, executar }));
+    document.getElementById('adm-tecnico').addEventListener('click', () => dialogoTecnicoAdm({ time, executar }));
   }
   aba.querySelectorAll('[data-elenco-time]').forEach((b) => b.addEventListener('click', () => { estado.elencoTimeId = Number(b.dataset.elencoTime); abaElenco(aba, times, jogadores); }));
   aba.querySelector('.seletor-times__item--ativo')?.scrollIntoView({ inline: 'center', block: 'nearest' });

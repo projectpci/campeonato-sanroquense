@@ -33,3 +33,8 @@ Em `js/config.js` (público, não é segredo): `export const WHATSAPP_ELENCO = '
 
 ## Testes
 `node tests/elenco.test.mjs` (leitor, formatos, vários times, avisos).
+
+## Cadastro direto pelo organizador e avisos de elenco (v46)
+- **ADM cadastra o elenco:** aba **Elenco** → **+ Jogador** (nome, número, posição) e **Técnico**; tocar numa carta edita ou remove o jogador. Quem já fez gol só sai da lista (`ativo = false`) para manter a artilharia. Nome que já existe no time (mesmo removido) é reaproveitado. Escrita direta em `jogadores`/`times` (RLS do organizador): `salvarJogadorAdm`, `removerJogadorAdm`, `salvarTecnicoAdm` em `js/api.js`; telas em `js/elencoAdm.js`.
+- **Seis posições em todo lugar:** Goleiros, Zagueiros, **Laterais**, Volantes, Meias, Atacantes (filtros do clube, seções do Elenco e resumo). As cores continuam por família (gol, defesa, meio, ataque).
+- **Elenco não informado:** "!" vermelho no escudo do seletor e cartão "⚠️ Elenco não informado" no time (torcedor, página do time, área do clube e painel); menos de 11 jogadores = "🟡 Elenco incompleto" (número amarelo). No painel, o resumo no topo da aba Elenco lista os times sem elenco e os incompletos.

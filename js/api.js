@@ -303,6 +303,39 @@ export const clubeSalvarTecnico = (codigo, nome, fotoUrl) =>
   demo ? dadosDemo.clubeSalvarTecnico(codigo, nome, fotoUrl) :
   rpcClube('clube_salvar_tecnico', { p_codigo: codigo, p_nome: nome, p_foto_url: fotoUrl || null });
 
+// ---------- Elenco pelo organizador (cadastro direto no painel) ----------
+const nomeSemAcento = (n) => String(n ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
+const erroDeJogador = (erro) => (/duplicate|unique/i.test(erro.message) ? new Error('Já existe outro jogador com esse nome neste time.') : erro);
+
+// Novo jogador ou edição. Nome que já existe no time (mesmo desativado) é reaproveitado em vez de duplicar.
+export async function salvarJogadorAdm({ id = null, time_id, nome, numero = null, posicao = '' }) {
+  if (demo) throw new Error('O cadastro não está disponível no modo demonstração.');
+  const limpo = String(nome ?? '').trim();
+  if (limpo.length < 2 || limpo.length > 40) throw new Error('Nome do jogador deve ter de 2 a 40 letras.');
+  const campos = { nome: limpo, numero: numero === '' ? null : numero, posicao: posicao || null, ativo: true };
+  try {
+    if (id) return await executar(cliente().from('jogadores').update(campos).eq('id', id));
+    const doTime = await executar(cliente().from('jogadores').select('id, nome').eq('time_id', time_id));
+    const igual = doTime.find((j) => nomeSemAcento(j.nome) === nomeSemAcento(limpo));
+    if (igual) return await executar(cliente().from('jogadores').update({ numero: campos.numero, posicao: campos.posicao, ativo: true }).eq('id', igual.id));
+    return await executar(cliente().from('jogadores').insert({ time_id, ...campos }));
+  } catch (erro) { throw erroDeJogador(erro); }
+}
+
+// Quem já fez gol só sai do elenco (ativo = false) para manter a artilharia; os outros são apagados
+export async function removerJogadorAdm(id) {
+  if (demo) throw new Error('O cadastro não está disponível no modo demonstração.');
+  const { count, error } = await cliente().from('gols').select('id', { count: 'exact', head: true }).eq('jogador_id', id);
+  if (error) throw new Error(error.message);
+  return count
+    ? executar(cliente().from('jogadores').update({ ativo: false }).eq('id', id))
+    : executar(cliente().from('jogadores').delete().eq('id', id));
+}
+
+export const salvarTecnicoAdm = (timeId, nome) =>
+  demo ? Promise.reject(new Error('O cadastro não está disponível no modo demonstração.'))
+    : executar(cliente().from('times').update({ tecnico_nome: String(nome ?? '').trim().slice(0, 40) || null }).eq('id', timeId));
+
 // Importação em massa do organizador (elencos recebidos por WhatsApp). lotes: [{ time_id, tecnico?, jogadores: [{ nome, numero, posicao }] }]
 // Jogador que já existe no time (mesmo nome, sem acento/maiúscula) só recebe número e posição; os demais são criados.
 export async function importarElenco(lotes) {

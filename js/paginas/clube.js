@@ -13,7 +13,7 @@ import { assinarMudancas, TABELAS_JOGOS } from '../realtime.js';
 import { prepararFoto } from '../imagem.js';
 import { compartilharImagem, gerarImagem } from '../compartilhar.js';
 import { arteEscalacao, inserirArte } from '../artes.js';
-import { FORMACOES, FORMACAO_PADRAO, POSICOES, LINHAS, linhaDe, htmlCampo, htmlCarta, avatarJogador } from '../escalacao.js';
+import { FORMACOES, FORMACAO_PADRAO, POSICOES, LINHAS, MINIMO_ELENCO, linhaDe, htmlCampo, htmlCarta, avatarJogador } from '../escalacao.js';
 import { montarLayout, marcarNav, definirModo, mostrarPerfil, perfilDoClube, checarConfiguracao, mostrarCarregando, mostrarAviso, escapar, escudo, icone, toast, formatarData, horaDoJogo } from '../ui.js';
 
 const app = document.getElementById('app');
@@ -391,7 +391,12 @@ const SECOES = {
     const todos = elenco();
     const grupos = LINHAS.find(([id]) => id === estado.filtroElenco)?.[2];
     const jogadores = grupos ? todos.filter((j) => grupos.includes(j.posicao)) : todos;
+    const aviso = !todos.length
+      ? `<div class="elenco__alerta" role="status"><strong>⚠️ Elenco não informado</strong><p>Cadastre os jogadores do seu time abaixo (toque em Adicionar jogador). Enquanto isso, a torcida vê "elenco não informado".</p></div>`
+      : todos.length < MINIMO_ELENCO
+        ? `<p class="elenco__selo elenco__selo--curto">🟡 Elenco incompleto · ${todos.length} de ${MINIMO_ELENCO} jogadores</p>` : '';
     alvo.innerHTML = `
+      ${aviso}
       <button class="tecnico" data-editar-tecnico>
         ${avatarJogador({ foto_url: time.tecnico_foto_url, numero: 'T' }, 'avatar avatar--medio')}
         <span><small>Técnico</small><strong>${escapar(time.tecnico_nome || 'Cadastrar técnico')}</strong></span>

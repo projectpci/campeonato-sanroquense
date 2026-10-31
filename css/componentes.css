@@ -1445,3 +1445,31 @@ body > main.conteudo:has(.cadastro__barra) { padding-bottom: var(--esp-5); }
 .cadastro__clube .escudo { width: 72px; height: 72px; flex: none; filter: drop-shadow(0 4px 12px var(--cor-sombra)); }
 .cadastro__clube small { color: var(--cor-texto-2); text-transform: uppercase; letter-spacing: .06em; }
 .cadastro__clube h2 { margin: 0; font-family: var(--fonte-titulo); font-size: 1.7rem; line-height: 1.1; text-shadow: var(--cor-brilho); }
+
+/* ================= v46: cadastro do elenco pelo ADM, laterais separados e aviso de elenco não informado ================= */
+/* Seletor: "!" vermelho = elenco não informado; número amarelo = incompleto */
+.seletor-times__escudo i.seletor-times__alerta { background: var(--cor-negativo); border-color: var(--cor-negativo); color: var(--cor-texto); font-weight: 800; }
+.seletor-times__escudo i.seletor-times__curto { background: var(--cor-ouro); border-color: var(--cor-ouro); color: var(--cor-texto-inverso); }
+.seletor-times__item--ativo .seletor-times__escudo i.seletor-times__alerta { background: var(--cor-negativo); border-color: var(--cor-negativo); color: var(--cor-texto); }
+.seletor-times__item--ativo .seletor-times__escudo i.seletor-times__curto { background: var(--cor-ouro); border-color: var(--cor-ouro); color: var(--cor-texto-inverso); }
+
+/* Aviso dentro do elenco do time */
+.elenco__alerta { display: grid; gap: var(--esp-1); padding: var(--esp-4); border-radius: 22px; border: 1px dashed var(--cor-negativo); background: color-mix(in srgb, var(--cor-negativo) 12%, var(--cor-fundo-2)); }
+.elenco__alerta strong { font-family: var(--fonte-destaque); font-weight: 400; font-size: 1.25rem; text-transform: uppercase; color: var(--cor-negativo); }
+.elenco__alerta p { margin: 0; color: var(--cor-texto-2); }
+.elenco__selo { justify-self: start; padding: 2px 12px; border-radius: 999px; font-size: .8rem; font-weight: 700; }
+.elenco__selo--curto { background: color-mix(in srgb, var(--cor-ouro) 18%, var(--cor-fundo)); border: 1px solid var(--cor-ouro); color: var(--cor-ouro); }
+
+/* Resumo para o organizador */
+.elenco__resumo-geral { display: grid; gap: var(--esp-1); margin-bottom: var(--esp-3); padding: var(--esp-3); border-radius: 18px; background: var(--cor-fundo-2); border: 1px solid var(--cor-borda); font-size: .9rem; }
+.elenco__resumo-geral p { margin: 0; color: var(--cor-texto-2); }
+.elenco__resumo-geral b { color: var(--cor-texto); }
+.elenco__resumo-geral--ok { color: var(--cor-positivo); }
+.elenco__acoes-adm { display: flex; gap: var(--esp-2); margin: var(--esp-3) 0; }
+.elenco__acoes-adm .botao:first-child { flex: 1; }
+.elenco__topo-mini { display: flex; justify-content: center; }
+
+/* Filtro por posição (clube): 7 botões em uma fila que rola para o lado */
+.chips[aria-label="Filtrar por posição"] { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.chips[aria-label="Filtrar por posição"]::-webkit-scrollbar { display: none; }
+.chips[aria-label="Filtrar por posição"] .chip { flex: none; }
